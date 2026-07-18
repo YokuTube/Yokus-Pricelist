@@ -238,5 +238,89 @@
     "ModSource": "Vanilla Psycasts Expanded - Hemosage",
     "modactive": true,
     "Version": 1
+  },
+  "IsekaiThickMist": {
+    "DefName": "IsekaiThickMist",
+    "Label": "whale-mist",
+    "Description": "An unnatural, soupy mist conjured by the Whale of the Mist. It clings to everything and swallows sight at a few paces. Ranged fire is nearly useless inside it.\n\n<i><color=#66E0E4FF>ISEKAI CREATURES ADD-ON - Isekai RPG Leveling</color></i>",
+    "BaseCost": 175,
+    "KarmaType": "Neutral",
+    "EventCap": 3,
+    "Enabled": true,
+    "ModSource": "ISEKAI CREATURES ADD-ON - Isekai RPG Leveling",
+    "modactive": true,
+    "Version": 1
+  },
+  "VREA_PsychicStorm": {
+    "DefName": "VREA_PsychicStorm",
+    "Label": "psychischer Sturm",
+    "Description": "Ein psychischer Sturm ist ein übernatürliches Phänomen, das in Zeiten erhöhter psychischer Aktivität auftritt.\n\n<i><color=#66E0E4FF>Vanilla Races Expanded - Archon</color></i>",
+    "BaseCost": 300,
+    "KarmaType": "Bad",
+    "EventCap": 3,
+    "Enabled": true,
+    "ModSource": "Vanilla Races Expanded - Archon",
+    "modactive": true,
+    "Version": 1
+  },
+  "VEE_Whiteout": {
+    "DefName": "VEE_Whiteout",
+    "Label": "whiteout",
+    "Description": "Starker, eiskalter Schnee, der die Genauigkeit von Fernkampfwaffen erheblich beeinträchtigt, Feuer löscht und Menschen verlangsamt.\n\n<i><color=#66E0E4FF>Vanilla Events Expanded</color></i>",
+    "BaseCost": 175,
+    "KarmaType": "Neutral",
+    "EventCap": 3,
+    "Enabled": true,
+    "ModSource": "Vanilla Events Expanded",
+    "modactive": true,
+    "Version": 1
+  },
+  "VEE_Swelter": {
+    "DefName": "VEE_Swelter",
+    "Label": "schmoren",
+    "Description": "Eine unnatürliche, drückende Hitze.\n\n<i><color=#66E0E4FF>Vanilla Events Expanded</color></i>",
+    "BaseCost": 175,
+    "KarmaType": "Neutral",
+    "EventCap": 3,
+    "Enabled": true,
+    "ModSource": "Vanilla Events Expanded",
+    "modactive": true,
+    "Version": 1
+  },
+  "VEE_Inferno": {
+    "DefName": "VEE_Inferno",
+    "Label": "Inferno",
+    "Description": "Eine katastrophale, unnatürliche, drückende Hitze.\n\n<i><color=#66E0E4FF>Vanilla Events Expanded</color></i>",
+    "BaseCost": 175,
+    "KarmaType": "Neutral",
+    "EventCap": 3,
+    "Enabled": true,
+    "ModSource": "Vanilla Events Expanded",
+    "modactive": true,
+    "Version": 1
+  },
+  "VEE_PsychicRain": {
+    "DefName": "VEE_PsychicRain",
+    "Label": "psychischer Regen",
+    "Description": "Ein scheinbar übernatürlicher Regen, der die Zusammensetzung der Zeit verändert.\n\n<i><color=#66E0E4FF>Vanilla Events Expanded</color></i>",
+    "BaseCost": 150,
+    "KarmaType": "Neutral",
+    "EventCap": 3,
+    "Enabled": true,
+    "ModSource": "Vanilla Events Expanded",
+    "modactive": true,
+    "Version": 1
+  },
+  "VEE_LongNight": {
+    "DefName": "VEE_LongNight",
+    "Label": "lange Nacht",
+    "Description": "A catastrophic celestial eclipse that blankets the world in an endless, freezing twilight, forcing the world to adapt to artificial light and increased psychic sensitivity as nocturnal predators and subterranean threats emerge in the darkness.\n\n<i><color=#66E0E4FF>Vanilla Events Expanded</color></i>",
+    "BaseCost": 175,
+    "KarmaType": "Neutral",
+    "EventCap": 3,
+    "Enabled": true,
+    "ModSource": "Vanilla Events Expanded",
+    "modactive": true,
+    "Version": 1
   }
 }
