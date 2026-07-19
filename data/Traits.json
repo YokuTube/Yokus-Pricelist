@@ -15,7 +15,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Bloodlust_0": {
@@ -34,14 +34,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Kind_0": {
     "DefName": "Kind",
     "Name": "Kind",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} is an exceptionally agreeable and giving person {PAWN_pronoun} rarely insults others and will sometimes offer kind words to brighten the moods of those around {PAWN_objective} {PAWN_pronoun} also never judges people by their appearance {PAWN_possessive} agreeableness also makes {PAWN_objective} more likely to conform to prevailing opinions.",
+    "Description": "{PAWN_nameDef} is an exceptionally agreeable and giving person. {PAWN_pronoun} rarely insults others and will sometimes offer kind words to brighten the moods of those around {PAWN_objective}. {PAWN_pronoun} also never judges people by their appearance. {PAWN_possessive} agreeableness also makes {PAWN_objective} more likely to conform to prevailing opinions.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -53,14 +53,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Psychopath_0": {
     "DefName": "Psychopath",
     "Name": "Psychopath",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} has no empathy The suffering of others doesn't bother {PAWN_objective} at all {PAWN_pronoun} doesn't mind if others are butchered, left unburied, imprisoned, or sold to slavery - unless it affects {PAWN_objective} {PAWN_pronoun} also feels no mood boost from socializing.",
+    "Description": "{PAWN_nameDef} has no empathy. The suffering of others doesn't bother {PAWN_objective} at all. {PAWN_pronoun} doesn't mind if others are butchered, left unburied, imprisoned, or sold to slavery - unless it affects {PAWN_objective}. {PAWN_pronoun} also feels no mood boost from socializing.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -72,7 +72,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Cannibal_0": {
@@ -91,7 +91,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Abrasive_0": {
@@ -110,7 +110,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "TooSmart_0": {
@@ -133,7 +133,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Brawler_0": {
@@ -154,7 +154,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Masochist_0": {
@@ -173,14 +173,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "NightOwl_0": {
     "DefName": "NightOwl",
     "Name": "Night owl",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} likes to be up during the night, and sleep during the day {PAWN_pronoun} gets a mood bonus if awake at night (23h-6h) and mood loss if awake during the day (11h-18h) {PAWN_pronoun} doesn't get a mood penalty for being in the dark.",
+    "Description": "{PAWN_nameDef} likes to be up during the night, and sleep during the day.\n\n{PAWN_pronoun} gets a mood bonus if awake at night (23h-6h) and mood loss if awake during the day (11h-18h).\n\n{PAWN_pronoun} doesn't get a mood penalty for being in the dark.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -192,7 +192,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Greedy_0": {
@@ -211,7 +211,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Jealous_0": {
@@ -230,14 +230,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Ascetic_0": {
     "DefName": "Ascetic",
     "Name": "Ascetic",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} has forsaken physical comforts and enjoyments in favor of a simple, pure lifestyle {PAWN_pronoun} will become unhappy if {PAWN_pronoun} has a bedroom that's too impressive {PAWN_pronoun} also dislikes fancy food and prefers to eat raw {PAWN_pronoun} never judges others by their appearance.",
+    "Description": "{PAWN_nameDef} has forsaken physical comforts and enjoyments in favor of a simple, pure lifestyle. {PAWN_pronoun} will become unhappy if {PAWN_pronoun} has a bedroom that's too impressive. {PAWN_pronoun} also dislikes fancy food and prefers to eat raw. {PAWN_pronoun} never judges others by their appearance.",
     "Stats": [
       "-0.5 Intimacy need multiplier"
     ],
@@ -251,7 +251,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Gay_0": {
@@ -270,7 +270,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Bisexual_0": {
@@ -289,7 +289,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Asexual_0": {
@@ -308,7 +308,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "AnnoyingVoice_0": {
@@ -327,7 +327,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "CreepyBreathing_0": {
@@ -346,14 +346,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Pyromaniac_0": {
     "DefName": "Pyromaniac",
     "Name": "Pyromaniac",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} loves fire {PAWN_pronoun} will never extinguish fires, and will occasionally go on random fire starting sprees {PAWN_pronoun} will be happy around flames, and happier when wielding an incendiary weapon.",
+    "Description": "{PAWN_nameDef} loves fire. {PAWN_pronoun} will never extinguish fires, and will occasionally go on random fire starting sprees. {PAWN_pronoun} will be happy around flames, and happier when wielding an incendiary weapon.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -365,7 +365,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Wimp_0": {
@@ -386,7 +386,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Nimble_0": {
@@ -407,7 +407,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "FastLearner_0": {
@@ -428,7 +428,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "SlowLearner_0": {
@@ -449,14 +449,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Undergrounder_0": {
     "DefName": "Undergrounder",
     "Name": "Undergrounder",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} has no need to experience the outdoors or light {PAWN_pronoun} will never feel cooped up or get cabin fever and is not bothered by darkness However, {PAWN_nameDef} will be unhappy while outdoors.",
+    "Description": "{PAWN_nameDef} has no need to experience the outdoors or light. {PAWN_pronoun} will never feel cooped up or get cabin fever and is not bothered by darkness. However, {PAWN_nameDef} will be unhappy while outdoors.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -468,12 +468,12 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Transhumanist_0": {
     "DefName": "Transhumanist",
-    "Name": "Body mod",
+    "Name": "Body modder",
     "Degree": 0,
     "Description": "{PAWN_nameDef} feels limited in {PAWN_possessive} feeble human body. {PAWN_pronoun} often dreams of being enhanced with artificial body parts or xenogenetics.",
     "Stats": [],
@@ -487,7 +487,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "BodyPurist_0": {
@@ -506,7 +506,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "DislikesMen_0": {
@@ -525,7 +525,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "DislikesWomen_0": {
@@ -544,7 +544,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "GreatMemory_0": {
@@ -563,7 +563,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Tough_0": {
@@ -582,7 +582,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "TorturedArtist_0": {
@@ -603,7 +603,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Gourmand_0": {
@@ -622,7 +622,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "QuickSleeper_0": {
@@ -643,7 +643,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "SpeedOffset_-1": {
@@ -664,7 +664,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "SpeedOffset_1": {
@@ -685,7 +685,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "SpeedOffset_2": {
@@ -706,14 +706,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "DrugDesire_2": {
     "DefName": "DrugDesire",
     "Name": "Chemical fascination",
     "Degree": 2,
-    "Description": "[PAWN_name] is utterly fascinated with chemical sources of enjoyment Consuming recreational drugs will create a good mood, while abstaining will lead to increasing frustration over time and possibly drug binges [PAWN_pronoun] will ignore directives to not use recreational drugs, and will consume more than a normal person.",
+    "Description": "[PAWN_name] is utterly fascinated with chemical sources of enjoyment. Consuming recreational drugs will create a good mood, while abstaining will lead to increasing frustration over time and possibly drug binges. [PAWN_pronoun] will ignore directives to not use recreational drugs, and will consume more than a normal person.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -725,14 +725,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "DrugDesire_1": {
     "DefName": "DrugDesire",
     "Name": "Chemical interest",
     "Degree": 1,
-    "Description": "[PAWN_name] has an unusual interest in chemical sources of enjoyment Consuming recreational drugs will create a good mood, while abstaining will lead to increasing frustration over time and possible drug binges [PAWN_pronoun] will ignore directives to not use recreational drugs, and will consume more than a normal person.",
+    "Description": "[PAWN_name] has an unusual interest in chemical sources of enjoyment. Consuming recreational drugs will create a good mood, while abstaining will lead to increasing frustration over time and possible drug binges. [PAWN_pronoun] will ignore directives to not use recreational drugs, and will consume more than a normal person.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -744,7 +744,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "DrugDesire_-1": {
@@ -763,7 +763,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "NaturalMood_2": {
@@ -782,7 +782,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "NaturalMood_1": {
@@ -801,7 +801,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "NaturalMood_-1": {
@@ -820,7 +820,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "NaturalMood_-2": {
@@ -839,7 +839,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Nerves_2": {
@@ -861,7 +861,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Nerves_1": {
@@ -883,7 +883,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Nerves_-1": {
@@ -905,7 +905,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Nerves_-2": {
@@ -927,7 +927,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Neurotic_1": {
@@ -950,14 +950,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Neurotic_2": {
     "DefName": "Neurotic",
     "Name": "Very neurotic",
     "Degree": 2,
-    "Description": "[PAWN_name] feels constantly nervous about everything that has to get done [PAWN_pronoun] will work extremely hard to attain this state of affairs, but [PAWN_possessive] nerves can easily get the better of [PAWN_objective].",
+    "Description": "[PAWN_name] feels constantly nervous about everything that has to get done. [PAWN_pronoun] will work extremely hard to attain this state of affairs, but [PAWN_possessive] nerves can easily get the better of [PAWN_objective].",
     "Stats": [
       "+0.4 Global work speed",
       "+0.08 Mental break threshold",
@@ -973,7 +973,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Industriousness_2": {
@@ -994,7 +994,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Industriousness_1": {
@@ -1015,7 +1015,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Industriousness_-1": {
@@ -1036,7 +1036,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Industriousness_-2": {
@@ -1057,7 +1057,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PsychicSensitivity_2": {
@@ -1078,7 +1078,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PsychicSensitivity_1": {
@@ -1099,7 +1099,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PsychicSensitivity_-1": {
@@ -1120,7 +1120,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PsychicSensitivity_-2": {
@@ -1141,7 +1141,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ShootingAccuracy_1": {
@@ -1163,7 +1163,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ShootingAccuracy_-1": {
@@ -1185,14 +1185,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Beauty_2": {
     "DefName": "Beauty",
     "Name": "Beautiful",
     "Degree": 2,
-    "Description": "[PAWN_name] is exceptionally beautiful, with an exotic-yet-familiar facial structure and an arresting gaze People are attracted to [PAWN_objective] before [PAWN_pronoun] even opens [PAWN_possessive] mouth.",
+    "Description": "[PAWN_name] is exceptionally beautiful, with an exotic-yet-familiar facial structure and an arresting gaze. People are attracted to [PAWN_objective] before [PAWN_pronoun] even opens [PAWN_possessive] mouth.",
     "Stats": [
       "+2 Beauty"
     ],
@@ -1206,7 +1206,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Beauty_1": {
@@ -1227,7 +1227,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Beauty_-1": {
@@ -1248,14 +1248,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Beauty_-2": {
     "DefName": "Beauty",
     "Name": "Staggeringly ugly",
     "Degree": -2,
-    "Description": "[PAWN_name] is staggeringly ugly [PAWN_possessive] face looks like a cross between a drawing by an untalented child, a malformed fetus in a jar of formaldehyde, and a piece of modern art Others must exert conscious effort to look at [PAWN_objective] while conversing.",
+    "Description": "[PAWN_name] is staggeringly ugly. [PAWN_possessive] face looks like a cross between a drawing by an untalented child, a malformed fetus in a jar of formaldehyde, and a piece of modern art. Others must exert conscious effort to look at [PAWN_objective] while conversing.",
     "Stats": [
       "-2 Beauty"
     ],
@@ -1269,7 +1269,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Immunity_1": {
@@ -1290,7 +1290,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Immunity_-1": {
@@ -1309,7 +1309,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Core",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Delicate_0": {
@@ -1328,7 +1328,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Biotech",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Recluse_0": {
@@ -1347,7 +1347,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Biotech",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PerfectMemory_0": {
@@ -1366,14 +1366,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Anomaly",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Occultist_0": {
     "DefName": "Occultist",
     "Name": "Occultist",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} has deep knowledge of the twisted patterns of dark psychic energy {PAWN_pronoun} can study unnatural entities faster than others {PAWN_pronoun} will also periodically teach this inhuman knowledge to others when {PAWN_pronoun} gets the chance.",
+    "Description": "{PAWN_nameDef} has deep knowledge of the twisted patterns of dark psychic energy. {PAWN_pronoun} can study unnatural entities faster than others. {PAWN_pronoun} will also periodically teach this inhuman knowledge to others when {PAWN_pronoun} gets the chance.",
     "Stats": [
       "+1 Study efficiency",
       "+0.5 Entity study rate"
@@ -1388,7 +1388,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Anomaly",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Joyous_0": {
@@ -1407,7 +1407,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Anomaly",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "BodyMastery_0": {
@@ -1426,7 +1426,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Anomaly",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Disturbing_0": {
@@ -1445,7 +1445,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Anomaly",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "VoidFascination_0": {
@@ -1464,7 +1464,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Anomaly",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Gossip_0": {
@@ -1483,7 +1483,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "[RF] Rumor Has It.... (Continued)",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Trustworthy_0": {
@@ -1502,14 +1502,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "[RF] Rumor Has It.... (Continued)",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Manipulative_0": {
     "DefName": "Manipulative",
     "Name": "Manipulative",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} is socially manipulative {PAWN_pronoun} doesn't always talk ill of people, but if {PAWN_pronoun} doesn't like someone, {PAWN_pronoun} will try to turn the rest of the colony against them.",
+    "Description": "{PAWN_nameDef} is socially manipulative. {PAWN_pronoun} doesn't always talk ill of people, but if {PAWN_pronoun} doesn't like someone, {PAWN_pronoun} will try to turn the rest of the colony against them.",
     "Stats": [
       "+0.05 Trade price improvement",
       "+0.2 Negotiation ability"
@@ -1524,7 +1524,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "[RF] Rumor Has It.... (Continued)",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Peacemaker_0": {
@@ -1543,7 +1543,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "[RF] Rumor Has It.... (Continued)",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Gushing_0": {
@@ -1562,14 +1562,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "[RF] Rumor Has It.... (Continued)",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "CompulsiveLiar_0": {
     "DefName": "CompulsiveLiar",
     "Name": "Compulsive liar",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} has a difficult relationship with the truth. This causes {PAWN_objective} to have difficult relationships with other colonists, as well.",
+    "Description": "{PAWN_nameDef} has a difficult relationship with the truth. This causes {PAWN_objective} to have difficult relationships with other colonists, as well. ",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -1581,7 +1581,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "[RF] Rumor Has It.... (Continued)",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "AM_Ahimsa_0": {
@@ -1591,8 +1591,8 @@
     "Description": "A strict principle of nonviolence which applies to all living things.",
     "Stats": [],
     "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
+    "CanAdd": false,
+    "CanRemove": false,
     "AddPrice": 150,
     "RemovePrice": 250,
     "BypassLimit": false,
@@ -1600,7 +1600,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Alpha Memes",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "RimScent_Anosmic_0": {
@@ -1621,7 +1621,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "RimScent",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "RimScent_KeenNose_0": {
@@ -1642,7 +1642,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "RimScent",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "RimScent_Dysosmic_0": {
@@ -1661,229 +1661,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "RimScent",
-    "modactive": true,
-    "Version": 1
-  },
-  "VAEI_Inhumanized_0": {
-    "DefName": "VAEI_Inhumanized",
-    "Name": "Inhumanized",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef}'s mind is dominated by the psychic patterns of the void They are completely disconnected from human concerns of family, friendship, and love Their experience of reality is distant and muted, guided by the psychic rhythm of a dark hyperintelligence.",
-    "Stats": [
-      "-0.01 Sanity gain per day"
-    ],
-    "Conflicts": [],
-    "CanAdd": false,
-    "CanRemove": false,
-    "AddPrice": 45,
-    "RemovePrice": 378,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Anomaly Expanded - Insanity",
-    "modactive": true,
-    "Version": 1
-  },
-  "VAEI_VoidTouched_0": {
-    "DefName": "VAEI_VoidTouched",
-    "Name": "Void touched",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} has seen the depths of the void and drank from its essence It lives inside them still, guiding their actions and twisting their flesh It has turned their hair brittle and white They no longer need sleep or comfort The void provides for them.",
-    "Stats": [],
-    "Conflicts": [],
-    "CanAdd": false,
-    "CanRemove": false,
-    "AddPrice": 150,
-    "RemovePrice": 250,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Anomaly Expanded - Insanity",
-    "modactive": true,
-    "Version": 1
-  },
-  "VAEI_Germaphobe_0": {
-    "DefName": "VAEI_Germaphobe",
-    "Name": "Germaphobe",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} is terrified of germs and contamination, leading to excessively slow and meticulous cleaning, but due to the careful nature will never contract flu, malaria, or plague.",
-    "Stats": [
-      "+1 Sanity loss multiplier"
-    ],
-    "Conflicts": [],
-    "CanAdd": false,
-    "CanRemove": false,
-    "AddPrice": 300,
-    "RemovePrice": 500,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Anomaly Expanded - Insanity",
-    "modactive": true,
-    "Version": 1
-  },
-  "VAEI_Noncommittal_0": {
-    "DefName": "VAEI_Noncommittal",
-    "Name": "Noncommittal",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} is desperately afraid of commitment. {PAWN_pronoun} will actively refuse any attachment to others, and will never form any new relationships.",
-    "Stats": [
-      "+1 Sanity loss multiplier"
-    ],
-    "Conflicts": [],
-    "CanAdd": false,
-    "CanRemove": false,
-    "AddPrice": 300,
-    "RemovePrice": 500,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Anomaly Expanded - Insanity",
-    "modactive": true,
-    "Version": 1
-  },
-  "VAEI_Unstable_0": {
-    "DefName": "VAEI_Unstable",
-    "Name": "Impulsive",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef}'s emotional foundation is fragile, making {PAWN_objective} significantly more prone to crumbling under stress {PAWN_pronoun} struggle to handle pressure, which often leads to breakdowns in challenging situations.",
-    "Stats": [
-      "+0.12 Mental break threshold",
-      "+1 Sanity loss multiplier"
-    ],
-    "Conflicts": [],
-    "CanAdd": false,
-    "CanRemove": false,
-    "AddPrice": 317,
-    "RemovePrice": 529,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Anomaly Expanded - Insanity",
-    "modactive": true,
-    "Version": 1
-  },
-  "VAEI_Distractable_0": {
-    "DefName": "VAEI_Distractable",
-    "Name": "Distractable",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} hyperfocuses on certain things when {PAWN_pronoun} feel like it, but most of the time {PAWN_pronoun} will struggle to concentrate on {PAWN_possessive} task, severely affecting {PAWN_possessive} work speed.",
-    "Stats": [
-      "+1 Sanity loss multiplier"
-    ],
-    "Conflicts": [],
-    "CanAdd": false,
-    "CanRemove": false,
-    "AddPrice": 300,
-    "RemovePrice": 500,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Anomaly Expanded - Insanity",
-    "modactive": true,
-    "Version": 1
-  },
-  "VAEI_MoodSwings_0": {
-    "DefName": "VAEI_MoodSwings",
-    "Name": "Mood swings",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} suffers from severe mood swings that can last anything between a day and a quadrum. One day {PAWN_pronoun} might be extremely happy, whilst the next day - extremely sad.",
-    "Stats": [
-      "+1 Sanity loss multiplier"
-    ],
-    "Conflicts": [],
-    "CanAdd": false,
-    "CanRemove": false,
-    "AddPrice": 300,
-    "RemovePrice": 500,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Anomaly Expanded - Insanity",
-    "modactive": true,
-    "Version": 1
-  },
-  "VME_Elder_0": {
-    "DefName": "VME_Elder",
-    "Name": "Elder",
-    "Degree": 0,
-    "Description": "Either the body or mind of {PAWN_nameDef} is one of insight and experience. While some find them old fashioned, others will respect their guidance.",
-    "Stats": [],
-    "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
-    "AddPrice": 150,
-    "RemovePrice": 250,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Ideology Expanded - Memes and Structures",
-    "modactive": true,
-    "Version": 1
-  },
-  "VPE_Thrall_0": {
-    "DefName": "VPE_Thrall",
-    "Name": "Thrall",
-    "Degree": 0,
-    "Description": "Psychic enthrallment caused by incredibly strong mental influence. Thralls don't need to sleep or have recreation, but are unable to do skilled work and engage in social interactions.",
-    "Stats": [],
-    "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
-    "AddPrice": 150,
-    "RemovePrice": 250,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Psycasts Expanded",
-    "modactive": true,
-    "Version": 1
-  },
-  "SEX_Solitary_0": {
-    "DefName": "SEX_Solitary",
-    "Name": "Solitary",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} is comfortable with isolation. {PAWN_pronoun} does not have a need for intimacy.",
-    "Stats": [],
-    "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
-    "AddPrice": 150,
-    "RemovePrice": 250,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Intimacy - Friends n' Lovers",
-    "modactive": true,
-    "Version": 1
-  },
-  "SEX_Affectionate_0": {
-    "DefName": "SEX_Affectionate",
-    "Name": "Affectionate",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} is quite the social butterfly. {PAWN_pronoun} has an increased need for intimacy.",
-    "Stats": [],
-    "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
-    "AddPrice": 150,
-    "RemovePrice": 250,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Intimacy - Friends n' Lovers",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Manipulative_0": {
@@ -1902,7 +1680,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Naive_0": {
@@ -1921,7 +1699,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Narcissist_0": {
@@ -1940,7 +1718,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_HealthNut_0": {
@@ -1959,7 +1737,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Emotional_0": {
@@ -1978,7 +1756,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Paranoid_0": {
@@ -1997,7 +1775,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Goofball_0": {
@@ -2016,7 +1794,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Loyal_0": {
@@ -2035,7 +1813,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_PartyAnimal_0": {
@@ -2054,7 +1832,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Insane_0": {
@@ -2073,7 +1851,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Proper_0": {
@@ -2094,7 +1872,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Grumpy_0": {
@@ -2113,14 +1891,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Shy_0": {
     "DefName": "ST_Shy",
     "Name": "Shy",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} struggles to socialise with other people, {PAWN_pronoun} especially cherish it while being on the receiving end of kindness Over the time, {PAWN_nameDef} have learned to spend more time on organising and introspecting {PAWN_objective}self.",
+    "Description": "{PAWN_nameDef} struggles to socialise with other people, {PAWN_pronoun} especially cherish it while being on the receiving end of kindness.\n\nOver the time, {PAWN_nameDef} have learned to spend more time on organising and introspecting {PAWN_objective}self.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -2132,7 +1910,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Materialistic_0": {
@@ -2151,7 +1929,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Vegan_0": {
@@ -2170,7 +1948,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Devout_0": {
@@ -2189,7 +1967,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Procrastinator_0": {
@@ -2210,7 +1988,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_NonCommital_0": {
@@ -2229,7 +2007,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_HighMaintenance_0": {
@@ -2248,7 +2026,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_FamilyOriented_0": {
@@ -2267,7 +2045,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_SteadyHands_0": {
@@ -2286,7 +2064,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Daredevil_0": {
@@ -2305,7 +2083,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Chatterbox_0": {
@@ -2324,7 +2102,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Bookworm_0": {
@@ -2343,7 +2121,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Handy_0": {
@@ -2362,7 +2140,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Virtuoso_0": {
@@ -2381,7 +2159,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_TechWhiz_0": {
@@ -2402,7 +2180,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Gambler_0": {
@@ -2425,7 +2203,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Childish_0": {
@@ -2444,7 +2222,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Nosy_0": {
@@ -2463,14 +2241,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_HugePower_0": {
     "DefName": "ST_HugePower",
     "Name": "Huge power",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} is noted for {PAWN_possessive} incredible strength {PAWN_pronoun}'s naturally strong without the need to frequent the gym However, delicate tasks like medical operations pose a huge challenge, as the sheer force of {PAWN_possessive} grip hinders any precision.",
+    "Description": "{PAWN_nameDef} is noted for {PAWN_possessive} incredible strength. {PAWN_pronoun}'s naturally strong without the need to frequent the gym.\n\nHowever, delicate tasks like medical operations pose a huge challenge, as the sheer force of {PAWN_possessive} grip hinders any precision.",
     "Stats": [
       "+75 Carrying capacity"
     ],
@@ -2484,7 +2262,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Observant_0": {
@@ -2503,7 +2281,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "ST_Zen_0": {
@@ -2522,14 +2300,312 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "The Sims Traits",
-    "modactive": true,
+    "modactive": false,
+    "Version": 1
+  },
+  "VAEI_Inhumanized_0": {
+    "DefName": "VAEI_Inhumanized",
+    "Name": "Inhumanized",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef}'s mind is dominated by the psychic patterns of the void. They are completely disconnected from human concerns of family, friendship, and love. Their experience of reality is distant and muted, guided by the psychic rhythm of a dark hyperintelligence.",
+    "Stats": [
+      "-0.01 Sanity gain per day"
+    ],
+    "Conflicts": [],
+    "CanAdd": false,
+    "CanRemove": false,
+    "AddPrice": 45,
+    "RemovePrice": 378,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Anomaly Expanded - Insanity",
+    "modactive": false,
+    "Version": 1
+  },
+  "VAEI_VoidTouched_0": {
+    "DefName": "VAEI_VoidTouched",
+    "Name": "Void touched",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} has seen the depths of the void and drank from its essence. It lives inside them still, guiding their actions and twisting their flesh. It has turned their hair brittle and white. They no longer need sleep or comfort. The void provides for them.",
+    "Stats": [],
+    "Conflicts": [],
+    "CanAdd": false,
+    "CanRemove": false,
+    "AddPrice": 150,
+    "RemovePrice": 250,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Anomaly Expanded - Insanity",
+    "modactive": false,
+    "Version": 1
+  },
+  "VAEI_Germaphobe_0": {
+    "DefName": "VAEI_Germaphobe",
+    "Name": "Germaphobe",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} is terrified of germs and contamination, leading to excessively slow and meticulous cleaning, but due to the careful nature will never contract flu, malaria, or plague.",
+    "Stats": [
+      "+1 Sanity loss multiplier"
+    ],
+    "Conflicts": [],
+    "CanAdd": false,
+    "CanRemove": false,
+    "AddPrice": 300,
+    "RemovePrice": 500,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Anomaly Expanded - Insanity",
+    "modactive": false,
+    "Version": 1
+  },
+  "VAEI_Noncommittal_0": {
+    "DefName": "VAEI_Noncommittal",
+    "Name": "Noncommittal",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} is desperately afraid of commitment. {PAWN_pronoun} will actively refuse any attachment to others, and will never form any new relationships.",
+    "Stats": [
+      "+1 Sanity loss multiplier"
+    ],
+    "Conflicts": [],
+    "CanAdd": false,
+    "CanRemove": false,
+    "AddPrice": 300,
+    "RemovePrice": 500,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Anomaly Expanded - Insanity",
+    "modactive": false,
+    "Version": 1
+  },
+  "VAEI_Unstable_0": {
+    "DefName": "VAEI_Unstable",
+    "Name": "Impulsive",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef}'s emotional foundation is fragile, making {PAWN_objective} significantly more prone to crumbling under stress. {PAWN_pronoun} struggle to handle pressure, which often leads to breakdowns in challenging situations.",
+    "Stats": [
+      "+0.12 Mental break threshold",
+      "+1 Sanity loss multiplier"
+    ],
+    "Conflicts": [],
+    "CanAdd": false,
+    "CanRemove": false,
+    "AddPrice": 317,
+    "RemovePrice": 529,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Anomaly Expanded - Insanity",
+    "modactive": false,
+    "Version": 1
+  },
+  "VAEI_Distractable_0": {
+    "DefName": "VAEI_Distractable",
+    "Name": "Distractable",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} hyperfocuses on certain things when {PAWN_pronoun} feel like it, but most of the time {PAWN_pronoun} will struggle to concentrate on {PAWN_possessive} task, severely affecting {PAWN_possessive} work speed.",
+    "Stats": [
+      "+1 Sanity loss multiplier"
+    ],
+    "Conflicts": [],
+    "CanAdd": false,
+    "CanRemove": false,
+    "AddPrice": 300,
+    "RemovePrice": 500,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Anomaly Expanded - Insanity",
+    "modactive": false,
+    "Version": 1
+  },
+  "VAEI_MoodSwings_0": {
+    "DefName": "VAEI_MoodSwings",
+    "Name": "Mood swings",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} suffers from severe mood swings that can last anything between a day and a quadrum. One day {PAWN_pronoun} might be extremely happy, whilst the next day - extremely sad.",
+    "Stats": [
+      "+1 Sanity loss multiplier"
+    ],
+    "Conflicts": [],
+    "CanAdd": false,
+    "CanRemove": false,
+    "AddPrice": 300,
+    "RemovePrice": 500,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Anomaly Expanded - Insanity",
+    "modactive": false,
+    "Version": 1
+  },
+  "VFEP_WarcasketTrait_0": {
+    "DefName": "VFEP_WarcasketTrait",
+    "Name": "Warcasket",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} is entombed in a warcasket. No amount of pain will have an effect on them, and they can never go into a pain shock or drop unconscious due to pain. Because of how bulky the armor is and how much energy it takes to use it, {PAWN_nameDef} is not capable of doing any work.",
+    "Stats": [],
+    "Conflicts": [],
+    "CanAdd": true,
+    "CanRemove": true,
+    "AddPrice": 150,
+    "RemovePrice": 250,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Factions Expanded - Pirates",
+    "modactive": false,
+    "Version": 1
+  },
+  "VFEP_Shellcasket_0": {
+    "DefName": "VFEP_Shellcasket",
+    "Name": "Shellcasket",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} was entombed in a warcasket, and then brutally pulled out of one. The neural and nerve damage from being unplugged is so severe that {PAWN_nameDef} is in constant, agonizing pain and can barely assemble his thoughts. Only installing {PAWN_nameDef} back in a warcasket can cure the symptoms.",
+    "Stats": [],
+    "Conflicts": [],
+    "CanAdd": true,
+    "CanRemove": true,
+    "AddPrice": 150,
+    "RemovePrice": 250,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Factions Expanded - Pirates",
+    "modactive": false,
+    "Version": 1
+  },
+  "VME_Elder_0": {
+    "DefName": "VME_Elder",
+    "Name": "Elder",
+    "Degree": 0,
+    "Description": "Either the body or mind of {PAWN_nameDef} is one of insight and experience. While some find them old fashioned, others will respect their guidance.",
+    "Stats": [],
+    "Conflicts": [],
+    "CanAdd": true,
+    "CanRemove": true,
+    "AddPrice": 150,
+    "RemovePrice": 250,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Ideology Expanded - Memes and Structures",
+    "modactive": false,
+    "Version": 1
+  },
+  "VPE_Thrall_0": {
+    "DefName": "VPE_Thrall",
+    "Name": "Thrall",
+    "Degree": 0,
+    "Description": "Psychic enthrallment caused by incredibly strong mental influence. Thralls don't need to sleep or have recreation, but are unable to do skilled work and engage in social interactions.",
+    "Stats": [],
+    "Conflicts": [],
+    "CanAdd": true,
+    "CanRemove": true,
+    "AddPrice": 150,
+    "RemovePrice": 250,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Psycasts Expanded",
+    "modactive": false,
+    "Version": 1
+  },
+  "VRE_Flirty_0": {
+    "DefName": "VRE_Flirty",
+    "Name": "Flirty",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} is always ready with a flirtatious comment or a playful compliment, lifting the spirits of those around {PAWN_objective}. {PAWN_pronoun} has a knack for making others feel special and desired, however this may sometimes lead to complicated situations when {PAWN_possessive} playful intentions are misinterpreted.",
+    "Stats": [],
+    "Conflicts": [],
+    "CanAdd": true,
+    "CanRemove": true,
+    "AddPrice": 150,
+    "RemovePrice": 250,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Races Expanded - Highmate",
+    "modactive": false,
+    "Version": 1
+  },
+  "VRE_Distressed_0": {
+    "DefName": "VRE_Distressed",
+    "Name": "Distressed",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} is exceptionally empathetic and sensitive to the suffering of others. Whenever {PAWN_pronoun} witnesses pain or hardship, it deeply affects {PAWN_objective}, resulting in memories of these events haunting {PAWN_nameDef} for a much longer time.",
+    "Stats": [],
+    "Conflicts": [],
+    "CanAdd": true,
+    "CanRemove": true,
+    "AddPrice": 150,
+    "RemovePrice": 250,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Vanilla Races Expanded - Highmate",
+    "modactive": false,
+    "Version": 1
+  },
+  "SEX_Solitary_0": {
+    "DefName": "SEX_Solitary",
+    "Name": "Solitary",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} is comfortable with isolation. {PAWN_pronoun} does not have a need for intimacy.",
+    "Stats": [],
+    "Conflicts": [],
+    "CanAdd": true,
+    "CanRemove": true,
+    "AddPrice": 150,
+    "RemovePrice": 250,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Intimacy - Friends n' Lovers",
+    "modactive": false,
+    "Version": 1
+  },
+  "SEX_Affectionate_0": {
+    "DefName": "SEX_Affectionate",
+    "Name": "Affectionate",
+    "Degree": 0,
+    "Description": "{PAWN_nameDef} is quite the social butterfly. {PAWN_pronoun} has an increased need for intimacy.",
+    "Stats": [],
+    "Conflicts": [],
+    "CanAdd": true,
+    "CanRemove": true,
+    "AddPrice": 150,
+    "RemovePrice": 250,
+    "BypassLimit": false,
+    "CustomName": false,
+    "KarmaTypeForAdding": null,
+    "KarmaTypeForRemoving": null,
+    "ModSource": "Intimacy - Friends n' Lovers",
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Protagonist_0": {
     "DefName": "Isekai_Protagonist",
     "Name": "Protagonist",
     "Degree": 0,
-    "Description": "This individual is the Protagonist — chosen by fate itself They gain experience at an extraordinary rate and grow faster than anyone else • x10 XP multiplier\n• +2 bonus stat points per level\n• Cannot have: Antagonist, Regressor, Summoned Hero",
+    "Description": "This individual is the Protagonist — chosen by fate itself. They gain experience at an extraordinary rate and grow faster than anyone else.\n\n• x10 XP multiplier\n• +2 bonus stat points per level\n• Cannot have: Antagonist, Regressor, Summoned Hero",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -2541,14 +2617,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Antagonist_0": {
     "DefName": "Isekai_Antagonist",
     "Name": "Antagonist",
     "Degree": 0,
-    "Description": "This individual walks the path of the Antagonist — feared and reviled They grow powerful through conflict, gaining massive combat bonuses, but their very presence unsettles others • x8 XP multiplier\n• +25% melee damage\n• +10% move speed\n• -25% social impact\n• -25 opinion from all other pawns\n• Cannot have: Protagonist, Summoned Hero",
+    "Description": "This individual walks the path of the Antagonist — feared and reviled. They grow powerful through conflict, gaining massive combat bonuses, but their very presence unsettles others.\n\n• x8 XP multiplier\n• +25% melee damage\n• +10% move speed\n• -25% social impact\n• -25 opinion from all other pawns\n• Cannot have: Protagonist, Summoned Hero",
     "Stats": [
       "-0.25 Social impact"
     ],
@@ -2562,14 +2638,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Reincarnated_0": {
     "DefName": "Isekai_Reincarnated",
     "Name": "Reincarnated",
     "Degree": 0,
-    "Description": "This individual has been reincarnated — reborn into a new life with memories of the old Their level and stats were reset, but they retained their constellation progress and earned powerful growth bonuses • Resets level to 1 and all stats to base (New Game+)\n• x5 XP multiplier\n• +10 bonus star points\n• +1 star point every 3 levels instead of 5\n• Constellation tree progress preserved\n• Cannot have: Protagonist, Antagonist, Hollow Core",
+    "Description": "This individual has been reincarnated — reborn into a new life with memories of the old. Their level and stats were reset, but they retained their constellation progress and earned powerful growth bonuses.\n\n• Resets level to 1 and all stats to base (New Game+)\n• x5 XP multiplier\n• +10 bonus star points\n• +1 star point every 3 levels instead of 5\n• Constellation tree progress preserved\n• Cannot have: Protagonist, Antagonist, Hollow Core",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -2581,14 +2657,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Regressor_0": {
     "DefName": "Isekai_Regressor",
     "Name": "Regressor",
     "Degree": 0,
-    "Description": "This individual has regressed — returned to the past with fragments of future knowledge They level faster and can freely readapt their constellation at any time • x4 XP multiplier\n• Free constellation respec (always)\n• Cannot have: Protagonist",
+    "Description": "This individual has regressed — returned to the past with fragments of future knowledge. They level faster and can freely readapt their constellation at any time.\n\n• x4 XP multiplier\n• Free constellation respec (always)\n• Cannot have: Protagonist",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -2600,14 +2676,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_SummonedHero_0": {
     "DefName": "Isekai_SummonedHero",
     "Name": "Summoned hero",
     "Degree": 0,
-    "Description": "This individual was summoned from another world as a hero They gain power rapidly and are mentally resilient, but the displacement from their home world weighs on them • x3 XP multiplier\n• +1 bonus stat point per level\n• Highly resistant to mental breaks\n• +25% social impact\n• -8 mood (displaced from home)\n• Cannot have: Protagonist, Antagonist",
+    "Description": "This individual was summoned from another world as a hero. They gain power rapidly and are mentally resilient, but the displacement from their home world weighs on them.\n\n• x3 XP multiplier\n• +1 bonus stat point per level\n• Highly resistant to mental breaks\n• +25% social impact\n• -8 mood (displaced from home)\n• Cannot have: Protagonist, Antagonist",
     "Stats": [
       "-0.1 Mental break threshold",
       "+0.25 Social impact"
@@ -2622,7 +2698,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_NaturalTalent_0": {
@@ -2641,7 +2717,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Prodigy_0": {
@@ -2660,14 +2736,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_LateBloomer_0": {
     "DefName": "Isekai_LateBloomer",
     "Name": "Late bloomer",
     "Degree": 0,
-    "Description": "Starts slow but becomes unstoppable XP gain scales dramatically with level — weak early, godlike late • Level 1-10: x0.5 XP\n• Level 11-25: x1.0 XP\n• Level 26-50: x1.5 XP\n• Level 51-100: x2.0 XP\n• Level 101+: x3.0 XP",
+    "Description": "Starts slow but becomes unstoppable. XP gain scales dramatically with level — weak early, godlike late.\n\n• Level 1-10: x0.5 XP\n• Level 11-25: x1.0 XP\n• Level 26-50: x1.5 XP\n• Level 51-100: x2.0 XP\n• Level 101+: x3.0 XP",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -2679,7 +2755,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_QuickLearner_0": {
@@ -2698,7 +2774,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_SlowGrind_0": {
@@ -2717,7 +2793,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_PowerSpike_0": {
@@ -2736,14 +2812,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_AwakenedPotential_0": {
     "DefName": "Isekai_AwakenedPotential",
     "Name": "Awakened potential",
     "Degree": 0,
-    "Description": "Dormant power awakens at level 25, dramatically increasing all stat effectiveness Before awakening, the pawn is unremarkable • Below level 25: -10% all stats\n• Level 25+: +50% all stat effectiveness",
+    "Description": "Dormant power awakens at level 25, dramatically increasing all stat effectiveness. Before awakening, the pawn is unremarkable.\n\n• Below level 25: -10% all stats\n• Level 25+: +50% all stat effectiveness",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -2755,7 +2831,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Genius_0": {
@@ -2774,7 +2850,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_BattleManiac_0": {
@@ -2795,14 +2871,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_BerserkerBlood_0": {
     "DefName": "Isekai_BerserkerBlood",
     "Name": "Berserker blood",
     "Degree": 0,
-    "Description": "When wounded, primal rage surges through their veins The more they bleed, the harder they fight • Below 50% HP: +30% melee damage, +15% move speed\n• Below 25% HP: +60% melee damage, +30% move speed\n• -10% mental break threshold (easier to break)",
+    "Description": "When wounded, primal rage surges through their veins. The more they bleed, the harder they fight.\n\n• Below 50% HP: +30% melee damage, +15% move speed\n• Below 25% HP: +60% melee damage, +30% move speed\n• -10% mental break threshold (easier to break)",
     "Stats": [
       "+0.1 Mental break threshold"
     ],
@@ -2816,7 +2892,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_IronWill_0": {
@@ -2839,7 +2915,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_GlassCannon_0": {
@@ -2858,7 +2934,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Fortress_0": {
@@ -2881,7 +2957,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_ShadowStep_0": {
@@ -2902,7 +2978,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_PredatorInstinct_0": {
@@ -2925,14 +3001,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Undying_0": {
     "DefName": "Isekai_Undying",
     "Name": "Undying",
     "Degree": 0,
-    "Description": "Fate refuses to let this individual die When struck by a killing blow, they miraculously survive — but the experience leaves a permanent mark on their psyche • Cheat death: Survive lethal damage once every 3 days\n• +20% pain shock threshold\n• -5 mood (touched by death) after triggering",
+    "Description": "Fate refuses to let this individual die. When struck by a killing blow, they miraculously survive — but the experience leaves a permanent mark on their psyche.\n\n• Cheat death: Survive lethal damage once every 3 days\n• +20% pain shock threshold\n• -5 mood (touched by death) after triggering",
     "Stats": [
       "+0.2 Pain shock threshold"
     ],
@@ -2946,7 +3022,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Mighty_0": {
@@ -2965,7 +3041,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Agile_0": {
@@ -2984,7 +3060,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Resilient_0": {
@@ -3003,7 +3079,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Brilliant_0": {
@@ -3022,7 +3098,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Enlightened_0": {
@@ -3041,7 +3117,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_SilverTongue_0": {
@@ -3060,7 +3136,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_MerchantEye_0": {
@@ -3082,7 +3158,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_CraftsmanSoul_0": {
@@ -3101,14 +3177,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_BeastWhisperer_0": {
     "DefName": "Isekai_BeastWhisperer",
     "Name": "Beast whisperer",
     "Degree": 0,
-    "Description": "Has an uncanny bond with animals Creatures of all kinds are drawn to this individual, making taming and training trivially easy • +40% tame animal chance\n• +30% train animal chance\n• +25% animal gather yield\n• Animals won't attack unprovoked",
+    "Description": "Has an uncanny bond with animals. Creatures of all kinds are drawn to this individual, making taming and training trivially easy.\n\n• +40% tame animal chance\n• +30% train animal chance\n• +25% animal gather yield\n• Animals won't attack unprovoked",
     "Stats": [
       "+0.4 Tame animal chance",
       "+0.3 Train animal chance",
@@ -3124,7 +3200,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_HealerTouch_0": {
@@ -3146,7 +3222,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Lucky_0": {
@@ -3169,14 +3245,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_CursedLuck_0": {
     "DefName": "Isekai_CursedLuck",
     "Name": "Cursed luck",
     "Degree": 0,
-    "Description": "Terrible luck plagues them, yet somehow they thrive in adversity Misfortune strengthens them in mysterious ways • x2 XP multiplier\n• -15% surgery success\n• -10% trade prices\n• +20% melee damage\n• -5 mood (cursed by fate)",
+    "Description": "Terrible luck plagues them, yet somehow they thrive in adversity. Misfortune strengthens them in mysterious ways.\n\n• x2 XP multiplier\n• -15% surgery success\n• -10% trade prices\n• +20% melee damage\n• -5 mood (cursed by fate)",
     "Stats": [
       "-0.15 Medical surgery success chance",
       "-0.1 Trade price improvement"
@@ -3191,14 +3267,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_HollowCore_0": {
     "DefName": "Isekai_HollowCore",
     "Name": "Hollow core",
     "Degree": 0,
-    "Description": "Their spiritual core is shattered — they can channel raw power but cannot form the connections needed for constellation skills • x3 XP multiplier\n• Cannot unlock any constellation nodes\n• No star points gained",
+    "Description": "Their spiritual core is shattered — they can channel raw power but cannot form the connections needed for constellation skills.\n\n• x3 XP multiplier\n• Cannot unlock any constellation nodes\n• No star points gained",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -3210,7 +3286,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_FragileVessel_0": {
@@ -3229,7 +3305,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_EchoOfDefeat_0": {
@@ -3248,14 +3324,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_SealedPower_0": {
     "DefName": "Isekai_SealedPower",
     "Name": "Sealed power",
     "Degree": 0,
-    "Description": "Immense power sealed away, waiting to be unleashed Weak and stunted until the seal breaks at level 25, then gains an explosive power surge • Before level 25: -30% all stats, no star points\n• At level 25: Seal breaks!\n• After level 25: Double stat points per level (up to +2 bonus), +2 star points per 5 levels",
+    "Description": "Immense power sealed away, waiting to be unleashed. Weak and stunted until the seal breaks at level 25, then gains an explosive power surge.\n\n• Before level 25: -30% all stats, no star points\n• At level 25: Seal breaks!\n• After level 25: Double stat points per level (up to +2 bonus), +2 star points per 5 levels",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -3267,7 +3343,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Rank_F_0": {
@@ -3291,7 +3367,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Rank_E_0": {
@@ -3314,7 +3390,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Rank_D_0": {
@@ -3335,7 +3411,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Rank_C_0": {
@@ -3358,7 +3434,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Rank_B_0": {
@@ -3382,7 +3458,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Rank_A_0": {
@@ -3407,7 +3483,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Rank_S_0": {
@@ -3432,14 +3508,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Rank_SS_0": {
     "DefName": "Isekai_Rank_SS",
     "Name": "Rank SS",
     "Degree": 0,
-    "Description": "This individual has transcended to SS-Rank - a demigod walking among mortals Their power is the stuff of legends, and entire nations would pay any price to secure their loyalty They radiate an otherworldly magnificence.",
+    "Description": "This individual has transcended to SS-Rank - a demigod walking among mortals. Their power is the stuff of legends, and entire nations would pay any price to secure their loyalty. They radiate an otherworldly magnificence.",
     "Stats": [
       "+2 Beauty",
       "+1 Social impact",
@@ -3457,14 +3533,14 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "Isekai_Rank_SSS_0": {
     "DefName": "Isekai_Rank_SSS",
     "Name": "Rank SSS",
     "Degree": 0,
-    "Description": "This individual has achieved the impossible - SSS-Rank, the absolute apex of existence They are a god among mortals, their power beyond comprehension Kingdoms would fall to possess them, and their very existence reshapes the world around them.",
+    "Description": "This individual has achieved the impossible - SSS-Rank, the absolute apex of existence. They are a god among mortals, their power beyond comprehension. Kingdoms would fall to possess them, and their very existence reshapes the world around them.",
     "Stats": [
       "+3 Beauty",
       "+1.5 Social impact",
@@ -3482,45 +3558,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "ISEKAI RPG LEVELING",
-    "modactive": true,
-    "Version": 1
-  },
-  "VFEP_WarcasketTrait_0": {
-    "DefName": "VFEP_WarcasketTrait",
-    "Name": "Warcasket",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} is entombed in a warcasket No amount of pain will have an effect on them, and they can never go into a pain shock or drop unconscious due to pain Because of how bulky the armor is and how much energy it takes to use it, {PAWN_nameDef} is not capable of doing any work.",
-    "Stats": [],
-    "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
-    "AddPrice": 150,
-    "RemovePrice": 250,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Factions Expanded - Pirates",
-    "modactive": true,
-    "Version": 1
-  },
-  "VFEP_Shellcasket_0": {
-    "DefName": "VFEP_Shellcasket",
-    "Name": "Shellcasket",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} was entombed in a warcasket, and then brutally pulled out of one The neural and nerve damage from being unplugged is so severe that {PAWN_nameDef} is in constant, agonizing pain and can barely assemble his thoughts Only installing {PAWN_nameDef} back in a warcasket can cure the symptoms.",
-    "Stats": [],
-    "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
-    "AddPrice": 150,
-    "RemovePrice": 250,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Factions Expanded - Pirates",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_LowTechProficiency_0": {
@@ -3539,7 +3577,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_FirearmProficiency_0": {
@@ -3558,7 +3596,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_HighTechProficiency_0": {
@@ -3577,7 +3615,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_AnimalRidingProficiency_0": {
@@ -3596,7 +3634,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_AutomobileDrivingProficiency_0": {
@@ -3615,7 +3653,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_AerialPilotingProficiency_0": {
@@ -3625,8 +3663,8 @@
     "Description": "This person is proficient with aerial piloting.",
     "Stats": [],
     "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
+    "CanAdd": false,
+    "CanRemove": false,
     "AddPrice": 150,
     "RemovePrice": 250,
     "BypassLimit": false,
@@ -3634,7 +3672,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_OrbitalPilotingProficiency_0": {
@@ -3653,7 +3691,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_MuteProficiency_0": {
@@ -3672,7 +3710,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_BasicSpeechProficiency_0": {
@@ -3691,7 +3729,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   },
   "PE_FluentSpeechProficiency_0": {
@@ -3710,45 +3748,7 @@
     "KarmaTypeForAdding": null,
     "KarmaTypeForRemoving": null,
     "ModSource": "Progression: Education",
-    "modactive": true,
-    "Version": 1
-  },
-  "VRE_Flirty_0": {
-    "DefName": "VRE_Flirty",
-    "Name": "Flirty",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} is always ready with a flirtatious comment or a playful compliment, lifting the spirits of those around {PAWN_objective} {PAWN_pronoun} has a knack for making others feel special and desired, however this may sometimes lead to complicated situations when {PAWN_possessive} playful intentions are misinterpreted.",
-    "Stats": [],
-    "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
-    "AddPrice": 150,
-    "RemovePrice": 250,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Races Expanded - Highmate",
-    "modactive": true,
-    "Version": 1
-  },
-  "VRE_Distressed_0": {
-    "DefName": "VRE_Distressed",
-    "Name": "Distressed",
-    "Degree": 0,
-    "Description": "{PAWN_nameDef} is exceptionally empathetic and sensitive to the suffering of others Whenever {PAWN_pronoun} witnesses pain or hardship, it deeply affects {PAWN_objective}, resulting in memories of these events haunting {PAWN_nameDef} for a much longer time.",
-    "Stats": [],
-    "Conflicts": [],
-    "CanAdd": true,
-    "CanRemove": true,
-    "AddPrice": 150,
-    "RemovePrice": 250,
-    "BypassLimit": false,
-    "CustomName": false,
-    "KarmaTypeForAdding": null,
-    "KarmaTypeForRemoving": null,
-    "ModSource": "Vanilla Races Expanded - Highmate",
-    "modactive": true,
+    "modactive": false,
     "Version": 1
   }
 }
