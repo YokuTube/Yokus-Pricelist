@@ -33640,7 +33640,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 750,
+      "BasePrice": 1250,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
