@@ -1,6 +1,6 @@
 {
-  "exportedAt": "2026-05-22T18:04:04.0472734Z",
-  "totalActiveMods": 122,
+  "exportedAt": "2026-07-28T21:14:23.6626466Z",
+  "totalActiveMods": 220,
   "mods": [
     {
       "author": "Krkr",
@@ -18,18 +18,42 @@
       "author": "Mlie",
       "name": "[RF] Rumor Has It.... (Continued)",
       "steamId": "2013940581",
-      "version": "1.6.1"
+      "version": "1.6.2"
     },
     {
       "author": "Andreas Pardeike",
       "name": "Achtung!",
       "steamId": "730936602",
-      "version": "4.1.8.0"
+      "version": "4.1.12"
+    },
+    {
+      "author": "Hyomoto",
+      "name": "Actually Date",
+      "steamId": "3762663803",
+      "version": null
+    },
+    {
+      "author": "Encoded",
+      "name": "Adaptive Priorities",
+      "steamId": "3765524719",
+      "version": "1.5.1"
     },
     {
       "author": "Soul, Phaneron, Bradson",
       "name": "Adaptive Storage Framework",
       "steamId": "3033901359",
+      "version": null
+    },
+    {
+      "author": "Superniquito",
+      "name": "All Ideoligions Are Fluid",
+      "steamId": "2872901762",
+      "version": null
+    },
+    {
+      "author": "Nina.Goblin",
+      "name": "Allies are Helpful",
+      "steamId": "3534920369",
       "version": null
     },
     {
@@ -63,15 +87,15 @@
       "version": "1.6.5"
     },
     {
-      "author": "Ludeon Studios",
-      "name": "Anomaly",
-      "steamId": null,
+      "author": "Royal-Tea",
+      "name": "Animals at Work — Herding Dogs",
+      "steamId": "3766198296",
       "version": null
     },
     {
-      "author": "SeoHyeon",
-      "name": "Auto Translation",
-      "steamId": "3278005460",
+      "author": "Ludeon Studios",
+      "name": "Anomaly",
+      "steamId": null,
       "version": null
     },
     {
@@ -93,9 +117,21 @@
       "version": null
     },
     {
-      "author": "VouLT",
-      "name": "Better Pawn Control",
-      "steamId": "1541460369",
+      "author": "ferny",
+      "name": "Back For Vengeance",
+      "steamId": "3761967749",
+      "version": null
+    },
+    {
+      "author": "NetzachSloth, Toby",
+      "name": "Better autocasting for Vanilla Psycasts Expanded",
+      "steamId": "3199585285",
+      "version": "8.1.0.0"
+    },
+    {
+      "author": "KyleMHB",
+      "name": "Better Pawn Control Forked",
+      "steamId": "3724294345",
       "version": null
     },
     {
@@ -111,6 +147,12 @@
       "version": null
     },
     {
+      "author": "ferny",
+      "name": "Character Development",
+      "steamId": "3770112044",
+      "version": null
+    },
+    {
       "author": "void",
       "name": "Character Editor",
       "steamId": "1874644848",
@@ -120,7 +162,7 @@
       "author": "Mlie",
       "name": "Cleaning Priority (Continued)",
       "steamId": "2018316486",
-      "version": "1.6.0"
+      "version": "1.6.2"
     },
     {
       "author": "Zaljerem",
@@ -144,7 +186,7 @@
       "author": "ilyvion,  Fluffy",
       "name": "Colony Manager Redux",
       "steamId": "3310027356",
-      "version": "0.14.6"
+      "version": "0.16.0"
     },
     {
       "author": "avilmask",
@@ -177,9 +219,21 @@
       "version": null
     },
     {
+      "author": "ferny",
+      "name": "Discoveries",
+      "steamId": "3655992052",
+      "version": null
+    },
+    {
       "author": "HaiLuan, 昏暗",
       "name": "Dlc collaboration - Void universe",
       "steamId": "3587277884",
+      "version": null
+    },
+    {
+      "author": "gguake",
+      "name": "Do Something for Idle",
+      "steamId": "1896806569",
       "version": null
     },
     {
@@ -231,15 +285,33 @@
       "version": null
     },
     {
+      "author": "Linq",
+      "name": "Expanded Incidents (Continued)",
+      "steamId": "2039064466",
+      "version": "1.6.2"
+    },
+    {
+      "author": "Crycore",
+      "name": "Family Is Everything",
+      "steamId": "3747730890",
+      "version": null
+    },
+    {
       "author": "ChaoticEnrico",
       "name": "Follow Target",
       "steamId": "3555423377",
       "version": null
     },
     {
-      "author": "notfood",
-      "name": "FrameRateControl",
-      "steamId": "1591142767",
+      "author": "ferny",
+      "name": "Footsteps",
+      "steamId": "3728675951",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Free UI Scaling",
+      "steamId": "3756809055",
       "version": null
     },
     {
@@ -267,6 +339,24 @@
       "version": null
     },
     {
+      "author": "aRandomKiwi",
+      "name": "Hunt for Me",
+      "steamId": "1593245720",
+      "version": null
+    },
+    {
+      "author": "Zaljerem",
+      "name": "I Miss My Limbs (Continued)",
+      "steamId": "3680510302",
+      "version": "1.0.2"
+    },
+    {
+      "author": "HaiLuan",
+      "name": "I will be back",
+      "steamId": "3400259397",
+      "version": null
+    },
+    {
       "author": "Ludeon Studios",
       "name": "Ideology",
       "steamId": null,
@@ -279,6 +369,30 @@
       "version": "0.20.0"
     },
     {
+      "author": "kathanon",
+      "name": "Impressionable Children",
+      "steamId": "2879996327",
+      "version": null
+    },
+    {
+      "author": "AmCh, Missionz3r0",
+      "name": "Improved Need Indicator",
+      "steamId": "3211635205",
+      "version": "1.6.4503.20250630Z"
+    },
+    {
+      "author": "Haecriver",
+      "name": "Injured Carry",
+      "steamId": "2413690575",
+      "version": null
+    },
+    {
+      "author": "Catachat",
+      "name": "Inspiration Tweaks",
+      "steamId": "2117570018",
+      "version": null
+    },
+    {
       "author": "Jaxe",
       "name": "Interaction Bubbles",
       "steamId": "1516158345",
@@ -286,8 +400,20 @@
     },
     {
       "author": "turkler",
-      "name": "Intimacy - A Lovin' Expansion",
+      "name": "Intimacy - Friends n' Lovers",
       "steamId": "3498422643",
+      "version": null
+    },
+    {
+      "author": "turkler",
+      "name": "Intimacy - Socio Butterfly",
+      "steamId": "3630896210",
+      "version": null
+    },
+    {
+      "author": "Poupun",
+      "name": "ISEKAI CREATURES ADD-ON - Isekai RPG Leveling",
+      "steamId": "3757560461",
       "version": null
     },
     {
@@ -297,9 +423,57 @@
       "version": null
     },
     {
+      "author": "Birby",
+      "name": "Isekai RPG Leveling - Character Editor Support",
+      "steamId": "3712581712",
+      "version": null
+    },
+    {
+      "author": "astryl",
+      "name": "Itemization Overhaul - Core",
+      "steamId": "3741866746",
+      "version": null
+    },
+    {
+      "author": "Astryl",
+      "name": "Itemization Overhaul - Jewelry & Charms",
+      "steamId": "3743049600",
+      "version": null
+    },
+    {
+      "author": "Astryl",
+      "name": "Itemization Overhaul - Runes & Socketables",
+      "steamId": "3742407509",
+      "version": null
+    },
+    {
+      "author": "Astryl",
+      "name": "Itemization Overhaul - Sets",
+      "steamId": "3741934365",
+      "version": null
+    },
+    {
+      "author": "astryl",
+      "name": "Itemization Overhaul - Stats and Levels",
+      "steamId": "3742372664",
+      "version": null
+    },
+    {
+      "author": "astryl",
+      "name": "Itemization Overhaul - Uniques & Mythics",
+      "steamId": "3742486404",
+      "version": null
+    },
+    {
       "author": "Linnun",
       "name": "Keep Converting",
       "steamId": "3461478214",
+      "version": null
+    },
+    {
+      "author": "turkler",
+      "name": "Lactation Expansion",
+      "steamId": "3489491945",
       "version": null
     },
     {
@@ -309,10 +483,40 @@
       "version": null
     },
     {
+      "author": "bsandyh",
+      "name": "Living Bonds",
+      "steamId": "3708989445",
+      "version": null
+    },
+    {
+      "author": "XandrMoro",
+      "name": "Lovin' Is Messy (and fun)",
+      "steamId": "3081507494",
+      "version": null
+    },
+    {
       "author": "erdelf",
       "name": "MinifyEverything",
       "steamId": "872762753",
       "version": null
+    },
+    {
+      "author": "Imranfish",
+      "name": "Mood Matters",
+      "steamId": "2581603685",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "More Prop Categories",
+      "steamId": "3167021055",
+      "version": null
+    },
+    {
+      "author": "telardo",
+      "name": "MultiFloors",
+      "steamId": "3384660931",
+      "version": "1.6.1.3"
     },
     {
       "author": "Oblitus",
@@ -339,10 +543,22 @@
       "version": null
     },
     {
+      "author": "ferny",
+      "name": "No Factory Floor Requirement",
+      "steamId": "3687039048",
+      "version": null
+    },
+    {
       "author": "Mlie",
       "name": "No Version Warning",
       "steamId": "2599504692",
-      "version": "1.6.102"
+      "version": "1.6.106"
+    },
+    {
+      "author": "Zaljerem",
+      "name": "Noobert's Event Scheduler (Continued)",
+      "steamId": "3178111019",
+      "version": "1.0.2"
     },
     {
       "author": "Ludeon Studios",
@@ -366,12 +582,18 @@
       "author": "Scherub",
       "name": "Planning Extended",
       "steamId": "2877392159",
-      "version": "1.16.0"
+      "version": "1.17.0"
     },
     {
       "author": "TwoPenny",
       "name": "Portraits of the Rim",
       "steamId": "2937991425",
+      "version": null
+    },
+    {
+      "author": "cem",
+      "name": "Positive Connections",
+      "steamId": "3003882069",
       "version": null
     },
     {
@@ -387,21 +609,171 @@
       "version": null
     },
     {
+      "author": "DanZinagri",
+      "name": "Progression Agriculture - Vanilla Outposts Farming Patch",
+      "steamId": "3746355073",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Aesthetics",
+      "steamId": "3294950875",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Agriculture",
+      "steamId": "3418017359",
+      "version": null
+    },
+    {
+      "author": "danzinagri",
+      "name": "Progression: Agriculture - Dynamic Seed Icons",
+      "steamId": "3759931550",
+      "version": null
+    },
+    {
+      "author": "Ferny,  Lemonskin",
+      "name": "Progression: Attire",
+      "steamId": "3634874325",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Core",
+      "steamId": "3301868772",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Drugs",
+      "steamId": "3763005969",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Education",
+      "steamId": "3590863552",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Factories",
+      "steamId": "3690565613",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Gravship",
+      "steamId": "3522893553",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Hospitality",
+      "steamId": "3265298940",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Kitchen",
+      "steamId": "3424640315",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Production",
+      "steamId": "3453408412",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Robotics",
+      "steamId": "3736402055",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Scenarios",
+      "steamId": "3378384387",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Soundtrack",
+      "steamId": "3620726714",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Storage",
+      "steamId": "3292746186",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Storytellers",
+      "steamId": "3361425712",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Temperature",
+      "steamId": "3253283971",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Therapy",
+      "steamId": "3753615736",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Verticality",
+      "steamId": "3416136317",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Worlds",
+      "steamId": "3534993993",
+      "version": null
+    },
+    {
+      "author": "mentalism",
+      "name": "Psycast Puppeteer Isekai patch",
+      "steamId": "3691866546",
+      "version": null
+    },
+    {
+      "author": "astryl",
+      "name": "Psycasts²",
+      "steamId": "3761869362",
+      "version": null
+    },
+    {
       "author": "DawnsGlow",
       "name": "Quality Colors (Continued)",
       "steamId": "3513846773",
       "version": null
     },
     {
-      "author": "Reel",
-      "name": "Reel's Expanded Storage",
-      "steamId": "3237638097",
+      "author": "SLIM",
+      "name": "Quartermaster",
+      "steamId": "3737474260",
       "version": null
     },
     {
-      "author": "cykonetic",
-      "name": "Relations Tab (Continued)",
-      "steamId": "3575145343",
+      "author": "slofa",
+      "name": "Quick Stockpile Creation",
+      "steamId": "1742151109",
+      "version": null
+    },
+    {
+      "author": "Reel",
+      "name": "Reel's Expanded Storage",
+      "steamId": "3237638097",
       "version": null
     },
     {
@@ -412,15 +784,33 @@
     },
     {
       "author": "ferny",
+      "name": "ReplaceLib",
+      "steamId": "3417393194",
+      "version": null
+    },
+    {
+      "author": "ferny",
       "name": "Resource Delivery Helper",
       "steamId": "3696859196",
       "version": null
     },
     {
-      "author": "yancy",
-      "name": "RimChat - Word to Actions",
-      "steamId": "3683001105",
-      "version": "1.5.0"
+      "author": "Maux",
+      "name": "Rimbody",
+      "steamId": "3354086860",
+      "version": "1.2.12"
+    },
+    {
+      "author": "Maux",
+      "name": "Rimbody - Stat Module",
+      "steamId": "3373263045",
+      "version": "1.2.3"
+    },
+    {
+      "author": "ferny",
+      "name": "Rimbody Vanilla-Style Integration Patch",
+      "steamId": "3734917610",
+      "version": null
     },
     {
       "author": "Jaxe",
@@ -432,19 +822,25 @@
       "author": "Maux",
       "name": "Rimpsyche - Disposition",
       "steamId": "3578212339",
-      "version": "1.0.16"
+      "version": "1.0.18"
     },
     {
       "author": "Maux",
       "name": "Rimpsyche - Personality Core",
       "steamId": "3535112473",
-      "version": "1.0.38"
+      "version": "1.0.41"
     },
     {
       "author": "Maux",
       "name": "Rimpsyche - Sexuality",
       "steamId": "3627304156",
-      "version": "1.0.9"
+      "version": "1.0.10"
+    },
+    {
+      "author": "reo",
+      "name": "RimRelations",
+      "steamId": "3737617982",
+      "version": null
     },
     {
       "author": "reo,  ocarina0001",
@@ -453,10 +849,16 @@
       "version": null
     },
     {
+      "author": "Rizryn",
+      "name": "Rizryn's Family Tree Mod",
+      "steamId": "3734644035",
+      "version": null
+    },
+    {
       "author": "MianReplicate",
       "name": "Romance & Intimacy On The Rim",
       "steamId": "3612563959",
-      "version": "1.2.2"
+      "version": "1.2.3"
     },
     {
       "author": "telardo",
@@ -471,9 +873,9 @@
       "version": null
     },
     {
-      "author": "Sandy",
-      "name": "RPG Style Inventory Revamped",
-      "steamId": "2478833213",
+      "author": " Original author: Captain Muscles (Nathan Harbour)\r\n    Since this fork: Arodoid\r\n    ",
+      "name": "Semi Random Research: Progression Fork",
+      "steamId": "3505290557",
       "version": null
     },
     {
@@ -504,12 +906,24 @@
       "author": "legodude17",
       "name": "Smarter Deconstruction and Mining (Continued)",
       "steamId": "3261302741",
-      "version": "1.6.0"
+      "version": "1.6.1"
+    },
+    {
+      "author": "Krelinos",
+      "name": "Social Experience from Trade",
+      "steamId": "3400608063",
+      "version": null
     },
     {
       "author": "Andromeda",
       "name": "Stack gap",
       "steamId": "3071298014",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Storage Stats in Description",
+      "steamId": "3740185419",
       "version": null
     },
     {
@@ -531,6 +945,12 @@
       "version": null
     },
     {
+      "author": "ferny",
+      "name": "Temporary Patches",
+      "steamId": "3424105991",
+      "version": null
+    },
+    {
       "author": "Fluffy",
       "name": "The Birds and the Bees (UNOFFICIAL 1.6)",
       "steamId": "2821429175",
@@ -543,9 +963,33 @@
       "version": null
     },
     {
+      "author": "Yokai",
+      "name": "To-do List",
+      "steamId": "3655920479",
+      "version": "1.0.0"
+    },
+    {
       "author": "Superniquito",
       "name": "Trait and Backstory Icons",
       "steamId": "2873494547",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Trauma and Integrity",
+      "steamId": "3760716715",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Triumphant Research",
+      "steamId": "3647618250",
+      "version": null
+    },
+    {
+      "author": "astryl",
+      "name": "True RPG Inventory",
+      "steamId": "3744201621",
       "version": null
     },
     {
@@ -597,9 +1041,51 @@
       "version": null
     },
     {
+      "author": "Oskar Potocki,  ISOREX,  xrushha,  legodude17,  Chowder",
+      "name": "Vanilla Factions Expanded - Classical",
+      "steamId": "2787850474",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  xrushha,  legodude17",
+      "name": "Vanilla Factions Expanded - Deserters",
+      "steamId": "3025493377",
+      "version": null
+    },
+    {
       "author": "Oskar Potocki,  xrushha,  legodude17,  Allie",
       "name": "Vanilla Factions Expanded - Empire",
       "steamId": "2938820380",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  erdelf,  Roolo,  Smash Phil,  Taranchuk,  xrushha,  Kikohi,  legodude17",
+      "name": "Vanilla Factions Expanded - Pirates",
+      "steamId": "2723801948",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  LimeTreeSnake,  Kikohi",
+      "name": "Vanilla Factions Expanded - Settlers",
+      "steamId": "2052918119",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  xrushha,  Taranchuk,  Sarg Bjornson",
+      "name": "Vanilla Factions Expanded - Tribals",
+      "steamId": "3079786283",
+      "version": null
+    },
+    {
+      "author": "pureMJ",
+      "name": "Vanilla Fix: Haul After Slaughter",
+      "steamId": "2801452324",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  Taranchuk",
+      "name": "Vanilla Furniture Expanded - Factory",
+      "steamId": "3686924415",
       "version": null
     },
     {
@@ -663,6 +1149,12 @@
       "version": null
     },
     {
+      "author": "legodude17, Oskar Potocki",
+      "name": "Vanilla Outposts Expanded",
+      "steamId": "2688941031",
+      "version": null
+    },
+    {
       "author": "erdelf,  Oskar Potocki,  legodude17,  Taranchuk,  xrushha,  Sarg Bjornson,  Sir Van,  Reann Shepard",
       "name": "Vanilla Psycasts Expanded",
       "steamId": "2842502659",
@@ -684,6 +1176,90 @@
       "author": "Chairheir",
       "name": "Vanilla Psycasts Expanded - Runesmith",
       "steamId": "3339063087",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Taranchuk,  ISOREX,  Sarg Bjornson",
+      "name": "Vanilla Races Expanded - Android",
+      "steamId": "2975771801",
+      "version": "1.1.0"
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  Taranchuk,  Reann Shepard,  xrushha",
+      "name": "Vanilla Races Expanded - Archon",
+      "steamId": "3067715093",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson",
+      "name": "Vanilla Races Expanded - Fungoid",
+      "steamId": "3042690053",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson",
+      "name": "Vanilla Races Expanded - Genie",
+      "steamId": "2901424072",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Taranchuk,  Sarg Bjornson",
+      "name": "Vanilla Races Expanded - Highmate",
+      "steamId": "2995385834",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  xrushha,  Taranchuk,  Sarg",
+      "name": "Vanilla Races Expanded - Hussar",
+      "steamId": "2893586390",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Taranchuk,  Sarg",
+      "name": "Vanilla Races Expanded - Insector",
+      "steamId": "3260509684",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson",
+      "name": "Vanilla Races Expanded - Lycanthrope",
+      "steamId": "3114453100",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  Allie,  Erin,  Sir Van,  Reann Shepard",
+      "name": "Vanilla Races Expanded - Phytokin",
+      "steamId": "2927323805",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  RedMattis",
+      "name": "Vanilla Races Expanded - Pigskin",
+      "steamId": "3164798809",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  Erin",
+      "name": "Vanilla Races Expanded - Sanguophage",
+      "steamId": "2963116383",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Neronix17",
+      "name": "Vanilla Races Expanded - Saurid",
+      "steamId": "2880990495",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson",
+      "name": "Vanilla Races Expanded - Starjack",
+      "steamId": "3531912428",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson",
+      "name": "Vanilla Races Expanded - Waster",
+      "steamId": "2983471725",
       "version": null
     },
     {
@@ -732,6 +1308,18 @@
       "author": "RedMattis",
       "name": "Wololoo - Better Conversion and Recruitment",
       "steamId": "3108763487",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Worldbuilder",
+      "steamId": "3522102833",
+      "version": null
+    },
+    {
+      "author": "Imranfish",
+      "name": "XML Extensions",
+      "steamId": "2574315206",
       "version": null
     }
   ]
