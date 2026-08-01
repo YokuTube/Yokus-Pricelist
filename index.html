@@ -1,21 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yokus Store - Purchase List</title>
+    <title>Yokus Store - Purchase List & Commands</title>
+
+    <!-- Deine vorhandene Store-Optik -->
     <link rel="stylesheet" href="assets/css/rics-store.css">
+
+    <!-- Nur für die Commands-Übersicht -->
+    <style>
+        .commands-page {
+            margin-top: 30px;
+        }
+
+        .commands-page h2 {
+            margin-top: 38px;
+            margin-bottom: 10px;
+        }
+
+        .commands-page h3 {
+            margin: 0;
+        }
+
+        .commands-intro {
+            margin-bottom: 20px;
+        }
+
+        .command-section {
+            margin: 22px 0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .command-section summary {
+            padding: 14px 16px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .command-section summary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .command-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .command-table th,
+        .command-table td {
+            padding: 11px 14px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .command-table th {
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .command-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .command-table tr:hover td {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .command-table code {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #b9c4ff;
+            background: rgba(88, 101, 242, 0.18);
+            word-break: break-word;
+        }
+
+        .command-icon {
+            width: 40px;
+            text-align: center;
+            font-size: 1.15rem;
+        }
+
+        .wiki-link {
+            display: inline-block;
+            margin: 10px 14px 14px;
+        }
+
+        @media (max-width: 650px) {
+            .command-table th,
+            .command-table td {
+                padding: 9px 8px;
+            }
+
+            .command-table th:nth-child(1),
+            .command-table td:nth-child(1) {
+                display: none;
+            }
+        }
+    </style>
 </head>
+
 <body>
     <div class="container">
         <header>
-<!-- PUT YOUR NAME HERE -->
             <h1>Yokus Store</h1>
-<!-- Change TExt here to anything you like -->
             <p>Interactive purchase list for RICS mod</p>
         </header>
 
-        <p>Für genauere Beschreibung der Befehle hier gucken: <a href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Commands" target="_blank">https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Commands</a></p>
+        <p>
+            Für genauere Beschreibung der Befehle:
+            <a href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Commands"
+               target="_blank"
+               rel="noopener noreferrer">
+                RICS Commands Wiki
+            </a>
+        </p>
 
         <div class="tabs">
             <button class="tab-button active" data-tab="items">Items</button>
@@ -23,15 +129,18 @@
             <button class="tab-button" data-tab="weather">Weather</button>
             <button class="tab-button" data-tab="traits">Traits</button>
             <button class="tab-button" data-tab="races">Races</button>
-<button class="tab-button" data-tab="mods">Mods</button>
+            <button class="tab-button" data-tab="mods">Mods</button>
+            <button class="tab-button" data-tab="commands">Commands</button>
         </div>
 
         <div class="tab-content">
+
             <!-- Items Tab -->
             <div id="items" class="tab-pane active">
                 <div class="search-box">
                     <input type="text" id="items-search" placeholder="Search items..." class="search-input">
                 </div>
+
                 <div class="table-container">
                     <table id="items-table" class="items-table">
                         <thead>
@@ -42,9 +151,7 @@
                                 <th data-sort="quantityLimit">Quantity Limit</th>
                             </tr>
                         </thead>
-                        <tbody id="items-tbody">
-                            <!-- Items loaded by JavaScript -->
-                        </tbody>
+                        <tbody id="items-tbody"></tbody>
                     </table>
                 </div>
             </div>
@@ -54,6 +161,7 @@
                 <div class="search-box">
                     <input type="text" id="events-search" placeholder="Search events..." class="search-input">
                 </div>
+
                 <div class="table-container">
                     <table id="events-table" class="items-table">
                         <thead>
@@ -63,9 +171,7 @@
                                 <th data-sort="karmaType">Karma Type</th>
                             </tr>
                         </thead>
-                        <tbody id="events-tbody">
-                            <!-- Events loaded by JavaScript -->
-                        </tbody>
+                        <tbody id="events-tbody"></tbody>
                     </table>
                 </div>
             </div>
@@ -75,6 +181,7 @@
                 <div class="search-box">
                     <input type="text" id="weather-search" placeholder="Search weather..." class="search-input">
                 </div>
+
                 <div class="table-container">
                     <table id="weather-table" class="items-table">
                         <thead>
@@ -85,17 +192,17 @@
                                 <th>Description</th>
                             </tr>
                         </thead>
-                        <tbody id="weather-tbody">
-                            <!-- Weather loaded by JavaScript -->
-                        </tbody>
+                        <tbody id="weather-tbody"></tbody>
                     </table>
                 </div>
             </div>
+
             <!-- Traits Tab -->
             <div id="traits" class="tab-pane">
                 <div class="search-box">
                     <input type="text" id="traits-search" placeholder="Search traits..." class="search-input">
                 </div>
+
                 <div class="table-container">
                     <table id="traits-table" class="items-table">
                         <thead>
@@ -106,28 +213,29 @@
                                 <th>Description & Details</th>
                             </tr>
                         </thead>
-                        <tbody id="traits-tbody">
-                            <!-- Traits loaded by JavaScript -->
-                        </tbody>
+                        <tbody id="traits-tbody"></tbody>
                     </table>
                 </div>
             </div>
 
-<!-- Races Tab -->
-<div id="races" class="tab-pane">
-<div class="search-box">
-<input type="text" id="races-search" placeholder="Search races and xenotypes..." class="search-input">
-</div>
+            <!-- Races Tab -->
+            <div id="races" class="tab-pane">
+                <div class="search-box">
+                    <input type="text"
+                           id="races-search"
+                           placeholder="Search races and xenotypes..."
+                           class="search-input">
+                </div>
 
-<div id="races-container" class="races-container">
-<!-- Populated by JavaScript with collapsible groups -->
-</div>
-</div>
-<!-- Mods Tab -->
+                <div id="races-container" class="races-container"></div>
+            </div>
+
+            <!-- Mods Tab -->
             <div id="mods" class="tab-pane">
                 <div class="search-box">
                     <input type="text" id="mods-search" placeholder="Search mods..." class="search-input">
                 </div>
+
                 <div class="table-container">
                     <table id="mods-table" class="items-table">
                         <thead>
@@ -138,17 +246,257 @@
                                 <th>Steam Workshop</th>
                             </tr>
                         </thead>
-                        <tbody id="mods-tbody">
-                            <!-- Mods loaded by JavaScript -->
-                        </tbody>
+                        <tbody id="mods-tbody"></tbody>
                     </table>
                 </div>
             </div>
 
-</div>
+            <!-- Commands Tab -->
+            <div id="commands" class="tab-pane">
+                <div class="commands-page">
+                    <h2>Chat Commands</h2>
+                    <p class="commands-intro">
+                        Hier findest du alle verfügbaren RICS- und Mod-Befehle.
+                        Die Kategorien können sich überschneiden, damit Befehle leichter zu finden sind.
+                    </p>
+
+                    <details class="command-section" open>
+                        <summary>💳 Economy Commands</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr>
+                                    <th>Icon</th>
+                                    <th>Befehl</th>
+                                    <th>Beschreibung</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">💳</td><td><code>!bal</code></td><td>Zeigt deinen Coin-Kontostand.</td></tr>
+                                <tr><td class="command-icon">❓</td><td><code>!whatiskarma</code></td><td>Erklärt, was Karma ist.</td></tr>
+                                <tr><td class="command-icon">🎁</td><td><code>!openlootbox</code></td><td>Öffnet deine tägliche Lootbox.</td></tr>
+                                <tr><td class="command-icon">🎁</td><td><code>!giftcoins</code></td><td>Schenkt Coins an andere Zuschauer. Derzeit deaktiviert.</td></tr>
+                            </tbody>
+                        </table>
+                        <a class="wiki-link" href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Economy-Commands" target="_blank" rel="noopener noreferrer">Economy Wiki öffnen ↗</a>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>🧬 Trait Commands</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">🔍</td><td><code>!trait</code></td><td>Sucht Informationen zu einem Trait.</td></tr>
+                                <tr><td class="command-icon">➕</td><td><code>!addtrait</code></td><td>Fügt deinem Pawn einen Trait hinzu.</td></tr>
+                                <tr><td class="command-icon">➖</td><td><code>!removetrait</code></td><td>Entfernt einen Trait von deinem Pawn.</td></tr>
+                                <tr><td class="command-icon">🔄</td><td><code>!replacetrait</code></td><td>Ersetzt einen Trait durch einen anderen.</td></tr>
+                                <tr><td class="command-icon">🛠️</td><td><code>!settraits [trait1] [trait2] ...</code></td><td>Fügt mehrere Traits hinzu oder ersetzt sie gesammelt.</td></tr>
+                                <tr><td class="command-icon">📜</td><td><code>!traits</code></td><td>Listet alle kaufbaren Traits auf.</td></tr>
+                            </tbody>
+                        </table>
+                        <a class="wiki-link" href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Trait-Commands" target="_blank" rel="noopener noreferrer">Trait Wiki öffnen ↗</a>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>🛒 Purchase Commands</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">💲</td><td><code>!pricecheck</code></td><td>Zeigt den exakten Preis eines Items.</td></tr>
+                                <tr><td class="command-icon">🛍️</td><td><code>!buy</code></td><td>Kauft Items oder Pawns aus dem Store.</td></tr>
+                                <tr><td class="command-icon">👤</td><td><code>!pawn</code></td><td>Kauft einen Pawn und tritt der Kolonie bei.</td></tr>
+                                <tr><td class="command-icon">🧬</td><td><code>!races</code></td><td>Listet verfügbare Rassen auf, ab RICS 1.37.</td></tr>
+                                <tr><td class="command-icon">🧪</td><td><code>!xenotype &lt;race&gt;</code></td><td>Listet Xenotypes für eine Rasse auf, ab RICS 1.37.</td></tr>
+                                <tr><td class="command-icon">⚡</td><td><code>!use</code></td><td>Benutzt ein Item sofort.</td></tr>
+                                <tr><td class="command-icon">🛡️</td><td><code>!equip</code></td><td>Rüstet deinen Pawn direkt mit einem Item aus.</td></tr>
+                                <tr><td class="command-icon">👕</td><td><code>!wear</code></td><td>Zieht deinem Pawn Kleidung an.</td></tr>
+                                <tr><td class="command-icon">🎒</td><td><code>!backpack</code></td><td>Legt ein Item ins Inventar deines Pawns.</td></tr>
+                                <tr><td class="command-icon">🏥</td><td><code>!surgery</code></td><td>Kauft Implantate und reiht eine Operation ein.</td></tr>
+                            </tbody>
+                        </table>
+                        <a class="wiki-link" href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Purchase-Commands" target="_blank" rel="noopener noreferrer">Purchase Wiki öffnen ↗</a>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>🌪️ Event Commands</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">🎭</td><td><code>!event</code></td><td>Löst Spielereignisse aus.</td></tr>
+                                <tr><td class="command-icon">☀️</td><td><code>!weather</code></td><td>Ändert die Wetterbedingungen.</td></tr>
+                                <tr><td class="command-icon">🎖️</td><td><code>!militaryaid</code></td><td>Ruft militärische Verstärkung.</td></tr>
+                                <tr><td class="command-icon">⚔️</td><td><code>!raid</code></td><td>Ruft einen feindlichen Raid auf die Kolonie.</td></tr>
+                                <tr><td class="command-icon">📚</td><td><code>!raidinfo</code></td><td>Zeigt verfügbare Raid-Typen.</td></tr>
+                                <tr><td class="command-icon">🚀</td><td><code>!joinraid</code></td><td>Tritt einem aktiven Twitch-Raid bei, falls einer läuft.</td></tr>
+                            </tbody>
+                        </table>
+                        <a class="wiki-link" href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Event-Commands" target="_blank" rel="noopener noreferrer">Event Wiki öffnen ↗</a>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>ℹ️ Information Commands</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">📦</td><td><code>!purchaselist</code></td><td>Listet alle kaufbaren Items auf.</td></tr>
+                                <tr><td class="command-icon">🏴</td><td><code>!factions</code></td><td>Listet die Fraktionen im aktuellen Spiel auf.</td></tr>
+                                <tr><td class="command-icon">👥</td><td><code>!colonists</code></td><td>Listet die Kolonisten im aktuellen Spiel auf.</td></tr>
+                                <tr><td class="command-icon">📦</td><td><code>!storage</code></td><td>Sucht nach Dingen im Lager.</td></tr>
+                                <tr><td class="command-icon">🔬</td><td><code>!research</code></td><td>Zeigt Kolonie-Forschung oder den Status einer bestimmten Forschung.</td></tr>
+                                <tr><td class="command-icon">📖</td><td><code>!study</code></td><td>Listet Anomaly-Studien auf.</td></tr>
+                                <tr><td class="command-icon">ℹ️</td><td><code>!modinfo</code></td><td>Zeigt Mod-Version und GitHub-Adresse.</td></tr>
+                                <tr><td class="command-icon">⚙️</td><td><code>!modsettings</code></td><td>Zeigt verschiedene Mod-Einstellungen.</td></tr>
+                                <tr><td class="command-icon">💰</td><td><code>!wealth</code></td><td>Zeigt den Reichtum der Kolonie.</td></tr>
+                                <tr><td class="command-icon">⚙️</td><td><code>!karmasettings</code></td><td>Zeigt das aktuelle Karma-System und seine Raten.</td></tr>
+                                <tr><td class="command-icon">📖</td><td><code>!storyteller</code></td><td>Zeigt Storyteller und Schwierigkeitsgrad.</td></tr>
+                                <tr><td class="command-icon">❓</td><td><code>!help</code></td><td>Verlinkt diese Hilfeseite.</td></tr>
+                                <tr><td class="command-icon">📋</td><td><code>!commands</code></td><td>Listet alle verfügbaren Commands auf.</td></tr>
+                                <tr><td class="command-icon">🔎</td><td><code>!lookup</code></td><td>Sucht Store-Items, Events, Wetter oder Traits.</td></tr>
+                            </tbody>
+                        </table>
+                        <a class="wiki-link" href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Information-Commands" target="_blank" rel="noopener noreferrer">Information Wiki öffnen ↗</a>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>👥 Pawn Management</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">👤</td><td><code>!mypawn</code></td><td>Zeigt Informationen über deinen Pawn und seine Unterbefehle.</td></tr>
+                                <tr><td class="command-icon">🤖</td><td><code>!mypawn mechs</code></td><td>Listet deine Mechanoids als Mechanitor auf, Biotech.</td></tr>
+                                <tr><td class="command-icon">🧠</td><td><code>!mypawn psycasts</code></td><td>Zeigt Psycast-Informationen und VPE-Klassen.</td></tr>
+                                <tr><td class="command-icon">🧠</td><td><code>!mypawn psycast &lt;class&gt;</code></td><td>Zeigt Informationen zu einer Psycast-Klasse.</td></tr>
+                                <tr><td class="command-icon">🚪</td><td><code>!leave</code></td><td>Gibt deinen zugewiesenen Pawn frei.</td></tr>
+                                <tr><td class="command-icon">💖</td><td><code>!revivepawn</code></td><td>Belebt einen ausgewählten Pawn, alle oder Zuschauer-Pawns wieder.</td></tr>
+                                <tr><td class="command-icon">🩹</td><td><code>!healpawn</code></td><td>Heilt Verletzungen eines Pawns.</td></tr>
+                                <tr><td class="command-icon">🎨</td><td><code>!dye</code></td><td>Färbt deine Kleidung.</td></tr>
+                                <tr><td class="command-icon">🎨</td><td><code>!setfavoritecolor</code></td><td>Setzt die Lieblingsfarbe deines Pawns.</td></tr>
+                                <tr><td class="command-icon">❤️</td><td><code>!passion</code></td><td>Setzt Coins für eine Chance ein, eine Leidenschaft zu erhöhen.</td></tr>
+                                <tr><td class="command-icon">🎲</td><td><code>!shufflechildhood</code></td><td>Ersetzt zufällig die Childhood-Backstory deines Pawns gegen Coins.</td></tr>
+                                <tr><td class="command-icon">🎲</td><td><code>!shuffleadulthood</code></td><td>Ersetzt zufällig die Adulthood-Backstory deines Pawns gegen Coins.</td></tr>
+                            </tbody>
+                        </table>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>📊 Queue Commands</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">➕</td><td><code>!joinqueue</code></td><td>Tritt der Pawn-Warteschlange bei.</td></tr>
+                                <tr><td class="command-icon">🚫</td><td><code>!leavequeue</code></td><td>Verlässt die Pawn-Warteschlange.</td></tr>
+                                <tr><td class="command-icon">📊</td><td><code>!queuestatus</code></td><td>Zeigt deine Position in der Warteschlange.</td></tr>
+                                <tr><td class="command-icon">✅</td><td><code>!acceptpawn</code></td><td>Akzeptiert ein Pawn-Angebot.</td></tr>
+                            </tbody>
+                        </table>
+                        <a class="wiki-link" href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Queue-Commands" target="_blank" rel="noopener noreferrer">Queue Wiki öffnen ↗</a>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>💬 Social Commands</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">💬</td><td><code>!chitchat</code></td><td>Locker plaudern. Kosten: 10 Coins.</td></tr>
+                                <tr><td class="command-icon">🗣️</td><td><code>!deeptalk</code></td><td>Tiefgründige Unterhaltung. Kosten: 15 Coins.</td></tr>
+                                <tr><td class="command-icon">😠</td><td><code>!insult</code></td><td>Beleidigt andere Kolonisten. Kosten: 5 Coins, benötigt 5 Karma.</td></tr>
+                                <tr><td class="command-icon">😘</td><td><code>!flirt</code></td><td>Romantische Interaktion. Kosten: 20 Coins.</td></tr>
+                                <tr><td class="command-icon">🤗</td><td><code>!reassure</code></td><td>Tröstet Kolonisten. Ideology-DLC nötig, Kosten: 12 Coins.</td></tr>
+                                <tr><td class="command-icon">🐾</td><td><code>!nuzzle</code></td><td>Zärtliche Interaktion. Kosten: 8 Coins.</td></tr>
+                                <tr><td class="command-icon">🐶</td><td><code>!animalchat</code></td><td>Mit Tieren reden. Kosten: 10 Coins.</td></tr>
+                                <tr><td class="command-icon">💒</td><td><code>!marry</code></td><td>Heiratsantrag. Kosten: 50 Coins, benötigt 10 Karma.</td></tr>
+                                <tr><td class="command-icon">🤝</td><td><code>!buildrapport</code></td><td>Beziehungen aufbauen. Kosten: 25 Coins.</td></tr>
+                                <tr><td class="command-icon">✝️</td><td><code>!convert</code></td><td>Ideology-Konvertierung. Ideology-DLC nötig, Kosten: 30 Coins, benötigt 15 Karma.</td></tr>
+                            </tbody>
+                        </table>
+                        <a class="wiki-link" href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Social-Commands" target="_blank" rel="noopener noreferrer">Social Wiki öffnen ↗</a>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>🎮 General Pawn Controls</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">📍</td><td><code>!zone</code></td><td>Zeigt und ändert Pawn-Zonen.</td></tr>
+                                <tr><td class="command-icon">✋</td><td><code>!pickup</code></td><td>Interagiert mit Items: aufnehmen, benutzen, ausrüsten, tragen und ablegen.</td></tr>
+                                <tr><td class="command-icon">🔨</td><td><code>!work</code></td><td>Zwingt deinen Pawn zu einer bestimmten Arbeit.</td></tr>
+                                <tr><td class="command-icon">🪖</td><td><code>!draft</code></td><td>Rekrutiert oder entlässt deinen Pawn.</td></tr>
+                                <tr><td class="command-icon">📌</td><td><code>!position</code></td><td>Speichert Positionen für den Move-Befehl.</td></tr>
+                                <tr><td class="command-icon">🚶</td><td><code>!move</code></td><td>Bewegt deinen Pawn.</td></tr>
+                                <tr><td class="command-icon">⚙️</td><td><code>!gizmo</code></td><td>Aktiviert bestimmte Pawn-Fähigkeiten oder Ausrüstung, z. B. Firefoam-Poppacks.</td></tr>
+                                <tr><td class="command-icon">💊</td><td><code>!medpolicy</code></td><td>Ändert die Medizin-Zuweisung deines Pawns.</td></tr>
+                                <tr><td class="command-icon">😡</td><td><code>!hostility</code></td><td>Ändert die Reaktion auf Feinde: fliehen, angreifen oder ignorieren.</td></tr>
+                                <tr><td class="command-icon">⚔️</td><td><code>!attack</code></td><td>Wählt einen Pawn zum Angreifen aus.</td></tr>
+                            </tbody>
+                        </table>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>🎨 Pawn Customization</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">🙂</td><td><code>!sethead</code></td><td>Ändert den Kopf.</td></tr>
+                                <tr><td class="command-icon">🧍</td><td><code>!setbody</code></td><td>Ändert den Körper.</td></tr>
+                                <tr><td class="command-icon">💇</td><td><code>!sethair</code></td><td>Ändert die Haare.</td></tr>
+                                <tr><td class="command-icon">🧔</td><td><code>!setbeard</code></td><td>Ändert den Bart.</td></tr>
+                                <tr><td class="command-icon">🌈</td><td><code>!dyehair</code></td><td>Färbt die Haare.</td></tr>
+                                <tr><td class="command-icon">🖊️</td><td><code>!settattoo</code></td><td>Ändert Tattoos.</td></tr>
+                                <tr><td class="command-icon">🎨</td><td><code>!setskin</code></td><td>Wählt eine Hautfarbe.</td></tr>
+                                <tr><td class="command-icon">👔</td><td><code>!setstyle</code></td><td>Wählt den Ideology-Stil für deine Ausrüstung.</td></tr>
+                                <tr><td class="command-icon">👹</td><td><code>!harcosmetic</code></td><td>Passt HAR-Pawn-Kosmetik an, zum Beispiel Hörner.</td></tr>
+                                <tr><td class="command-icon">🧬</td><td><code>!geneedit</code></td><td>Fügt Gene hinzu oder ändert den Xenotype.</td></tr>
+                            </tbody>
+                        </table>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>🧩 Mod Commands</summary>
+                        <table class="command-table">
+                            <thead>
+                                <tr><th>Icon</th><th>Befehl</th><th>Beschreibung</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="command-icon">🔫</td><td><code>!sidearms</code></td><td>Zeigt, rüstet aus und legt Simple Sidearms ab.</td></tr>
+                                <tr><td class="command-icon">✨</td><td><code>!isekai</code></td><td>Zeigt und levelt Werte; außerdem kannst du eine Aura wählen.</td></tr>
+                                <tr><td class="command-icon">🌌</td><td><code>!constellation</code></td><td>Wählt und levelt eine Isekai-Klasse, einen Keystone und die Nodes dazwischen.</td></tr>
+                            </tbody>
+                        </table>
+                    </details>
+
+                    <details class="command-section">
+                        <summary>🧪 Test Commands</summary>
+                        <p style="padding: 0 14px 14px; margin: 14px 0 0;">
+                            Für Testbefehle bitte in die
+                            <a href="https://github.com/ekudram/-cap-RimworldInteractiveChatServices/wiki/Test-Commands"
+                               target="_blank"
+                               rel="noopener noreferrer">RICS Test Commands Wiki</a>
+                            schauen, da diese je nach Mod-Version anders sein können.
+                        </p>
+                    </details>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- Deine bereits vorhandene JavaScript-Datei -->
     <script src="assets/js/rics-store.js"></script>
 </body>
-
 </html>
