@@ -1646,7 +1646,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 24,
-      "Category": "Furniture",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -1661,7 +1661,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 18,
-      "Category": "Furniture",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2306,7 +2306,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 2,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2321,7 +2321,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 5,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2336,7 +2336,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 19,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2351,7 +2351,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 61,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2366,7 +2366,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 265,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2381,7 +2381,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 295,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2396,7 +2396,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 265,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2426,7 +2426,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 295,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2441,7 +2441,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 945,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2456,7 +2456,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 600,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2666,7 +2666,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 390,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2681,7 +2681,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 1180,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2711,7 +2711,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 830,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2726,7 +2726,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 420,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2741,7 +2741,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 230,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2786,7 +2786,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 340,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2801,7 +2801,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 30,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2816,7 +2816,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 11,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2831,7 +2831,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 11,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2966,7 +2966,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 1270,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -2981,7 +2981,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 1445,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -3026,7 +3026,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 1075,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -3296,7 +3296,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 25,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -3311,7 +3311,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 61,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -3341,7 +3341,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 275,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -3356,7 +3356,7 @@
       "IsWearable": false,
       "Mod": "Core",
       "BasePrice": 58,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -4219,7 +4219,7 @@
       "DefName": "Hay",
       "CustomName": "Hay",
       "HasQuantityLimit": true,
-      "QuantityLimit": 200,
+      "QuantityLimit": 2000,
       "LimitMode": "OneStack",
       "IsUsable": true,
       "IsEquippable": false,
@@ -5404,7 +5404,7 @@
       "DefName": "BlocksSandstone",
       "CustomName": "Sandstone blocks",
       "HasQuantityLimit": true,
-      "QuantityLimit": 75,
+      "QuantityLimit": 1000,
       "LimitMode": "OneStack",
       "IsUsable": false,
       "IsEquippable": false,
@@ -5419,7 +5419,7 @@
       "DefName": "BlocksGranite",
       "CustomName": "Granite blocks",
       "HasQuantityLimit": true,
-      "QuantityLimit": 75,
+      "QuantityLimit": 1000,
       "LimitMode": "OneStack",
       "IsUsable": false,
       "IsEquippable": false,
@@ -5434,7 +5434,7 @@
       "DefName": "BlocksLimestone",
       "CustomName": "Limestone blocks",
       "HasQuantityLimit": true,
-      "QuantityLimit": 75,
+      "QuantityLimit": 1000,
       "LimitMode": "OneStack",
       "IsUsable": false,
       "IsEquippable": false,
@@ -5449,7 +5449,7 @@
       "DefName": "BlocksSlate",
       "CustomName": "Slate blocks",
       "HasQuantityLimit": true,
-      "QuantityLimit": 75,
+      "QuantityLimit": 1000,
       "LimitMode": "OneStack",
       "IsUsable": false,
       "IsEquippable": false,
@@ -5464,7 +5464,7 @@
       "DefName": "BlocksMarble",
       "CustomName": "Marble blocks",
       "HasQuantityLimit": true,
-      "QuantityLimit": 75,
+      "QuantityLimit": 1000,
       "LimitMode": "OneStack",
       "IsUsable": false,
       "IsEquippable": false,
@@ -8936,7 +8936,7 @@
       "IsWearable": false,
       "Mod": "Ideology",
       "BasePrice": 24,
-      "Category": "Furniture",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -8951,7 +8951,7 @@
       "IsWearable": false,
       "Mod": "Ideology",
       "BasePrice": 22,
-      "Category": "Furniture",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -10211,7 +10211,7 @@
       "IsWearable": false,
       "Mod": "Biotech",
       "BasePrice": 360,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -10792,7 +10792,7 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": true,
       "Mod": "Biotech",
       "BasePrice": 67,
@@ -10807,7 +10807,7 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": true,
       "Mod": "Biotech",
       "BasePrice": 45,
@@ -10822,7 +10822,7 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": true,
       "Mod": "Biotech",
       "BasePrice": 45,
@@ -10837,7 +10837,7 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": true,
       "Mod": "Biotech",
       "BasePrice": 103,
@@ -10852,7 +10852,7 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": true,
       "Mod": "Biotech",
       "BasePrice": 65,
@@ -10867,7 +10867,7 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": true,
       "Mod": "Biotech",
       "BasePrice": 47,
@@ -11816,7 +11816,7 @@
       "IsWearable": false,
       "Mod": "Anomaly",
       "BasePrice": 740,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -14857,7 +14857,7 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": true,
       "Mod": "Odyssey",
       "BasePrice": 345,
@@ -14869,7 +14869,7 @@
       "DefName": "BlocksVacstone",
       "CustomName": "Vacstone blocks",
       "HasQuantityLimit": true,
-      "QuantityLimit": 75,
+      "QuantityLimit": 1000,
       "LimitMode": "OneStack",
       "IsUsable": false,
       "IsEquippable": false,
@@ -16181,7 +16181,7 @@
       "IsWearable": false,
       "Mod": "Alpha Memes",
       "BasePrice": 7,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -16196,7 +16196,7 @@
       "IsWearable": false,
       "Mod": "Alpha Memes",
       "BasePrice": 4,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -16376,7 +16376,7 @@
       "IsWearable": false,
       "Mod": "Alpha Memes",
       "BasePrice": 310,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -16759,7 +16759,7 @@
       "DefName": "AM_BlocksPristineLimestone",
       "CustomName": "Pristine limestone blocks",
       "HasQuantityLimit": true,
-      "QuantityLimit": 75,
+      "QuantityLimit": 1000,
       "LimitMode": "OneStack",
       "IsUsable": false,
       "IsEquippable": false,
@@ -19481,7 +19481,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Classical",
       "BasePrice": 141,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -19511,7 +19511,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Classical",
       "BasePrice": 315,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -19526,7 +19526,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Classical",
       "BasePrice": 345,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -19541,7 +19541,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Classical",
       "BasePrice": 210,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -19571,7 +19571,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Classical",
       "BasePrice": 183,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -19586,7 +19586,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Classical",
       "BasePrice": 61,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -19624,7 +19624,7 @@
       "DefName": "VFEC_BlocksConcrete",
       "CustomName": "Concrete blocks",
       "HasQuantityLimit": true,
-      "QuantityLimit": 75,
+      "QuantityLimit": 1000,
       "LimitMode": "OneStack",
       "IsUsable": false,
       "IsEquippable": false,
@@ -20261,7 +20261,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Pirates",
       "BasePrice": 625,
-      "Category": "Production",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -21086,7 +21086,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Settlers",
       "BasePrice": 194,
-      "Category": "Power",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -21281,7 +21281,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Tribals",
       "BasePrice": 194,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25106,7 +25106,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 2,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25121,7 +25121,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 52,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25136,7 +25136,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 2,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25166,7 +25166,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 330,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25181,7 +25181,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 255,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25196,7 +25196,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 150,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25211,7 +25211,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 275,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25226,7 +25226,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 245,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25241,7 +25241,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 480,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25256,7 +25256,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 150,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25271,7 +25271,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 111,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25286,7 +25286,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 235,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25301,7 +25301,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 38,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25331,7 +25331,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 96,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -25346,7 +25346,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Temperature Expanded",
       "BasePrice": 192,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -26996,7 +26996,7 @@
       "IsWearable": false,
       "Mod": "Replace Stuff - Continued",
       "BasePrice": 275,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -27011,7 +27011,7 @@
       "IsWearable": false,
       "Mod": "Replace Stuff - Continued",
       "BasePrice": 275,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -27026,7 +27026,7 @@
       "IsWearable": false,
       "Mod": "Replace Stuff - Continued",
       "BasePrice": 58,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -27041,7 +27041,7 @@
       "IsWearable": false,
       "Mod": "Replace Stuff - Continued",
       "BasePrice": 58,
-      "Category": "Temperature",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -27296,7 +27296,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Deserters",
       "BasePrice": 2865,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -27311,7 +27311,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Deserters",
       "BasePrice": 2740,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -27326,7 +27326,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Deserters",
       "BasePrice": 2740,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -27356,7 +27356,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Deserters",
       "BasePrice": 365,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -27371,7 +27371,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Deserters",
       "BasePrice": 345,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -27386,7 +27386,7 @@
       "IsWearable": false,
       "Mod": "Vanilla Factions Expanded - Deserters",
       "BasePrice": 420,
-      "Category": "Security",
+      "Category": "Misc",
       "Enabled": false,
       "modactive": true
     },
@@ -33640,7 +33640,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33655,7 +33655,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33670,7 +33670,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33685,7 +33685,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33700,7 +33700,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33715,7 +33715,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33730,7 +33730,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33745,7 +33745,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33760,7 +33760,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33775,7 +33775,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33790,7 +33790,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
@@ -33805,7 +33805,7 @@
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Core",
-      "BasePrice": 1250,
+      "BasePrice": 3000,
       "Category": "Skilltrainers",
       "Enabled": false,
       "modactive": true
