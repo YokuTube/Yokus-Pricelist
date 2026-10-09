@@ -102,14 +102,14 @@
       "cmd": "lookup", "group": "info", "src": "rics",
       "summary": "Sucht Items, Events, Wetter, Eigenschaften, Rassen und Xenotypen.",
       "usage": [ { "syntax": "!lookup [item|event|weather|trait|race|xenotype] [Name]", "note": "Ohne Namen zeigt der Befehl, wonach du suchen kannst. Teile von Namen reichen." } ],
-      "examples": ["!lookup item rifle", "!lookup event raid", "!lookup race"],
+      "examples": ["!lookup item steel", "!lookup event raid", "!lookup race"],
       "effect": "Zeigt passende Treffer mit Preisen. Praktisch, wenn du den genauen Namen nicht kennst."
     },
     {
       "cmd": "pricecheck", "group": "info", "src": "rics",
       "summary": "Zeigt den genauen Preis eines Items.",
       "usage": [ { "syntax": "!pricecheck [Item] [Qualität] [Material] [Menge]", "note": "Ohne Item bekommst du einen Hinweis mit Beispiel." } ],
-      "examples": ["!pricecheck steel", "!pricecheck assault_rifle excellent"],
+      "examples": ["!pricecheck steel", "!pricecheck medicine 5"],
       "effect": "Zeigt den Preis für genau diese Kombination. Bei Waffen siehst du zusätzlich Schaden und Nahkampf-DPS.",
       "notes": ["Qualität kostet extra: awful, poor, normal, good, excellent, masterwork, legendary."]
     },
@@ -183,7 +183,7 @@
       "cmd": "storage", "group": "info", "src": "rics",
       "summary": "Sucht nach Dingen im Lager der Kolonie.",
       "usage": [ { "syntax": "!storage [Item]" } ],
-      "examples": ["!storage steel", "!storage plasteel longsword"],
+      "examples": ["!storage steel", "!storage medicine"],
       "effect": "Zeigt, wie viel davon in den Lagern liegt."
     },
 
@@ -191,10 +191,10 @@
       "cmd": "buy", "group": "shop", "src": "rics",
       "summary": "Kauft Items. Sie kommen per Landekapsel in die Kolonie.",
       "usage": [
-        { "syntax": "!buy <Item> [Qualität] [Material] [Menge]", "note": "Alles in eckigen Klammern ist optional. Namen schreibst du in einem Wort; Leerzeichen werden zu Unterstrichen (assault_rifle). Den Namen siehst du im Tab „Items“." },
+        { "syntax": "!buy <Item> [Qualität] [Material] [Menge]", "note": "Alles in eckigen Klammern ist optional. Namen schreibst du in einem Wort; Leerzeichen werden zu Unterstrichen (herbal_medicine). Den Namen siehst du im Tab „Items“." },
         { "syntax": "!buy wager <Item> <Einsatz>", "note": "Falls vom Streamer erlaubt: Du setzt Coins ein und Qualität/Material werden ausgewürfelt." }
       ],
-      "examples": ["!buy medicine 5", "!buy knife steel", "!buy assault_rifle excellent 1"],
+      "examples": ["!buy medicine 5", "!buy steel 100", "!buy herbal_medicine 10"],
       "effect": "Coins werden abgezogen, die Ware fällt in der Kolonie ab. Der Preis ist Grundpreis × Qualität × Material × Menge.",
       "notes": ["Qualitäten: awful, poor, normal, good, excellent, masterwork, legendary. Ohne Material (oder mit random) wird eins ausgewürfelt.", "Pro Kauf gibt es eine Mengengrenze (steht im Tab „Items“).", "Manches braucht eine bestimmte Forschung."]
     },
@@ -202,14 +202,13 @@
       "cmd": "use", "group": "shop", "src": "rics",
       "summary": "Kauft ein Item und benutzt es sofort an deinem Pawn.",
       "usage": [ { "syntax": "!use <Item> [Menge]", "note": "Qualität und Material gibt es hier nicht." } ],
-      "examples": ["!use medicine", "!use beer 2"],
+      "examples": ["!use medicine", "!use herbal_medicine 2"],
       "effect": "Medizin wird angewendet, Essen und Trinken wird verzehrt. Ein Resurrector-Serum kann einen toten Pawn wiederbeleben."
     },
     {
       "cmd": "equip", "group": "shop", "src": "rics",
       "summary": "Kauft eine Waffe und gibt sie deinem Pawn direkt in die Hand.",
       "usage": [ { "syntax": "!equip <Waffe> [Qualität] [Material]" } ],
-      "examples": ["!equip pistol", "!equip longsword plasteel good"],
       "effect": "Die Waffe wird direkt ausgerüstet, ohne Landekapsel.",
       "notes": ["Dein Pawn muss leben und die Waffe tragen können."]
     },
@@ -217,7 +216,6 @@
       "cmd": "wear", "group": "shop", "src": "rics",
       "summary": "Kauft Kleidung oder Rüstung und zieht sie deinem Pawn direkt an.",
       "usage": [ { "syntax": "!wear <Kleidung> [Qualität] [Material]" } ],
-      "examples": ["!wear flak_vest", "!wear tribalwear cloth"],
       "effect": "Das Teil wird direkt angezogen, ohne Landekapsel."
     },
     {

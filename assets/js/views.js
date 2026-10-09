@@ -127,7 +127,7 @@ export function startView(data) {
 
     <h2 style="margin:22px 0 10px;font-size:1.15rem">Die wichtigsten Befehle</h2>
     <div class="cmd-row">
-      ${['!join', '!bal', '!mypawn', '!mypawn needs', '!lookup item rifle', '!event list', '!commands'].map((c) => cmdBtn(c)).join('')}
+      ${['!join', '!bal', '!mypawn', '!mypawn needs', '!lookup item steel', '!event list', '!commands'].map((c) => cmdBtn(c)).join('')}
     </div>
 
     <h2 class="section-title">Das ist möglich</h2>
@@ -367,8 +367,8 @@ export function itemsView(data) {
     <details class="help-box">
       <summary>So kaufst du ein Item</summary>
       <ul>
-        <li>Wähle die <strong>Menge</strong>, tippe auf den Befehl-Knopf (z. B. <code>!buy steel 100</code>) und füge ihn im Chat ein. Du kannst auch einfach selbst tippen: <code>!buy beer 5</code>.</li>
-        <li>Qualität und Material sind optional: <code>!buy assault_rifle excellent</code>. Qualitäten: awful, poor, normal, good, excellent, masterwork, legendary. Namen mit mehreren Wörtern schreibst du mit Unterstrich.</li>
+        <li>Wähle die <strong>Menge</strong>, tippe auf den Befehl-Knopf (z. B. <code>!buy steel 100</code>) und füge ihn im Chat ein. Du kannst auch einfach selbst tippen: <code>!buy medicine 5</code>.</li>
+        <li>Bei Waffen und Kleidung sind Qualität und Material optional, z. B. <code>!buy &lt;Item&gt; excellent</code>. Qualitäten: awful, poor, normal, good, excellent, masterwork, legendary. Namen mit mehreren Wörtern schreibst du mit Unterstrich.</li>
         <li><code>!use</code> benutzt es sofort, <code>!equip</code> rüstet es aus, <code>!wear</code> zieht es an. Das geht nur bei Items mit der passenden Markierung.</li>
         <li>Den genauen Preis für deine Wunschkombination zeigt <code>!pricecheck Steel</code>.</li>
       </ul>
