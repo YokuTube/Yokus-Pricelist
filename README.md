@@ -4,19 +4,19 @@ Eine Seite für GitHub Pages, die zeigt, was der Chat im Stream kaufen, auslöse
 
 Aufgebaut aus der Vorlage von [ekudram/RICS-Pricelist](https://github.com/ekudram/RICS-Pricelist), inzwischen aber komplett neu geschrieben (kein Build-Schritt, reines HTML/CSS/JS).
 
-## Daten aktualisieren (automatisch)
+## Daten aktualisieren (ein Klick)
 
-Die Seite liest die JSON-Dateien aus `data/`. Die kommen aus dem Spiel (`%AppData%\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\CAP_ChatInteractive`). Du musst sie nicht mehr selbst hochladen:
+Die Seite liest die JSON-Dateien aus `data/`. Die kommen aus dem Spiel (`%AppData%\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\CAP_ChatInteractive`). Hochladen musst du sie nicht selbst – es genügt ein Klick, wenn du etwas geändert hast (z. B. alle paar Wochen):
 
-| Was | Wie |
+| Wo | Wie |
 |---|---|
-| **Einmal sofort** | Doppelklick auf `tools\sync-pricelist.bat` |
-| **Automatisch, nur beim Spielen** | `powershell -ExecutionPolicy Bypass -File tools\install-autosync.ps1` – ein unsichtbarer Wächter startet beim Anmelden, **schläft aber, solange RimWorld nicht läuft**. Läuft das Spiel und RICS ändert die Dateien (z. B. du speicherst Store-Einstellungen), wird abgeglichen (höchstens einmal pro Minute), und einmal beim Beenden des Spiels. Es gibt keinen Zeitplan. |
-| **Wieder ausschalten** | `powershell -ExecutionPolicy Bypass -File tools\install-autosync.ps1 -Remove` |
+| **Im Spiel (empfohlen)** | In der RICS-Leiste auf **„Preisliste hochladen“** (Mod „RICS Extras“) klicken, dann **„Jetzt hochladen“**. Das Fenster meldet, ob es geklappt hat. |
+| **Ohne Spiel** | Doppelklick auf `tools\sync-pricelist.bat` |
 | **Nur testen** | `powershell -ExecutionPolicy Bypass -File tools\sync-data.ps1 -DryRun` |
 
-Das Skript kopiert **nur** diese sieben Dateien: `StoreItems`, `Incidents`, `Traits`, `RaceSettings`, `Weather`, `ActiveMods`, `CommandSettings`. Zuschauerdaten (`viewers.json`) und Einstellungen mit Zugangsdaten werden nie angefasst. Ungültige oder gerade geschriebene Dateien werden übersprungen. Danach committet und pusht es mit deinem angemeldeten GitHub-Konto (`gh auth login`). GitHub Pages braucht 1–2 Minuten, bis es sichtbar ist; die Seite zeigt unten rechts „Stand“.
+Es läuft nichts im Hintergrund und nichts nach Zeitplan. Hat sich seit dem letzten Mal nichts geändert, sagt der Knopf „Alles schon aktuell“.
 
+Das Skript kopiert **nur** diese sieben Dateien: `StoreItems`, `Incidents`, `Traits`, `RaceSettings`, `Weather`, `ActiveMods`, `CommandSettings`. Zuschauerdaten (`viewers.json`) und Einstellungen mit Zugangsdaten werden nie angefasst. Ungültige oder gerade geschriebene Dateien werden übersprungen. Danach committet und pusht es mit deinem angemeldeten GitHub-Konto (`gh auth login`). GitHub Pages braucht 1–2 Minuten, bis es sichtbar ist; die Seite zeigt unten rechts „Stand“. Liegt der Projektordner woanders, stellst du den Pfad zum Skript in den Mod-Einstellungen von „RICS Extras“ ein.
 ## Befehlstexte pflegen
 
 - `data/commands.json` – die von Hand geschriebenen Erklärungen pro Befehl (Eingabe, Beispiele, Wirkung, Hinweise). Neue Befehle dort eintragen.
@@ -49,7 +49,7 @@ assets/js/views.js         alle Ansichten (Start, Befehle, Items, Events, …)
 assets/js/chat.js          optionales Senden über Twitch
 assets/js/util.js          Hilfsfunktionen
 data/                      JSON-Daten (siehe oben)
-tools/                     Aktualisierung (sync-data.ps1 = Abgleich, watch-sync.ps1 = Wächter, install-autosync.ps1 = einrichten), Vorschau (preview.bat)
+tools/                     sync-data.ps1 (Abgleich + Upload, vom Knopf im Spiel aufgerufen), sync-pricelist.bat, Vorschau (preview.bat, dev-server.py)
 ```
 
 Lokal ansehen: Doppelklick auf `tools\preview.bat` (startet einen kleinen Server ohne Zwischenspeicher und öffnet <http://localhost:8765>). Die Seite lässt sich nicht per Doppelklick auf `index.html` öffnen.
