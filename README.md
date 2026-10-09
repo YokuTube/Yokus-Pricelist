@@ -11,7 +11,7 @@ Die Seite liest die JSON-Dateien aus `data/`. Die kommen aus dem Spiel (`%AppDat
 | Was | Wie |
 |---|---|
 | **Einmal sofort** | Doppelklick auf `tools\sync-pricelist.bat` |
-| **Dauerhaft automatisch** | `powershell -ExecutionPolicy Bypass -File tools\install-autosync.ps1` – prüft beim Anmelden und alle 15 Minuten, lädt nur bei Änderungen hoch |
+| **Automatisch, nur beim Spielen** | `powershell -ExecutionPolicy Bypass -File tools\install-autosync.ps1` – ein unsichtbarer Wächter startet beim Anmelden, **schläft aber, solange RimWorld nicht läuft**. Läuft das Spiel und RICS ändert die Dateien (z. B. du speicherst Store-Einstellungen), wird abgeglichen (höchstens einmal pro Minute), und einmal beim Beenden des Spiels. Es gibt keinen Zeitplan. |
 | **Wieder ausschalten** | `powershell -ExecutionPolicy Bypass -File tools\install-autosync.ps1 -Remove` |
 | **Nur testen** | `powershell -ExecutionPolicy Bypass -File tools\sync-data.ps1 -DryRun` |
 
@@ -49,7 +49,7 @@ assets/js/views.js         alle Ansichten (Start, Befehle, Items, Events, …)
 assets/js/chat.js          optionales Senden über Twitch
 assets/js/util.js          Hilfsfunktionen
 data/                      JSON-Daten (siehe oben)
-tools/                     Aktualisierungs-Skripte
+tools/                     Aktualisierung (sync-data.ps1 = Abgleich, watch-sync.ps1 = Wächter, install-autosync.ps1 = einrichten), Vorschau (preview.bat)
 ```
 
 Lokal ansehen: Doppelklick auf `tools\preview.bat` (startet einen kleinen Server ohne Zwischenspeicher und öffnet <http://localhost:8765>). Die Seite lässt sich nicht per Doppelklick auf `index.html` öffnen.

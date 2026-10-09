@@ -239,7 +239,7 @@
     "Degree": 0,
     "Description": "{PAWN_nameDef} verzichtet auf körperliche Annehmlichkeiten und Vergnügen zugunsten eines einfachen, reinen Lebensstils. {PAWN_pronoun} bekommt schlechte Laune, wenn {PAWN_possessive} Schlafraum zu imposant ist. Außerdem verabscheut {PAWN_pronoun} ausgefallenes Essen und isst am liebsten roh. {PAWN_pronoun} beurteilt andere nie nach ihrem Aussehen.",
     "Stats": [
-      "-0.5 Intimacy need multiplier"
+      "-0.5 Multiplikator des Intimitätsbedürfnisses"
     ],
     "Conflicts": [],
     "CanAdd": true,
@@ -2565,9 +2565,9 @@
   },
   "SEX_Solitary_0": {
     "DefName": "SEX_Solitary",
-    "Name": "Solitary",
+    "Name": "Einzelgängerisch",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} is comfortable with isolation. {PAWN_pronoun} does not have a need for intimacy.",
+    "Description": "{PAWN_nameDef} ist mit Isolation zufrieden. {PAWN_pronoun} hat kein Bedürfnis nach Intimität.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,
@@ -2584,9 +2584,9 @@
   },
   "SEX_Affectionate_0": {
     "DefName": "SEX_Affectionate",
-    "Name": "Affectionate",
+    "Name": "Zärtlich",
     "Degree": 0,
-    "Description": "{PAWN_nameDef} is quite the social butterfly. {PAWN_pronoun} has an increased need for intimacy.",
+    "Description": "{PAWN_nameDef} ist ein richtiger Sozialschmetterling. {PAWN_pronoun} hat ein erhöhtes Bedürfnis nach Intimität.",
     "Stats": [],
     "Conflicts": [],
     "CanAdd": true,

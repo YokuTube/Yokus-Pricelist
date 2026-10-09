@@ -4,7 +4,7 @@ Antworte auf Deutsch. Öffentliche Preislisten-/Befehlsseite für Andreas' RICS-
 
 ## Stand
 - **Live** unter https://yokutube.github.io/Yokus-Pricelist/ (GitHub Pages, Branch `main`), seit 9.10.2026 (Neuaufbau).
-- **Automatik eingerichtet** (vom Nutzer gewünscht): Windows-Aufgabe `YokusStoreSync` (als normaler Benutzer, beim Anmelden + alle 15 Min) startet `tools/sync-data.ps1`; sie lädt nur bei Änderungen der RICS-JSON-Dateien hoch. Entfernen: `tools/install-autosync.ps1 -Remove`.
+- **Automatik eingerichtet** (vom Nutzer gewünscht, **nur während RimWorld läuft**): Windows-Aufgabe `YokusStoreSync` (normaler Benutzer, nur beim Anmelden) startet unsichtbar (`tools/run-hidden.vbs`) den Wächter `tools/watch-sync.ps1`. Der schläft, solange `RimWorldWin64` nicht läuft; bei laufendem Spiel prüft er alle 30 s die Zeitstempel der 7 Dateien und ruft bei Änderung `tools/sync-data.ps1` auf (max. 1×/Min), plus einmal nach Spielende. **Kein Zeitplan** – der Nutzer wollte ausdrücklich keine ständigen Läufe. Entfernen: `tools/install-autosync.ps1 -Remove`. Log der letzten Abgleichs: `tools/sync.log` (nicht im Repo).
 - Twitch-Senden ist **bewusst aus** (`data/site-config.json` leer; Nutzer will keine Twitch-App registrieren) – nicht wieder einschalten ohne Rückfrage.
 - Die RICS-Item-Einstellungen wurden am 9.10.2026 auf den alten Stand (ca. 70 Items) zurückgesetzt; Sicherung unter `...\Config\CAP_ChatInteractive\Backups\StoreItems_vor_Rueckstellung_*.json`.
 

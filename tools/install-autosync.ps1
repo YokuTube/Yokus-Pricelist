@@ -1,30 +1,40 @@
 <#
-  Richtet ein, dass die Preisliste sich automatisch aktualisiert (Windows-Aufgabenplanung).
+  Richtet ein, dass die Preisliste sich automatisch aktualisiert - aber NUR, wenn RimWorld laeuft und sich RICS-Dateien aendern
+  (sowie einmal, wenn du RimWorld beendest). Sonst laeuft nichts.
   (Datei bewusst ohne Umlaute: Windows PowerShell 5.1 liest sonst falsch.)
-  Laeuft unsichtbar als dein normaler Benutzer (kein Admin noetig): beim Anmelden und danach alle 15 Minuten.
-  Nur wenn sich Daten aendern, wird etwas hochgeladen.
+
+  Technik: Beim Anmelden startet unsichtbar ein winziger Waechter (tools\watch-sync.ps1). Er schlaeft, solange RimWorld
+  nicht laeuft. Kein Admin noetig.
 
   Einrichten:  powershell -ExecutionPolicy Bypass -File tools\install-autosync.ps1
   Entfernen:   powershell -ExecutionPolicy Bypass -File tools\install-autosync.ps1 -Remove
 #>
-param([switch]$Remove, [int]$EveryMinutes = 15)
+param([switch]$Remove)
 
 $ErrorActionPreference = 'Stop'
 $taskName = 'YokusStoreSync'
 $me = "$env:USERDOMAIN\$env:USERNAME"
 
+function StopWatcher {
+  Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe'" -ErrorAction SilentlyContinue |
+    Where-Object { $_.CommandLine -like '*watch-sync.ps1*' } |
+    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+}
+
 if ($Remove) {
   Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+  StopWatcher
   Write-Host "Automatische Aktualisierung entfernt."
   return
 }
 
-$script = Join-Path $PSScriptRoot 'sync-data.ps1'
-$arg = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$script`""
-$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $arg
+$watch = Join-Path $PSScriptRoot 'watch-sync.ps1'
+$vbs = Join-Path $PSScriptRoot 'run-hidden.vbs'
+$action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument "//B //Nologo `"$vbs`" `"$watch`""
 $logon = New-ScheduledTaskTrigger -AtLogOn -User $me
-$repeat = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes $EveryMinutes) -RepetitionDuration (New-TimeSpan -Days 3650)
 $principal = New-ScheduledTaskPrincipal -UserId $me -LogonType Interactive -RunLevel Limited
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 5) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($logon, $repeat) -Principal $principal -Settings $settings -Description 'Yokus Store: RICS-Daten auf GitHub aktualisieren' -Force | Out-Null
-Write-Host "Eingerichtet: Aktualisierung beim Anmelden und alle $EveryMinutes Minuten (nur bei Aenderungen)."
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+StopWatcher
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $logon -Principal $principal -Settings $settings -Description 'Yokus Store: RICS-Daten auf GitHub aktualisieren, nur waehrend RimWorld laeuft' -Force | Out-Null
+Start-ScheduledTask -TaskName $taskName
+Write-Host "Eingerichtet: Der Waechter laeuft unsichtbar und gleicht nur ab, wenn RimWorld laeuft und sich Daten aendern."

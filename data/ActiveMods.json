@@ -1,6 +1,6 @@
 {
-  "exportedAt": "2026-10-09T12:05:38.9156587Z",
-  "totalActiveMods": 281,
+  "exportedAt": "2026-10-09T16:18:24.7029455Z",
+  "totalActiveMods": 283,
   "mods": [
     {
       "author": "Krkr",
@@ -114,6 +114,12 @@
       "author": "Sarg Bjornson",
       "name": "Alpha Skills",
       "steamId": "3448953006",
+      "version": null
+    },
+    {
+      "author": "Andreas",
+      "name": "Andreas Mod-Fixes",
+      "steamId": null,
       "version": null
     },
     {
@@ -1020,6 +1026,12 @@
       "author": "ferny",
       "name": "Resource Delivery Helper",
       "steamId": "3696859196",
+      "version": null
+    },
+    {
+      "author": "Andreas",
+      "name": "RICS Extras",
+      "steamId": null,
       "version": null
     },
     {
