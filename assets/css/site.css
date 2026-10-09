@@ -186,6 +186,8 @@ button.xeno:focus-visible { outline: 2px solid var(--accent); outline-offset: 2p
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
 .btn:hover { border-color: var(--accent); }
 .more-wrap { text-align: center; margin-top: 16px; }
+.small-btn { min-height: 36px; padding: 0 12px; font-size: .85rem; color: var(--muted); flex-shrink: 0; }
+[hidden] { display: none !important; }
 
 /* ---------- Start ---------- */
 .hero { padding: 20px; }

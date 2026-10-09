@@ -114,8 +114,9 @@ export function startView(data) {
       <div id="u-results" aria-live="polite"></div>
     </section>
 
-    <section class="card hero" style="margin-top:14px">
-      <h2>Willkommen im Yokus Store</h2>
+    <p id="welcome-show" class="small" style="margin:10px 0 0" hidden><button type="button" class="linklike" id="welcome-show-btn">Einführung wieder anzeigen</button></p>
+    <section class="card hero" id="welcome" style="margin-top:14px">
+      <div class="ev-top"><h2>Willkommen im Yokus Store</h2><button type="button" class="btn small-btn" id="welcome-hide" title="Blendet die Einführung aus. Du kannst sie jederzeit wieder einblenden.">Ausblenden</button></div>
       <p class="intro" style="margin:0">Hier siehst du, was du im Stream mit deinen Coins machen kannst: Items kaufen, Events und Wetter auslösen und deinen eigenen Kolonisten steuern. Du musst nichts auswendig lernen – tippe einfach auf einen Befehl, er wird kopiert, und du fügst ihn im Twitch-Chat ein.</p>
       <ol class="steps">
         <li><div><strong>Tritt der Kolonie bei.</strong> Schreibe als Erstes <code>!join</code> in den Chat. Damit stellst du dich in die Warteschlange für einen eigenen Kolonisten, den nur du steuerst. Mit <code>!queuestatus</code> siehst du deinen Platz. Wird dir im Chat ein Pawn angeboten, bestätigst du mit <code>!acceptpawn</code>.</div></li>
@@ -145,6 +146,18 @@ export function startView(data) {
     ${data.failed.length ? `<p class="warn" style="margin-top:16px">Einige Daten konnten nicht geladen werden (${data.failed.map(esc).join(', ')}). Manche Tabs sind deshalb leer.</p>` : ''}
   `;
   function bind(root) {
+    // Einführung ausblendbar (wird im Browser gemerkt)
+    const welcome = root.querySelector('#welcome'), showLink = root.querySelector('#welcome-show');
+    const setWelcome = (visible, remember) => {
+      welcome.hidden = !visible; showLink.hidden = visible;
+      if (remember) { try { localStorage.setItem('ys-welcome', visible ? 'show' : 'hide'); } catch { /* egal */ } }
+    };
+    let saved = null;
+    try { saved = localStorage.getItem('ys-welcome'); } catch { /* egal */ }
+    setWelcome(saved !== 'hide', false);
+    root.querySelector('#welcome-hide').addEventListener('click', () => setWelcome(false, true));
+    root.querySelector('#welcome-show-btn').addEventListener('click', () => setWelcome(true, true));
+
     const box = root.querySelector('#u-search'), out = root.querySelector('#u-results');
     const go = (tab, q) => `<a href="#/${tab}" data-q="${esc(q)}" class="small">Alle Treffer ansehen →</a>`;
     const draw = () => {
