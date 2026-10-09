@@ -1,6 +1,6 @@
 {
-  "exportedAt": "2026-07-28T21:14:23.6626466Z",
-  "totalActiveMods": 220,
+  "exportedAt": "2026-10-09T12:05:38.9156587Z",
+  "totalActiveMods": 281,
   "mods": [
     {
       "author": "Krkr",
@@ -12,19 +12,37 @@
       "author": "Captolamia",
       "name": "[CAP] Rimworld Interactive Chat Service",
       "steamId": "3603078790",
+      "version": "1.51.0"
+    },
+    {
+      "author": "LimeTreeSnake",
+      "name": "[LTS]Ammunition - Framework",
+      "steamId": "2803605634",
       "version": null
     },
     {
-      "author": "Mlie",
+      "author": "LimeTreeSnake",
+      "name": "[LTS]Ammunition - Simple Ammo Pack",
+      "steamId": "2803605709",
+      "version": null
+    },
+    {
+      "author": "Oganesson",
+      "name": "[Og] Immersive Filter",
+      "steamId": "3735827910",
+      "version": null
+    },
+    {
+      "author": "Rainbeau Flambe",
       "name": "[RF] Rumor Has It.... (Continued)",
       "steamId": "2013940581",
-      "version": "1.6.2"
+      "version": "1.6.3"
     },
     {
       "author": "Andreas Pardeike",
       "name": "Achtung!",
       "steamId": "730936602",
-      "version": "4.1.12"
+      "version": "4.1.14"
     },
     {
       "author": "Hyomoto",
@@ -36,12 +54,18 @@
       "author": "Encoded",
       "name": "Adaptive Priorities",
       "steamId": "3765524719",
-      "version": "1.5.1"
+      "version": "1.5.2"
     },
     {
       "author": "Soul, Phaneron, Bradson",
       "name": "Adaptive Storage Framework",
       "steamId": "3033901359",
+      "version": null
+    },
+    {
+      "author": "LiterallyFree",
+      "name": "Against all odds",
+      "steamId": "3552336221",
       "version": null
     },
     {
@@ -63,7 +87,19 @@
       "version": null
     },
     {
-      "author": "Sarg Bjornson,  Helixien,  Cassie,  Luizi,  Allie",
+      "author": "Sarg Bjornson,  AFriend",
+      "name": "Alpha Animals",
+      "steamId": "1541721856",
+      "version": null
+    },
+    {
+      "author": "Allie,  Erin,  Major Quadrangle,  Matsay,  Sarg",
+      "name": "Alpha Genes",
+      "steamId": "2891845502",
+      "version": null
+    },
+    {
+      "author": "Sarg Bjornson,  Helixien,  Cassie,  Allie",
       "name": "Alpha Memes",
       "steamId": "2661356814",
       "version": null
@@ -72,6 +108,12 @@
       "author": "Sarg Bjornson",
       "name": "Alpha Random",
       "steamId": "3642631969",
+      "version": null
+    },
+    {
+      "author": "Sarg Bjornson",
+      "name": "Alpha Skills",
+      "steamId": "3448953006",
       "version": null
     },
     {
@@ -99,6 +141,12 @@
       "version": null
     },
     {
+      "author": "marcin212",
+      "name": "Architect Icons",
+      "steamId": "1195427067",
+      "version": null
+    },
+    {
       "author": "Linnun",
       "name": "Auto-Cast Specialist Commands",
       "steamId": "3459647882",
@@ -123,10 +171,16 @@
       "version": null
     },
     {
+      "author": "ferny",
+      "name": "Better Architect Menu",
+      "steamId": "3563882422",
+      "version": null
+    },
+    {
       "author": "NetzachSloth, Toby",
       "name": "Better autocasting for Vanilla Psycasts Expanded",
       "steamId": "3199585285",
-      "version": "8.1.0.0"
+      "version": "8.1.1.0"
     },
     {
       "author": "KyleMHB",
@@ -148,8 +202,20 @@
     },
     {
       "author": "ferny",
+      "name": "Capture Expansion",
+      "steamId": "3787736781",
+      "version": null
+    },
+    {
+      "author": "ferny",
       "name": "Character Development",
       "steamId": "3770112044",
+      "version": null
+    },
+    {
+      "author": "DanZinagri",
+      "name": "Character Development - Additional Gene Quirks",
+      "steamId": "3783109079",
       "version": null
     },
     {
@@ -159,10 +225,10 @@
       "version": "1.6.1"
     },
     {
-      "author": "Mlie",
+      "author": "ChippedChap",
       "name": "Cleaning Priority (Continued)",
       "steamId": "2018316486",
-      "version": "1.6.2"
+      "version": "1.6.3"
     },
     {
       "author": "Zaljerem",
@@ -186,7 +252,7 @@
       "author": "ilyvion,  Fluffy",
       "name": "Colony Manager Redux",
       "steamId": "3310027356",
-      "version": "0.16.0"
+      "version": "0.19.1"
     },
     {
       "author": "avilmask",
@@ -207,15 +273,45 @@
       "version": null
     },
     {
+      "author": "Drake Bailey",
+      "name": "Custom Thought & Trait Studio",
+      "steamId": "3782562816",
+      "version": null
+    },
+    {
+      "author": "AlenDio",
+      "name": "Dawn of a New Day",
+      "steamId": "3771580900",
+      "version": "1.6.2"
+    },
+    {
       "author": "WiseClock,  fork: AtrociousCollector",
       "name": "Days Matter (fork)",
       "steamId": "2045496988",
       "version": null
     },
     {
+      "author": "ferny",
+      "name": "Decor into Props",
+      "steamId": "3771248988",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Decor into Styles",
+      "steamId": "3771249138",
+      "version": null
+    },
+    {
       "author": "merthsoft",
       "name": "Designator Shapes",
       "steamId": "1235181370",
+      "version": null
+    },
+    {
+      "author": "Andreas",
+      "name": "Deutsch Komplett",
+      "steamId": null,
       "version": null
     },
     {
@@ -250,21 +346,27 @@
     },
     {
       "author": "Dubwise",
+      "name": "Dubs Bad Hygiene",
+      "steamId": "836308268",
+      "version": "3.1.2800"
+    },
+    {
+      "author": "Dubwise",
       "name": "Dubs Mint Menus",
       "steamId": "1446523594",
-      "version": "1.3.1247"
+      "version": "1.3.1684"
     },
     {
       "author": "Dubwise",
       "name": "Dubs Mint Minimap",
       "steamId": "1662119905",
-      "version": "1.3.791"
+      "version": "1.3.800"
     },
     {
       "author": "Dubwise",
       "name": "Dubs Performance Analyzer",
       "steamId": "2038874626",
-      "version": null
+      "version": "1.6.10"
     },
     {
       "author": "Nepenthe",
@@ -288,13 +390,19 @@
       "author": "Linq",
       "name": "Expanded Incidents (Continued)",
       "steamId": "2039064466",
-      "version": "1.6.2"
+      "version": "1.6.3"
     },
     {
       "author": "Crycore",
       "name": "Family Is Everything",
       "steamId": "3747730890",
       "version": null
+    },
+    {
+      "author": "Axolki",
+      "name": "Fish Until",
+      "steamId": "3777179657",
+      "version": "1.0.0"
     },
     {
       "author": "ChaoticEnrico",
@@ -315,10 +423,28 @@
       "version": null
     },
     {
-      "author": "Mlie",
+      "author": "Uuugggg",
+      "name": "Gear Up And Go (fork)",
+      "steamId": "3530234134",
+      "version": null
+    },
+    {
+      "author": "Gerrymon",
+      "name": "Gerrymon's Misc Props: Dungeon",
+      "steamId": "3772571876",
+      "version": null
+    },
+    {
+      "author": "Gerrymon",
+      "name": "Gerrymon's Misc Props: Graveyard",
+      "steamId": "3780458386",
+      "version": null
+    },
+    {
+      "author": "Ilyaki",
       "name": "Growing Zone Priorities (Continued)",
       "steamId": "2026571920",
-      "version": "1.6.1"
+      "version": "1.6.2"
     },
     {
       "author": "Poupun",
@@ -366,7 +492,7 @@
       "author": "ilyvion",
       "name": "ilyvion's Laboratory",
       "steamId": "3296362231",
-      "version": "0.20.0"
+      "version": "0.24.0"
     },
     {
       "author": "kathanon",
@@ -379,6 +505,12 @@
       "name": "Improved Need Indicator",
       "steamId": "3211635205",
       "version": "1.6.4503.20250630Z"
+    },
+    {
+      "author": "Kaamalauppias",
+      "name": "Info Card Plus",
+      "steamId": "3776660810",
+      "version": null
     },
     {
       "author": "Haecriver",
@@ -399,13 +531,13 @@
       "version": null
     },
     {
-      "author": "turkler",
+      "author": "rosaline",
       "name": "Intimacy - Friends n' Lovers",
       "steamId": "3498422643",
       "version": null
     },
     {
-      "author": "turkler",
+      "author": "rosaline",
       "name": "Intimacy - Socio Butterfly",
       "steamId": "3630896210",
       "version": null
@@ -465,16 +597,28 @@
       "version": null
     },
     {
+      "author": "The_H4tBird",
+      "name": "Join or Die",
+      "steamId": "3782336530",
+      "version": null
+    },
+    {
       "author": "Linnun",
       "name": "Keep Converting",
       "steamId": "3461478214",
       "version": null
     },
     {
-      "author": "turkler",
+      "author": "rosaline",
       "name": "Lactation Expansion",
       "steamId": "3489491945",
       "version": null
+    },
+    {
+      "author": "Funstab",
+      "name": "Last Wish",
+      "steamId": "3783799395",
+      "version": "0.2.2"
     },
     {
       "author": "Leo39994",
@@ -498,6 +642,18 @@
       "author": "erdelf",
       "name": "MinifyEverything",
       "steamId": "872762753",
+      "version": null
+    },
+    {
+      "author": "ViralReaction",
+      "name": "Missile Girl - Performance Mod",
+      "steamId": "3712928623",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Mojave Mask - Progression Storytellers",
+      "steamId": "3781130446",
       "version": null
     },
     {
@@ -552,7 +708,7 @@
       "author": "Mlie",
       "name": "No Version Warning",
       "steamId": "2599504692",
-      "version": "1.6.106"
+      "version": "1.6.115"
     },
     {
       "author": "Zaljerem",
@@ -564,6 +720,24 @@
       "author": "Ludeon Studios",
       "name": "Odyssey",
       "steamId": null,
+      "version": null
+    },
+    {
+      "author": "komunre",
+      "name": "Passive Research",
+      "steamId": "2843607858",
+      "version": null
+    },
+    {
+      "author": "Kiame Vivacity, Missionz3r0, Vendan, simeyo",
+      "name": "Path Avoid (1.6 Rebuild)",
+      "steamId": "3779284077",
+      "version": "1.6.0.5"
+    },
+    {
+      "author": "remi",
+      "name": "Perfect Placement",
+      "steamId": "3628576625",
       "version": null
     },
     {
@@ -585,6 +759,12 @@
       "version": "1.17.0"
     },
     {
+      "author": "Peppsen",
+      "name": "P-Music",
+      "steamId": "725130005",
+      "version": null
+    },
+    {
       "author": "TwoPenny",
       "name": "Portraits of the Rim",
       "steamId": "2937991425",
@@ -600,6 +780,12 @@
       "author": "Zetrith",
       "name": "Prepatcher",
       "steamId": "2934420800",
+      "version": null
+    },
+    {
+      "author": "Legator",
+      "name": "Prisoner Realism",
+      "steamId": "3760196312",
       "version": null
     },
     {
@@ -664,8 +850,26 @@
     },
     {
       "author": "ferny",
+      "name": "Progression: Furniture",
+      "steamId": "3771246586",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Genetics",
+      "steamId": "3239506998",
+      "version": null
+    },
+    {
+      "author": "ferny",
       "name": "Progression: Gravship",
       "steamId": "3522893553",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Progression: Hives",
+      "steamId": "3783411735",
       "version": null
     },
     {
@@ -700,12 +904,6 @@
     },
     {
       "author": "ferny",
-      "name": "Progression: Soundtrack",
-      "steamId": "3620726714",
-      "version": null
-    },
-    {
-      "author": "ferny",
       "name": "Progression: Storage",
       "steamId": "3292746186",
       "version": null
@@ -736,6 +934,12 @@
     },
     {
       "author": "ferny",
+      "name": "Progression: Warrants",
+      "steamId": "3270214529",
+      "version": null
+    },
+    {
+      "author": "ferny",
       "name": "Progression: Worlds",
       "steamId": "3534993993",
       "version": null
@@ -750,7 +954,7 @@
       "author": "astryl",
       "name": "Psycasts²",
       "steamId": "3761869362",
-      "version": null
+      "version": "1.3.4"
     },
     {
       "author": "DawnsGlow",
@@ -765,10 +969,22 @@
       "version": null
     },
     {
+      "author": "godsfathermixtape",
+      "name": "Quest Maker",
+      "steamId": "3781943034",
+      "version": null
+    },
+    {
       "author": "slofa",
       "name": "Quick Stockpile Creation",
       "steamId": "1742151109",
       "version": null
+    },
+    {
+      "author": "Funstab",
+      "name": "Raid Tactics",
+      "steamId": "3779504766",
+      "version": "2.4.2"
     },
     {
       "author": "Reel",
@@ -789,9 +1005,27 @@
       "version": null
     },
     {
+      "author": "kongkim",
+      "name": "Research Data",
+      "steamId": "3001121619",
+      "version": null
+    },
+    {
+      "author": "PeteTimesSix",
+      "name": "Research Reinvented",
+      "steamId": "2868392160",
+      "version": null
+    },
+    {
       "author": "ferny",
       "name": "Resource Delivery Helper",
       "steamId": "3696859196",
+      "version": null
+    },
+    {
+      "author": "Andreas",
+      "name": "RICS Voting",
+      "steamId": null,
       "version": null
     },
     {
@@ -813,6 +1047,12 @@
       "version": null
     },
     {
+      "author": "Font",
+      "name": "Rimesis",
+      "steamId": "3767949538",
+      "version": null
+    },
+    {
       "author": "Jaxe",
       "name": "RimHUD",
       "steamId": "1508850027",
@@ -822,19 +1062,19 @@
       "author": "Maux",
       "name": "Rimpsyche - Disposition",
       "steamId": "3578212339",
-      "version": "1.0.18"
+      "version": "1.0.20"
     },
     {
       "author": "Maux",
       "name": "Rimpsyche - Personality Core",
       "steamId": "3535112473",
-      "version": "1.0.41"
+      "version": "1.0.43"
     },
     {
       "author": "Maux",
       "name": "Rimpsyche - Sexuality",
       "steamId": "3627304156",
-      "version": "1.0.10"
+      "version": "1.0.11"
     },
     {
       "author": "reo",
@@ -846,6 +1086,12 @@
       "author": "reo,  ocarina0001",
       "name": "RimScent",
       "steamId": "3645569466",
+      "version": null
+    },
+    {
+      "author": "kanboru",
+      "name": "Rimworld Interactive Chat Service - Addon",
+      "steamId": "3760183125",
       "version": null
     },
     {
@@ -873,10 +1119,10 @@
       "version": null
     },
     {
-      "author": " Original author: Captain Muscles (Nathan Harbour)\r\n    Since this fork: Arodoid\r\n    ",
-      "name": "Semi Random Research: Progression Fork",
-      "steamId": "3505290557",
-      "version": null
+      "author": " Original author: Captain Muscles (Nathan Harbour)\r\n\t\t\t Original Progression Fork: Arodoid\r\n    ",
+      "name": "Semi Random Research:P-Fork Continued",
+      "steamId": "3778002533",
+      "version": "260930"
     },
     {
       "author": "PeteTimesSix",
@@ -885,9 +1131,27 @@
       "version": null
     },
     {
+      "author": "pb3n,  Taranchuk",
+      "name": "Simple Warrants",
+      "steamId": "2676828755",
+      "version": null
+    },
+    {
+      "author": "B4ttl3m3d (Dev),  Pumpkinlass (Art)",
+      "name": "SimpleBabyCarry",
+      "steamId": "3692756679",
+      "version": "5.0.0"
+    },
+    {
       "author": "ray1203",
       "name": "SimpleCameraSetting",
       "steamId": "3232415388",
+      "version": null
+    },
+    {
+      "author": "astryl",
+      "name": "Sleeping Buddies",
+      "steamId": "3774741768",
       "version": null
     },
     {
@@ -915,16 +1179,34 @@
       "version": null
     },
     {
+      "author": "RemingtonRyder",
+      "name": "Sometimes Raids Go Wrong",
+      "steamId": "1551336515",
+      "version": null
+    },
+    {
       "author": "Andromeda",
       "name": "Stack gap",
       "steamId": "3071298014",
       "version": null
     },
     {
+      "author": "f⑨",
+      "name": "Stat Compression",
+      "steamId": "3782413422",
+      "version": "1.2.1"
+    },
+    {
       "author": "ferny",
       "name": "Storage Stats in Description",
       "steamId": "3740185419",
       "version": null
+    },
+    {
+      "author": "Funstab",
+      "name": "Talk Before Bloodshed",
+      "steamId": "3781719315",
+      "version": "1.4.1"
     },
     {
       "author": "Uuugggg",
@@ -948,6 +1230,12 @@
       "author": "ferny",
       "name": "Temporary Patches",
       "steamId": "3424105991",
+      "version": null
+    },
+    {
+      "author": "ferny",
+      "name": "Text Tool",
+      "steamId": "3773691016",
       "version": null
     },
     {
@@ -1029,6 +1317,12 @@
       "version": null
     },
     {
+      "author": "Kikohi, Oskar Potocki",
+      "name": "Vanilla Base Generation Expanded",
+      "steamId": "3209927822",
+      "version": null
+    },
+    {
       "author": "Oskar Potocki,  Kikohi,  Helixien,  Sarg",
       "name": "Vanilla Events Expanded",
       "steamId": "1938420742",
@@ -1056,6 +1350,18 @@
       "author": "Oskar Potocki,  xrushha,  legodude17,  Allie",
       "name": "Vanilla Factions Expanded - Empire",
       "steamId": "2938820380",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  xrushha,  Taranchuk,  Sarg Bjornson",
+      "name": "Vanilla Factions Expanded - Insectoids 2",
+      "steamId": "3309003431",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  xrushha,  Taranchuk,  Sarg Bjornson,  Oracle of Thessia",
+      "name": "Vanilla Factions Expanded - Medieval 2",
+      "steamId": "3444347874",
       "version": null
     },
     {
@@ -1092,6 +1398,12 @@
       "author": "Oskar Potocki,  Sarg Bjornson",
       "name": "Vanilla Furniture Expanded - Props and Decor",
       "steamId": "2102143149",
+      "version": null
+    },
+    {
+      "author": "Sarg,  erdelf,  Oskar Potocki,  Luizi,  Reann Shepard",
+      "name": "Vanilla Genetics Expanded",
+      "steamId": "2801160906",
       "version": null
     },
     {
@@ -1155,6 +1467,12 @@
       "version": null
     },
     {
+      "author": "Oskar Potocki,  Taranchuk",
+      "name": "Vanilla Persona Weapons Expanded",
+      "steamId": "2826922787",
+      "version": null
+    },
+    {
       "author": "erdelf,  Oskar Potocki,  legodude17,  Taranchuk,  xrushha,  Sarg Bjornson,  Sir Van,  Reann Shepard",
       "name": "Vanilla Psycasts Expanded",
       "steamId": "2842502659",
@@ -1176,6 +1494,36 @@
       "author": "Chairheir",
       "name": "Vanilla Psycasts Expanded - Runesmith",
       "steamId": "3339063087",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  Taranchuk,  Ferny",
+      "name": "Vanilla Quests Expanded - Ancients",
+      "steamId": "3618306875",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  Taranchuk",
+      "name": "Vanilla Quests Expanded - Cryptoforge",
+      "steamId": "3461526070",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  Taranchuk",
+      "name": "Vanilla Quests Expanded - Deadlife",
+      "steamId": "3497226454",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  Taranchuk,  Ferny",
+      "name": "Vanilla Quests Expanded - Drone Factory",
+      "steamId": "3733951755",
+      "version": null
+    },
+    {
+      "author": "Oskar Potocki,  Sarg Bjornson,  Taranchuk,  Bread mo",
+      "name": "Vanilla Quests Expanded - The Generator",
+      "steamId": "3411401573",
       "version": null
     },
     {
@@ -1263,6 +1611,12 @@
       "version": null
     },
     {
+      "author": "legodude17,  Oskar Potocki,  Sarg Bjornson",
+      "name": "Vanilla Skills Expanded",
+      "steamId": "3400246558",
+      "version": null
+    },
+    {
       "author": "Oskar Potocki,  Taranchuk",
       "name": "Vanilla Social Interactions Expanded",
       "steamId": "2439736083",
@@ -1279,6 +1633,12 @@
       "name": "Visit Settlements",
       "steamId": "3535955435",
       "version": null
+    },
+    {
+      "author": "Mlie",
+      "name": "Visual XML Patches",
+      "steamId": "3570531169",
+      "version": "1.6.2"
     },
     {
       "author": "addvans",
@@ -1314,6 +1674,12 @@
       "author": "ferny",
       "name": "Worldbuilder",
       "steamId": "3522102833",
+      "version": null
+    },
+    {
+      "author": "Waggish Pluto",
+      "name": "Xenotype Summary",
+      "steamId": "3710012135",
       "version": null
     },
     {

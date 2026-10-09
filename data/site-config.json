@@ -1,0 +1,5 @@
+{
+  "_hinweis": "Optional: Wenn channel UND twitchClientId gesetzt sind, können sich Zuschauer freiwillig mit Twitch verbinden und Befehle direkt aus der Seite senden. Leer lassen = Funktion komplett aus (nur Kopieren). Anleitung: README.md, Abschnitt 'Direkt senden'.",
+  "channel": "",
+  "twitchClientId": ""
+}

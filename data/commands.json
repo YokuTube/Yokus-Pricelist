@@ -1,0 +1,810 @@
+{
+  "_hinweis": "Von Hand gepflegte Befehlsbeschreibungen. Ob ein Befehl an ist, wer ihn nutzen darf und welche Aliase er hat, kommt live aus CommandSettings.json. 'cmd' ist der ursprüngliche (englische) Befehlsname.",
+  "groups": [
+    { "id": "start", "icon": "🚀", "title": "Erste Schritte", "intro": "Das brauchst du für den Anfang: Pawn holen, Coins checken, dich umsehen." },
+    { "id": "info", "icon": "ℹ️", "title": "Nachschlagen & Infos", "intro": "Preise, Items, Events und den Zustand der Kolonie abfragen – kostet nichts." },
+    { "id": "shop", "icon": "🛒", "title": "Einkaufen", "intro": "Items, Waffen, Kleidung und Operationen für deinen Pawn oder die Kolonie." },
+    { "id": "events", "icon": "🌪️", "title": "Events, Wetter & Raids", "intro": "Mit Coins das Schicksal der Kolonie beeinflussen. Welche Events es gibt, siehst du im Tab „Events“." },
+    { "id": "pawn", "icon": "🧍", "title": "Dein Pawn", "intro": "Pawn bekommen, ansehen, heilen, wiederbeleben und wieder abgeben." },
+    { "id": "char", "icon": "🧬", "title": "Charakter, Wünsche & Ziele", "intro": "Eigenschaften, Leidenschaften, Wünsche und Lebensziele deines Pawns." },
+    { "id": "look", "icon": "🎨", "title": "Aussehen", "intro": "Frisur, Bart, Haut, Tattoos, Gene und mehr. Mit „list“ siehst du bei den meisten Befehlen, was möglich ist." },
+    { "id": "social", "icon": "💬", "title": "Soziales & Duelle", "intro": "Deinen Pawn mit anderen Kolonisten reden, flirten, streiten oder kämpfen lassen." },
+    { "id": "control", "icon": "🎮", "title": "Pawn steuern", "intro": "Arbeit, Aufenthaltsort, Kampf und Ausrüstung deines Pawns bestimmen." },
+    { "id": "community", "icon": "🤝", "title": "Abstimmungen & Gemeinschaftsziele", "intro": "Hier entscheidet der ganze Chat gemeinsam." },
+    { "id": "mod", "icon": "🛡️", "title": "Für Mods & Streamer", "intro": "Diese Befehle dürfen nur Moderatoren oder der Streamer benutzen." }
+  ],
+  "commands": [
+    {
+      "cmd": "joinqueue", "show": "join", "order": 1, "group": "start", "src": "rics",
+      "summary": "Dein erster Schritt: Du stellst dich in die Warteschlange für einen eigenen Pawn.",
+      "usage": [ { "syntax": "!join", "note": "Der Befehl heißt eigentlich !joinqueue, !join reicht aber." } ],
+      "effect": "Du bekommst einen Platz in der Schlange. Wenn der Streamer den nächsten Pawn vergibt, wird dir einer angeboten – dann tippst du !acceptpawn.",
+      "notes": ["Das musst du als Erstes tun, wenn du in der Kolonie mitspielen willst.", "Mit !queuestatus siehst du, wie weit vorne du bist. Wieder raus geht mit !leavequeue.", "Hast du schon einen Pawn, geht das nicht – dann zuerst !leave."]
+    },
+    {
+      "cmd": "queuestatus", "order": 2, "group": "start", "src": "rics",
+      "summary": "Zeigt, auf welchem Platz du in der Warteschlange stehst.",
+      "usage": [ { "syntax": "!queuestatus" } ],
+      "effect": "Reine Anzeige: „Du bist auf Platz 3 von 7.“"
+    },
+    {
+      "cmd": "acceptpawn", "group": "pawn", "src": "rics",
+      "summary": "Nimmt ein Pawn-Angebot an – nur nötig, wenn dir der Bot im Chat einen Pawn anbietet.",
+      "usage": [ { "syntax": "!acceptpawn" } ],
+      "effect": "Der angebotene Pawn gehört ab jetzt dir – „Willkommen in der Kolonie!“",
+      "notes": ["Wenn du nichts angeboten bekommen hast, kannst du den Befehl ignorieren.", "Das Angebot gilt nur kurz. Ist es abgelaufen, stellst du dich mit !join neu an."]
+    },
+    {
+      "cmd": "pawn", "order": 4, "group": "start", "src": "rics",
+      "summary": "Zeigt, welche Rassen es gibt und was sie kosten – je nach Einstellung kannst du damit auch direkt einen Pawn kaufen.",
+      "usage": [
+        { "syntax": "!pawn", "note": "Je nach Einstellung des Streamers kaufst du damit sofort einen Pawn (wenn nur eine Rasse freigeschaltet ist) oder bekommst die Liste der Rassen mit Preisen." },
+        { "syntax": "!pawn [Rasse] [Xenotyp] [Geschlecht] [Alter]", "note": "Alles optional. Geschlecht: male, female oder random. Alter liegt zwischen dem Mindest- und Höchstalter der Rasse. Xenotypen brauchen Biotech." }
+      ],
+      "examples": ["!pawn human hussar", "!pawn human genie female 25"],
+      "effect": "Beim Kauf erscheint dein Pawn am Kartenrand, bekommt deinen Namen und gehört dir, bis er stirbt oder du ihn mit !leave abgibst.",
+      "notes": ["Der sichere Einstieg ist !join – siehe oben.", "Pro Zuschauer gibt es einen Pawn. Der Preis hängt von Rasse und Xenotyp ab – siehe Tab „Rassen“.", "Zum Kaufen brauchst du genug Coins (!bal)."]
+    },
+    {
+      "cmd": "bal", "group": "start", "src": "rics",
+      "summary": "Zeigt, wie viele Coins und wie viel Karma du hast.",
+      "usage": [ { "syntax": "!bal" } ],
+      "effect": "Coins bekommst du fürs Dabeisein im Chat. Damit bezahlst du fast alles in diesem Store."
+    },
+    {
+      "cmd": "openlootbox", "group": "start", "src": "rics",
+      "summary": "Öffnet deine tägliche Lootbox.",
+      "usage": [ { "syntax": "!openlootbox" } ],
+      "effect": "Du bekommst eine Überraschung aus der Lootbox. Es gibt eine pro Tag."
+    },
+    {
+      "cmd": "mypawn", "group": "start", "src": "rics",
+      "summary": "Zeigt alles über deinen Pawn – mit vielen Unterbefehlen.",
+      "usage": [
+        { "syntax": "!mypawn", "note": "Kurzer Überblick und die Liste der Unterbefehle." },
+        { "syntax": "!mypawn needs", "note": "Hunger, Schlaf, Freizeit, Stimmung." },
+        { "syntax": "!mypawn health", "note": "Gesundheit und Fähigkeiten wie Bewusstsein, Sicht, Bewegung, Schmerz." },
+        { "syntax": "!mypawn body [Körperteil]", "note": "Körpertyp und Verletzungen, optional nur für ein Körperteil (z. B. arm, head)." },
+        { "syntax": "!mypawn implants", "note": "Implantate und Prothesen." },
+        { "syntax": "!mypawn gear", "note": "Waffen, Kleidung, Rüstungswerte, Inventar." },
+        { "syntax": "!mypawn weapon", "note": "Genaue Werte der Waffe in deiner Hand." },
+        { "syntax": "!mypawn skills [Fertigkeit]", "note": "Alle Fertigkeiten mit Leidenschaft oder Details zu einer." },
+        { "syntax": "!mypawn stats [Wert ...]", "note": "Kampf- und Arbeitswerte, z. B. movespeed, shootingaccuracy, meleedps." },
+        { "syntax": "!mypawn traits", "note": "Deine Eigenschaften mit Beschreibung." },
+        { "syntax": "!mypawn story", "note": "Alter, Kindheit, Erwachsenenleben; mit Biotech auch Rasse und Xenotyp." },
+        { "syntax": "!mypawn work [Arbeit] [Priorität]", "note": "Arbeitsprioritäten ansehen oder setzen (0 = aus, 1 = höchste, bis 4)." },
+        { "syntax": "!mypawn job", "note": "Was dein Pawn gerade tut (auch: action)." },
+        { "syntax": "!mypawn relations [Zuschauer]", "note": "Familie, Freunde, Rivalen, Romanze – optional mit einem bestimmten Zuschauer." },
+        { "syntax": "!mypawn family | friends | rivals", "note": "Nur Familie / nur Freunde / nur Rivalen (Kurzformen: kin, kith, enemies)." },
+        { "syntax": "!mypawn genes", "note": "Xenotyp und Gene (auch: xeno). Braucht Biotech." },
+        { "syntax": "!mypawn mechs", "note": "Deine Mechs als Mechanitor. Braucht Biotech." },
+        { "syntax": "!mypawn psycasts", "note": "Psycasts deines Pawns." },
+        { "syntax": "!mypawn kills", "note": "Wie viele Gegner dein Pawn besiegt hat." },
+        { "syntax": "!mypawn owned [all|weapons|armor]", "note": "Ausrüstung, die dir gehört. Mit !mypawn disown <Nr> gibst du etwas wieder frei." }
+      ],
+      "effect": "Reine Anzeige im Chat, es kostet nichts und ändert nichts.",
+      "notes": ["Dein Pawn muss leben. Hast du keinen, hilft !pawn."]
+    },
+    {
+      "cmd": "help", "group": "start", "src": "rics",
+      "summary": "Schickt den Link zu dieser Hilfeseite in den Chat.",
+      "usage": [ { "syntax": "!help" } ],
+      "effect": "Keine Wirkung außer dem Link."
+    },
+    {
+      "cmd": "commands", "group": "start", "src": "rics",
+      "summary": "Listet die Befehle auf, die du benutzen darfst.",
+      "usage": [ { "syntax": "!commands" } ],
+      "effect": "Reine Anzeige im Chat. Die ausführliche Version ist diese Seite."
+    },
+
+    {
+      "cmd": "lookup", "group": "info", "src": "rics",
+      "summary": "Sucht Items, Events, Wetter, Eigenschaften, Rassen und Xenotypen.",
+      "usage": [ { "syntax": "!lookup [item|event|weather|trait|race|xenotype] [Name]", "note": "Ohne Namen zeigt der Befehl, wonach du suchen kannst. Teile von Namen reichen." } ],
+      "examples": ["!lookup item rifle", "!lookup event raid", "!lookup race"],
+      "effect": "Zeigt passende Treffer mit Preisen. Praktisch, wenn du den genauen Namen nicht kennst."
+    },
+    {
+      "cmd": "pricecheck", "group": "info", "src": "rics",
+      "summary": "Zeigt den genauen Preis eines Items.",
+      "usage": [ { "syntax": "!pricecheck [Item] [Qualität] [Material] [Menge]", "note": "Ohne Item bekommst du einen Hinweis mit Beispiel." } ],
+      "examples": ["!pricecheck steel", "!pricecheck assault_rifle excellent"],
+      "effect": "Zeigt den Preis für genau diese Kombination. Bei Waffen siehst du zusätzlich Schaden und Nahkampf-DPS.",
+      "notes": ["Qualität kostet extra: awful, poor, normal, good, excellent, masterwork, legendary."]
+    },
+    {
+      "cmd": "purchaselist", "group": "info", "src": "rics",
+      "summary": "Schickt den Link zur Preisliste (diese Seite) in den Chat.",
+      "usage": [ { "syntax": "!purchaselist" } ],
+      "effect": "Keine Wirkung außer dem Link."
+    },
+    {
+      "cmd": "karmasettings", "group": "info", "src": "rics",
+      "summary": "Erklärt, wie Karma hier funktioniert, und zeigt deine Einstellungen.",
+      "usage": [ { "syntax": "!karmasettings" } ],
+      "effect": "Zeigt die Karma-Regeln dieses Streams und deinen Stand."
+    },
+    {
+      "cmd": "whatiskarma", "group": "info", "src": "rics",
+      "summary": "Erklärt Karma (in aktuellen RICS-Versionen meist abgeschaltet – nimm !karmasettings).",
+      "usage": [ { "syntax": "!whatiskarma" } ],
+      "effect": "Reine Anzeige."
+    },
+    {
+      "cmd": "modinfo", "group": "info", "src": "rics",
+      "summary": "Zeigt Mod-Version und Adresse.",
+      "usage": [ { "syntax": "!modinfo" } ],
+      "effect": "Reine Anzeige."
+    },
+    {
+      "cmd": "modsettings", "group": "info", "src": "rics",
+      "summary": "Zeigt, wie viele Coins und Karma man verdient.",
+      "usage": [ { "syntax": "!modsettings" } ],
+      "effect": "Reine Anzeige."
+    },
+    {
+      "cmd": "storyteller", "group": "info", "src": "rics",
+      "summary": "Zeigt Erzähler und Schwierigkeitsgrad.",
+      "usage": [ { "syntax": "!storyteller" } ],
+      "effect": "Reine Anzeige."
+    },
+    {
+      "cmd": "factions", "group": "info", "src": "rics",
+      "summary": "Listet die Fraktionen im aktuellen Spiel.",
+      "usage": [ { "syntax": "!factions" } ],
+      "effect": "Reine Anzeige."
+    },
+    {
+      "cmd": "colonists", "group": "info", "src": "rics",
+      "summary": "Zeigt, wie viele Kolonisten, Zuschauer-Pawns und Tiere es gibt.",
+      "usage": [ { "syntax": "!colonists" } ],
+      "effect": "Reine Anzeige."
+    },
+    {
+      "cmd": "wealth", "group": "info", "src": "rics",
+      "summary": "Zeigt den Reichtum der Kolonie.",
+      "usage": [ { "syntax": "!wealth" } ],
+      "effect": "Reine Anzeige. Der Reichtum beeinflusst auch, wie stark Raids werden."
+    },
+    {
+      "cmd": "research", "group": "info", "src": "rics",
+      "summary": "Zeigt die aktuelle Forschung oder den Stand einer bestimmten.",
+      "usage": [ { "syntax": "!research", "note": "Aktuelle Forschung der Kolonie." }, { "syntax": "!research [Name]", "note": "Fortschritt dieses Projekts." } ],
+      "effect": "Reine Anzeige."
+    },
+    {
+      "cmd": "study", "group": "info", "src": "rics",
+      "summary": "Zeigt die aktuelle Anomaly-Studie.",
+      "usage": [ { "syntax": "!study" } ],
+      "effect": "Reine Anzeige. Braucht das Anomaly-DLC."
+    },
+    {
+      "cmd": "storage", "group": "info", "src": "rics",
+      "summary": "Sucht nach Dingen im Lager der Kolonie.",
+      "usage": [ { "syntax": "!storage [Item]" } ],
+      "examples": ["!storage steel", "!storage plasteel longsword"],
+      "effect": "Zeigt, wie viel davon in den Lagern liegt."
+    },
+
+    {
+      "cmd": "buy", "group": "shop", "src": "rics",
+      "summary": "Kauft Items. Sie kommen per Landekapsel in die Kolonie.",
+      "usage": [
+        { "syntax": "!buy <Item> [Qualität] [Material] [Menge]", "note": "Alles in eckigen Klammern ist optional. Namen schreibst du in einem Wort; Leerzeichen werden zu Unterstrichen (assault_rifle). Den Namen siehst du im Tab „Items“." },
+        { "syntax": "!buy wager <Item> <Einsatz>", "note": "Falls vom Streamer erlaubt: Du setzt Coins ein und Qualität/Material werden ausgewürfelt." }
+      ],
+      "examples": ["!buy medicine 5", "!buy knife steel", "!buy assault_rifle excellent 1"],
+      "effect": "Coins werden abgezogen, die Ware fällt in der Kolonie ab. Der Preis ist Grundpreis × Qualität × Material × Menge.",
+      "notes": ["Qualitäten: awful, poor, normal, good, excellent, masterwork, legendary. Ohne Material (oder mit random) wird eins ausgewürfelt.", "Pro Kauf gibt es eine Mengengrenze (steht im Tab „Items“).", "Manches braucht eine bestimmte Forschung."]
+    },
+    {
+      "cmd": "use", "group": "shop", "src": "rics",
+      "summary": "Kauft ein Item und benutzt es sofort an deinem Pawn.",
+      "usage": [ { "syntax": "!use <Item> [Menge]", "note": "Qualität und Material gibt es hier nicht." } ],
+      "examples": ["!use medicine", "!use beer 2"],
+      "effect": "Medizin wird angewendet, Essen und Trinken wird verzehrt. Ein Resurrector-Serum kann einen toten Pawn wiederbeleben."
+    },
+    {
+      "cmd": "equip", "group": "shop", "src": "rics",
+      "summary": "Kauft eine Waffe und gibt sie deinem Pawn direkt in die Hand.",
+      "usage": [ { "syntax": "!equip <Waffe> [Qualität] [Material]" } ],
+      "examples": ["!equip pistol", "!equip longsword plasteel good"],
+      "effect": "Die Waffe wird direkt ausgerüstet, ohne Landekapsel.",
+      "notes": ["Dein Pawn muss leben und die Waffe tragen können."]
+    },
+    {
+      "cmd": "wear", "group": "shop", "src": "rics",
+      "summary": "Kauft Kleidung oder Rüstung und zieht sie deinem Pawn direkt an.",
+      "usage": [ { "syntax": "!wear <Kleidung> [Qualität] [Material]" } ],
+      "examples": ["!wear flak_vest", "!wear tribalwear cloth"],
+      "effect": "Das Teil wird direkt angezogen, ohne Landekapsel."
+    },
+    {
+      "cmd": "backpack", "group": "shop", "src": "rics",
+      "summary": "Kauft ein Item und legt es ins Inventar deines Pawns.",
+      "usage": [ { "syntax": "!backpack <Item> [Qualität] [Material] [Menge]" } ],
+      "effect": "Das Item landet im Rucksack, ohne Landekapsel.",
+      "notes": ["Ist das Inventar voll, klappt es nicht – dann !buy nehmen."]
+    },
+    {
+      "cmd": "surgery", "group": "shop", "src": "rics",
+      "summary": "Kauft Implantate und Eingriffe und stellt die Operation für die Ärzte der Kolonie ein.",
+      "usage": [
+        { "syntax": "!surgery <Implantat> [left|right] [Menge]", "note": "Seite und Menge nur bei Körperteilen, die es doppelt gibt (Arme, Beine, Augen, Ohren, Lunge, Nieren)." },
+        { "syntax": "!surgery genderswap", "note": "Geschlechtsumwandlung (auch einfacher mit !genderswap)." },
+        { "syntax": "!surgery fat body | thin body | hulking body | masculine body | feminine body", "note": "Körperform ändern." },
+        { "syntax": "!surgery transfusion | hemogen | sterilize | tubal | vasectomy | iud | iudremove | vasreverse | terminate", "note": "Biotech-Eingriffe. Keine Seite, keine Menge." }
+      ],
+      "examples": ["!surgery archotech leg right 2", "!surgery fat body"],
+      "effect": "Coins werden abgezogen, die nötigen Teile landen im Inventar deines Pawns und eine Operation wird eingeplant. Ein Kolonist-Arzt führt sie durch, sobald er Zeit hat.",
+      "notes": ["Operationen können misslingen (Schmerz, Narben, im schlimmsten Fall Tod).", "Dein Pawn muss leben. Manche Eingriffe brauchen Forschung.", "Preise legt der Streamer fest."]
+    },
+
+    {
+      "cmd": "event", "group": "events", "src": "rics",
+      "summary": "Löst ein Ereignis in der Kolonie aus – gute wie schlechte.",
+      "usage": [ { "syntax": "!event <Name>", "note": "Namen findest du im Tab „Events“ oder mit !lookup event. Leerzeichen als Unterstrich oder zusammengeschrieben." }, { "syntax": "!event list", "note": "Zeigt die möglichen Events." } ],
+      "examples": ["!event aurora", "!event heat_wave", "!event psychic_soothe"],
+      "effect": "Die Coins werden abgezogen und das Event passiert sofort. Gute Events bringen Karma, schlechte kosten Karma.",
+      "notes": ["Jedes Event hat eine Pause: Es kann nur alle paar Spieltage ausgelöst werden.", "Der Streamer kann Events einzeln ausschalten."]
+    },
+    {
+      "cmd": "weather", "group": "events", "src": "rics",
+      "summary": "Ändert das Wetter in der Kolonie.",
+      "usage": [ { "syntax": "!weather <Typ>", "note": "Typen siehst du im Tab „Wetter“." } ],
+      "examples": ["!weather clear", "!weather rain", "!weather thunderstorm"],
+      "effect": "Das Wetter wechselt zum gewählten Typ, die Coins werden abgezogen.",
+      "notes": ["Teilsuche geht: „rain“ findet „rain“ und „foggy rain“."]
+    },
+    {
+      "cmd": "raid", "group": "events", "src": "rics",
+      "summary": "Schickt einen feindlichen Überfall auf die Kolonie.",
+      "usage": [ { "syntax": "!raid [Typ] [Strategie] [Einsatz]", "note": "Alles optional, aber in dieser Reihenfolge. Welche Typen und Strategien gerade erlaubt sind, zeigt !raidinfo." } ],
+      "examples": ["!raid standard", "!raid mech 2000", "!raid drop immediate 5000"],
+      "effect": "Je höher dein Einsatz, desto stärker die Feinde. Das kostet dich Karma.",
+      "notes": ["Typen (je nach DLC): standard, drop, dropcenter, dropedge, dropchaos, dropgroups, mech, mechcluster, wateredge.", "Strategien: immediate (Standard), smart, sappers, breach, breachsmart, stage, siege.", "Der Streamer legt Mindest- und Höchsteinsatz fest."],
+      "requires": ""
+    },
+    {
+      "cmd": "raidinfo", "group": "events", "src": "rics",
+      "summary": "Zeigt, welche Raid-Typen und Strategien erlaubt sind.",
+      "usage": [ { "syntax": "!raidinfo" } ],
+      "effect": "Reine Anzeige, kostenlos."
+    },
+    {
+      "cmd": "militaryaid", "group": "events", "src": "rics",
+      "summary": "Ruft Verstärkung von befreundeten Fraktionen.",
+      "usage": [ { "syntax": "!militaryaid [Einsatz]" } ],
+      "examples": ["!militaryaid 1500", "!militaryaid 3000"],
+      "effect": "Verbündete Truppen eilen der Kolonie zu Hilfe. Mehr Einsatz erhöht die Chance auf erfolgreiche Hilfe. Das bringt dir Karma.",
+      "notes": ["Es braucht mindestens eine befreundete Fraktion; bei schlechten Beziehungen kommt vielleicht niemand."]
+    },
+    {
+      "cmd": "joinraid", "group": "events", "src": "rics",
+      "summary": "Tritt einem laufenden Twitch-Raid bei.",
+      "usage": [ { "syntax": "!joinraid" } ],
+      "effect": "Wenn ein anderer Streamer mit seinem Chat zu uns raidet, werden die Mitmachenden als Namen der Angreifer ins Spiel eingebaut.",
+      "notes": ["Funktioniert nur während des kurzen Zeitfensters nach der Raid-Ankündigung."]
+    },
+
+    {
+      "cmd": "races", "group": "pawn", "src": "rics",
+      "summary": "Listet die Rassen, die du mit !pawn kaufen kannst.",
+      "usage": [ { "syntax": "!races" } ],
+      "effect": "Reine Anzeige. Mehr Details im Tab „Rassen“."
+    },
+    {
+      "cmd": "xenotypes", "group": "pawn", "src": "rics",
+      "summary": "Listet die Xenotypen einer Rasse.",
+      "usage": [ { "syntax": "!xenotypes <Rasse>" } ],
+      "examples": ["!xenotypes human"],
+      "effect": "Reine Anzeige. Braucht Biotech."
+    },
+    {
+      "cmd": "leave", "group": "pawn", "src": "rics",
+      "summary": "Gibt deinen Pawn frei.",
+      "usage": [ { "syntax": "!leave" } ],
+      "effect": "Dein Pawn ist nicht mehr deiner. Du kannst dich danach mit !join für einen neuen anstellen.",
+      "notes": ["Das lässt sich nicht rückgängig machen."]
+    },
+    {
+      "cmd": "leavequeue", "group": "pawn", "src": "rics",
+      "summary": "Nimmt dich wieder aus der Warteschlange.",
+      "usage": [ { "syntax": "!leavequeue" } ],
+      "effect": "Du bist nicht mehr in der Schlange. Mit !join kannst du dich jederzeit neu anstellen."
+    },
+    {
+      "cmd": "rescueme", "group": "pawn", "src": "rics",
+      "summary": "Holt deinen verschwundenen Pawn zurück.",
+      "usage": [ { "syntax": "!rescueme" } ],
+      "effect": "Wurde dein Pawn gefangen genommen, entsteht ein Rettungsort auf der Weltkarte. Wurde er zurückgelassen, kommt er per Landekapsel heim.",
+      "notes": ["Nur für Subscriber (so steht es im Standard; der Streamer kann es ändern).", "Ist dein Pawn tot, hilft !revivepawn."]
+    },
+    {
+      "cmd": "revivepawn", "group": "pawn", "src": "rics",
+      "summary": "Belebt einen toten Pawn wieder.",
+      "usage": [ { "syntax": "!revivepawn", "note": "Deinen eigenen Pawn." }, { "syntax": "!revivepawn <Zuschauer>", "note": "Den Pawn eines anderen." }, { "syntax": "!revivepawn all", "note": "Alle toten Zuschauer-Pawns." } ],
+      "effect": "Coins werden abgezogen, der Pawn lebt wieder. Anderen zu helfen belohnt das Karma."
+    },
+    {
+      "cmd": "healpawn", "group": "pawn", "src": "rics",
+      "summary": "Heilt Verletzungen.",
+      "usage": [ { "syntax": "!healpawn", "note": "Dein eigener Pawn." }, { "syntax": "!healpawn <Zuschauer>", "note": "Der Pawn eines anderen." }, { "syntax": "!healpawn all", "note": "Alle Zuschauer-Pawns." } ],
+      "effect": "Coins werden abgezogen, die Verletzungen verschwinden. Anderen zu helfen belohnt das Karma."
+    },
+    {
+      "cmd": "pawncheck", "group": "pawn", "src": "rics",
+      "summary": "Zeigt die Verletzungen des Pawns eines anderen Zuschauers.",
+      "usage": [ { "syntax": "!pawncheck <Zuschauer>" } ],
+      "examples": ["!pawncheck yokutube"],
+      "effect": "Reine Anzeige, zeigt nur Verletzungen."
+    },
+
+    {
+      "cmd": "trait", "group": "char", "src": "rics",
+      "summary": "Zeigt Infos zu einer Eigenschaft.",
+      "usage": [ { "syntax": "!trait <Name>" } ],
+      "examples": ["!trait quick_learner"],
+      "effect": "Reine Anzeige. Die Liste aller kaufbaren Eigenschaften steht im Tab „Traits“."
+    },
+    {
+      "cmd": "traits", "group": "char", "src": "rics",
+      "summary": "Listet die kaufbaren Eigenschaften.",
+      "usage": [ { "syntax": "!traits" } ],
+      "effect": "Reine Anzeige."
+    },
+    {
+      "cmd": "addtrait", "group": "char", "src": "rics",
+      "summary": "Fügt deinem Pawn eine Eigenschaft hinzu.",
+      "usage": [ { "syntax": "!addtrait <Name>" } ],
+      "examples": ["!addtrait nudist"],
+      "effect": "Coins werden abgezogen und dein Pawn bekommt die Eigenschaft. Das Spiel erlaubt nur eine begrenzte Anzahl und manche schließen einander aus."
+    },
+    {
+      "cmd": "removetrait", "group": "char", "src": "rics",
+      "summary": "Entfernt eine Eigenschaft von deinem Pawn.",
+      "usage": [ { "syntax": "!removetrait <Name>" } ],
+      "effect": "Coins werden abgezogen und die Eigenschaft ist weg."
+    },
+    {
+      "cmd": "replacetrait", "group": "char", "src": "rics",
+      "summary": "Tauscht eine Eigenschaft gegen eine andere.",
+      "usage": [ { "syntax": "!replacetrait <alte> <neue>" } ],
+      "examples": ["!replacetrait slow_learner fast_learner"],
+      "effect": "Die alte Eigenschaft verschwindet, die neue kommt dazu."
+    },
+    {
+      "cmd": "settraits", "group": "char", "src": "rics",
+      "summary": "Fügt mehrere Eigenschaften auf einmal hinzu oder ersetzt sie.",
+      "usage": [ { "syntax": "!settraits [Eigenschaft] [Eigenschaft] ..." } ],
+      "effect": "Spart dir mehrere Einzelbefehle."
+    },
+    {
+      "cmd": "passion", "group": "char", "src": "rics",
+      "summary": "Wette Coins auf eine neue oder stärkere Leidenschaft.",
+      "usage": [
+        { "syntax": "!passion <Einsatz>", "note": "Wette auf eine zufällige Fertigkeit." },
+        { "syntax": "!passion <Fertigkeit> <Einsatz>", "note": "Wette auf eine bestimmte Fertigkeit. Teilnamen reichen (shoot, med)." },
+        { "syntax": "!passion list", "note": "Zeigt die Leidenschaften deines Pawns." }
+      ],
+      "examples": ["!passion 200", "!passion shooting 500"],
+      "effect": "Bei Erfolg bekommt der Pawn eine Leidenschaft (🔥) oder eine stärkere (🔥🔥). Bei Misserfolg sind die Coins weg; ein kritischer Fehlschlag kann sogar eine Leidenschaft kosten.",
+      "notes": ["Ein höherer Einsatz erhöht die Chance, aber nur bis zu einem Höchstwert."]
+    },
+    {
+      "cmd": "shufflechildhood", "group": "char", "src": "rics",
+      "summary": "Würfelt die Kindheits-Geschichte deines Pawns neu.",
+      "usage": [ { "syntax": "!shufflechildhood" } ],
+      "effect": "Coins werden abgezogen, die Kindheit wird ersetzt – das ändert Fertigkeiten und Eigenschaften."
+    },
+    {
+      "cmd": "shuffleadulthood", "group": "char", "src": "rics",
+      "summary": "Würfelt die Erwachsenen-Geschichte deines Pawns neu.",
+      "usage": [ { "syntax": "!shuffleadulthood" } ],
+      "effect": "Coins werden abgezogen, die Erwachsenen-Geschichte wird ersetzt."
+    },
+    {
+      "cmd": "genderswap", "group": "char", "src": "extras",
+      "summary": "Wechselt das Geschlecht deines Pawns – mit einem einzigen Befehl.",
+      "usage": [ { "syntax": "!genderswap" } ],
+      "effect": "Die Operation wird für deinen Pawn eingeplant und die Coins abgezogen. Ein Kolonist-Arzt führt sie durch, sobald Arzt und Bett frei sind.",
+      "notes": ["Der Preis steht in den RICS-Einstellungen. Das Gleiche geht auch mit !surgery genderswap."]
+    },
+    {
+      "cmd": "wants", "group": "char", "src": "extras",
+      "summary": "Zeigt die Wünsche deines Pawns und lässt dich unmögliche tauschen.",
+      "usage": [
+        { "syntax": "!wants", "note": "Liste der aktuellen Wünsche und deine Charakterpunkte." },
+        { "syntax": "!wants <Nr>", "note": "Details und ein Hinweis, in welche Richtung du denken musst." },
+        { "syntax": "!wants reroll <Nr>", "note": "Tauscht einen Wunsch gegen einen neuen, wenn er nicht machbar ist." }
+      ],
+      "examples": ["!wants", "!wants 2", "!wants reroll 2"],
+      "effect": "Erfüllt dein Pawn einen Wunsch, gibt es Charakterpunkte – die schalten Quirks frei. Wie du ihn erfüllst, ist deine Idee: Es gibt bewusst keinen Befehl dafür.",
+      "notes": ["Tauschen kostet Coins und hat eine Pause pro Pawn.", "Braucht die Mod „Character Development“."],
+      "requires": "Character Development"
+    },
+    {
+      "cmd": "quirks", "group": "char", "src": "extras",
+      "summary": "Zeigt die freigeschalteten Quirks deines Pawns.",
+      "usage": [ { "syntax": "!quirks" }, { "syntax": "!quirks <Nr>", "note": "Details zu einem Quirk." } ],
+      "effect": "Reine Anzeige. Quirks schaltest du frei, indem dein Pawn Wünsche erfüllt.",
+      "requires": "Character Development"
+    },
+    {
+      "cmd": "aspirations", "group": "char", "src": "extras",
+      "summary": "Zeigt die Lebensziele deines Pawns und was schon erfüllt ist.",
+      "usage": [ { "syntax": "!aspirations" }, { "syntax": "!aspirations <Nr>", "note": "Details zu einem Ziel." } ],
+      "effect": "Reine Anzeige mit Haken bei erfüllten Zielen und der Erfüllung in Prozent. Sind alle Ziele erreicht, wird dein Pawn zufriedener.",
+      "requires": "Vanilla Aspirations Expanded"
+    },
+    {
+      "cmd": "expertise", "group": "char", "src": "addon",
+      "summary": "Zeigt und wählt die Expertisen deines Pawns.",
+      "usage": [ { "syntax": "!expertise [Name]", "note": "Ohne Namen siehst du, was dein Pawn schon kann und was er lernen darf." } ],
+      "effect": "Wenn dein Pawn die nötige Fertigkeitsstufe hat, kannst du eine neue Expertise wählen. Es gibt eine Höchstzahl.",
+      "requires": "Vanilla Skills Expanded"
+    },
+    {
+      "cmd": "dye", "group": "char", "src": "rics",
+      "summary": "Färbt die Kleidung deines Pawns.",
+      "usage": [ { "syntax": "!dye [Farbe]" }, { "syntax": "!dye hair [Farbe]", "note": "Falls vom Streamer eingerichtet, färbt das die Haare." } ],
+      "effect": "Die Farbe ändert sich sofort."
+    },
+    {
+      "cmd": "setfavoritecolor", "group": "char", "src": "rics",
+      "summary": "Setzt die Lieblingsfarbe deines Pawns.",
+      "usage": [ { "syntax": "!setfavoritecolor <Farbe>", "note": "Farbname oder Hex-Code. Ohne Farbe siehst du die aktuelle." } ],
+      "examples": ["!setfavoritecolor blue", "!setfavoritecolor #FF0000"],
+      "effect": "Die Lieblingsfarbe wird gespeichert.",
+      "requires": "Ideology"
+    },
+
+    {
+      "cmd": "sethead", "group": "look", "src": "addon",
+      "summary": "Ändert den Kopf deines Pawns.",
+      "usage": [ { "syntax": "!sethead <Kopf>" }, { "syntax": "!sethead list", "note": "Zeigt, was für deinen Pawn möglich ist." } ],
+      "effect": "Der Kopf ändert sich. Rasse, Geschlecht und Gene werden beachtet."
+    },
+    {
+      "cmd": "setbody", "group": "look", "src": "addon",
+      "summary": "Ändert den Körpertyp.",
+      "usage": [ { "syntax": "!setbody <Körper>" }, { "syntax": "!setbody list" } ],
+      "effect": "Der Körpertyp ändert sich, wenn Rasse und Gene es zulassen."
+    },
+    {
+      "cmd": "sethair", "group": "look", "src": "addon",
+      "summary": "Ändert die Frisur.",
+      "usage": [ { "syntax": "!sethair <Frisur>" }, { "syntax": "!sethair list" } ],
+      "effect": "Die Frisur ändert sich, wenn Gene und Rasse es erlauben."
+    },
+    {
+      "cmd": "setbeard", "group": "look", "src": "addon",
+      "summary": "Ändert den Bart.",
+      "usage": [ { "syntax": "!setbeard <Bart>" }, { "syntax": "!setbeard list" } ],
+      "effect": "Der Bart ändert sich.",
+      "requires": "Ideology"
+    },
+    {
+      "cmd": "dyehair", "group": "look", "src": "addon",
+      "summary": "Färbt die Haare.",
+      "usage": [ { "syntax": "!dyehair <Farbe>" }, { "syntax": "!dyehair genes", "note": "Haarfarben, die deine Gene erlauben." }, { "syntax": "!dyehair list" } ],
+      "effect": "Die Haarfarbe ändert sich."
+    },
+    {
+      "cmd": "settattoo", "group": "look", "src": "addon",
+      "summary": "Ändert Tattoos.",
+      "usage": [ { "syntax": "!settattoo <face|body> <Tattoo>" }, { "syntax": "!settattoo <face|body> list" } ],
+      "examples": ["!settattoo face list"],
+      "effect": "Das Tattoo wird gesetzt.",
+      "requires": "Ideology"
+    },
+    {
+      "cmd": "setskin", "group": "look", "src": "addon",
+      "summary": "Wählt die Hautfarbe.",
+      "usage": [ { "syntax": "!setskin <Farbe>" }, { "syntax": "!setskin 2 <Farbe>", "note": "Zweite Farbe, falls dein Pawn eine hat." }, { "syntax": "!setskin list" } ],
+      "effect": "Die Hautfarbe ändert sich."
+    },
+    {
+      "cmd": "setstyle", "group": "look", "src": "addon",
+      "summary": "Wählt den Ideologie-Stil deiner Ausrüstung.",
+      "usage": [ { "syntax": "!setstyle <Nr> <Stil>" } ],
+      "effect": "Das gewählte Ausrüstungsstück bekommt den Stil.",
+      "requires": "Ideology"
+    },
+    {
+      "cmd": "harcosmetic", "group": "look", "src": "addon",
+      "summary": "Ändert Körper-Extras von Fremdrassen, z. B. Hörner.",
+      "usage": [ { "syntax": "!harcosmetic" } ],
+      "effect": "Passt Kosmetik an, wenn deine Rasse welche hat."
+    },
+    {
+      "cmd": "geneedit", "group": "look", "src": "addon",
+      "summary": "Fügt Gene hinzu, setzt den Xenotyp oder aktiviert Kosmetik-Gene.",
+      "usage": [
+        { "syntax": "!geneedit activate", "note": "Aktiviert überschriebene Kosmetik-Gene (Hörner usw.)." },
+        { "syntax": "!geneedit create <Gen> <Gen> ...", "note": "Ersetzt die Xenogene durch eine eigene Liste – gegen Coins." },
+        { "syntax": "!geneedit add <Gen>", "note": "Fügt ein Xenogen hinzu – doppelter Preis." },
+        { "syntax": "!geneedit set <Xenotyp>", "note": "Wechselt zu einem Xenotyp, den deine Rasse erlaubt – gleicher Preis." }
+      ],
+      "effect": "Gene werden geändert. Braucht Biotech und fertige Gen-Forschung.",
+      "requires": "Biotech"
+    },
+
+    {
+      "cmd": "chitchat", "group": "social", "src": "rics",
+      "summary": "Dein Pawn plaudert locker mit einem anderen Kolonisten.",
+      "usage": [ { "syntax": "!chitchat [@Zuschauer|Pawnname|random]", "note": "Das Ziel ist optional. Ohne Ziel wird ein Kolonist ausgewählt." } ],
+      "effect": "Eine freundliche Unterhaltung. Kostet Coins (Standard 10).",
+      "notes": ["Beide Pawns müssen leben, wach, auf derselben Karte und zu Gesprächen fähig sein."]
+    },
+    {
+      "cmd": "deeptalk", "group": "social", "src": "rics",
+      "summary": "Dein Pawn führt ein tiefes Gespräch.",
+      "usage": [ { "syntax": "!deeptalk [@Zuschauer|Pawnname|random]" } ],
+      "effect": "Verbessert die Beziehung. Kostet Coins (Standard 15)."
+    },
+    {
+      "cmd": "buildrapport", "group": "social", "src": "rics",
+      "summary": "Baut eine Freundschaft auf.",
+      "usage": [ { "syntax": "!buildrapport [@Zuschauer|Pawnname|random]" } ],
+      "effect": "Fördert Freundschaft. Kostet Coins (Standard 25)."
+    },
+    {
+      "cmd": "flirt", "group": "social", "src": "rics",
+      "summary": "Dein Pawn flirtet mit einem anderen.",
+      "usage": [ { "syntax": "!flirt [@Zuschauer|Pawnname|random]" } ],
+      "effect": "Eine romantische Annäherung. Passt das Paar nicht zusammen, wird sie abgelehnt. Kostet Coins (Standard 20).",
+      "notes": ["Hat dein Pawn schon einen Partner und flirtet mit einem anderen, kostet das extra Karma."]
+    },
+    {
+      "cmd": "marry", "group": "social", "src": "rics",
+      "summary": "Dein Pawn macht einen Heiratsantrag.",
+      "usage": [ { "syntax": "!marry [@Zuschauer|Pawnname|random]" } ],
+      "effect": "Ein Antrag mit hohem Risiko. Passen die beiden nicht zusammen, wird er abgelehnt. Kostet Coins (Standard 50) und braucht Karma (Standard 10)."
+    },
+    {
+      "cmd": "insult", "group": "social", "src": "rics",
+      "summary": "Dein Pawn beleidigt einen anderen.",
+      "usage": [ { "syntax": "!insult [@Zuschauer|Pawnname|random]" } ],
+      "effect": "Schadet der Beziehung. Kostet Coins (Standard 5) und braucht Karma (Standard 5).",
+      "notes": ["Ist die Stimmung des Opfers schon schlecht, kostet es zusätzlich Karma."]
+    },
+    {
+      "cmd": "reassure", "group": "social", "src": "rics",
+      "summary": "Dein Pawn tröstet einen anderen.",
+      "usage": [ { "syntax": "!reassure [@Zuschauer|Pawnname|random]" } ],
+      "effect": "Beruhigt den Kolonisten. Kostet Coins (Standard 12).",
+      "requires": "Ideology"
+    },
+    {
+      "cmd": "nuzzle", "group": "social", "src": "rics",
+      "summary": "Dein Pawn kuschelt mit einem Tier.",
+      "usage": [ { "syntax": "!nuzzle [Tier]" } ],
+      "effect": "Zuneigung für gebundene Tiere. Kostet Coins (Standard 8). Laut RICS-Wiki noch nicht ausführlich getestet."
+    },
+    {
+      "cmd": "animalchat", "group": "social", "src": "rics",
+      "summary": "Dein Pawn redet mit einem Tier.",
+      "usage": [ { "syntax": "!animalchat [Tier]" } ],
+      "effect": "Kommunikation mit trainierten Tieren. Kostet Coins (Standard 10)."
+    },
+    {
+      "cmd": "convert", "group": "social", "src": "rics",
+      "summary": "Dein Pawn versucht, einen anderen von seiner Ideologie zu überzeugen.",
+      "usage": [ { "syntax": "!convert [@Zuschauer|Pawnname|random]" } ],
+      "effect": "Bei Erfolg wechselt der andere die Ideologie. Starker Glaube macht es schwerer, ein Fehlschlag schadet der Beziehung. Kostet Coins (Standard 30) und Karma (Standard 15).",
+      "requires": "Ideology"
+    },
+    {
+      "cmd": "duel", "group": "social", "src": "extras",
+      "summary": "Fordere einen anderen Pawn zum Faustkampf heraus.",
+      "usage": [
+        { "syntax": "!duel <Name>", "note": "Name eines Zuschauers oder Kolonisten. Ist das Ziel ein normaler Kolonist, geht es sofort los." },
+        { "syntax": "!duel ja", "note": "Du wurdest von einem Zuschauer herausgefordert und nimmst an." },
+        { "syntax": "!duel nein", "note": "Du lehnst ab." }
+      ],
+      "examples": ["!duel mikael", "!duel ja"],
+      "effect": "Beide Pawns schlagen sich mit den Fäusten. Ein Schiedsrichter bricht ab, bevor es gefährlich wird; Sieger ist, wer mehr Gesundheit hat.",
+      "notes": ["Sind beide Pawns von Zuschauern, müssen beide zustimmen.", "Beide müssen gesund und kampffähig sein. Danach gibt es für beide eine Pause.", "Kein Duell, solange die Kolonie bedroht wird."]
+    },
+
+    {
+      "cmd": "work", "group": "control", "src": "addon",
+      "summary": "Zwingt deinen Pawn zu einer Arbeit, zum Schlafen oder zur Freizeit.",
+      "usage": [ { "syntax": "!work <Arbeit|sleep|joy> [Freizeitart]", "note": "Bei joy kannst du die Art der Erholung angeben." } ],
+      "examples": ["!work sleep", "!work joy"],
+      "effect": "Dein Pawn lässt alles stehen und liegen und macht das."
+    },
+    {
+      "cmd": "zone", "group": "control", "src": "addon",
+      "summary": "Zeigt und wechselt die Zone, in der sich dein Pawn aufhalten darf.",
+      "usage": [ { "syntax": "!zone [Name]", "note": "Ohne Namen siehst du die Zonen." } ],
+      "effect": "Dein Pawn hält sich danach in der gewählten Zone auf."
+    },
+    {
+      "cmd": "pickup", "group": "control", "src": "addon",
+      "summary": "Nimmt Dinge aus dem Lager der Kolonie.",
+      "usage": [ { "syntax": "!pickup <Item>", "note": "Dein Pawn holt das Item." }, { "syntax": "!pickup <equip|wear|use|drop> <Item>", "note": "Ausrüsten, anziehen, benutzen oder ablegen." } ],
+      "effect": "Dein Pawn bekommt den Auftrag, das Item zu holen und etwas damit zu tun.",
+      "notes": ["Dafür muss es im Lager liegen (prüfe mit !storage)."]
+    },
+    {
+      "cmd": "draft", "group": "control", "src": "addon",
+      "summary": "Versetzt deinen Pawn in den Kampfmodus oder holt ihn wieder heraus.",
+      "usage": [ { "syntax": "!draft" } ],
+      "effect": "Im Kampfmodus tut der Pawn nur noch, was du ihm sagst (!move, !attack).",
+      "notes": ["Nicht möglich, wenn dein Pawn am Boden liegt."]
+    },
+    {
+      "cmd": "move", "group": "control", "src": "addon",
+      "summary": "Bewegt deinen gedrafteten Pawn.",
+      "usage": [ { "syntax": "!move <x> <y>", "note": "Zu einer Karten-Koordinate." }, { "syntax": "!move pos <1-5>", "note": "Zu einer gespeicherten Position." }, { "syntax": "!move room <Raumtyp>", "note": "In einen Raum dieser Art." } ],
+      "effect": "Der Pawn läuft dorthin."
+    },
+    {
+      "cmd": "position", "group": "control", "src": "addon",
+      "summary": "Speichert Orte für !move.",
+      "usage": [ { "syntax": "!position <1-5> set", "note": "Speichert den aktuellen Ort in einem von fünf Plätzen." }, { "syntax": "!position", "note": "Zeigt deine gespeicherten Orte." } ],
+      "effect": "Du kannst später mit !move pos <Nr> dorthin zurück."
+    },
+    {
+      "cmd": "attack", "group": "control", "src": "addon",
+      "summary": "Lässt deinen gedrafteten Pawn ein Ziel angreifen.",
+      "usage": [ { "syntax": "!attack [Ziel]" } ],
+      "effect": "Dein Pawn geht auf das Ziel los. Gibt es keinen Gegner, kommt eine Meldung."
+    },
+    {
+      "cmd": "autocombat", "group": "control", "src": "addon",
+      "summary": "Dein Pawn sucht und bekämpft Feinde selbst.",
+      "usage": [ { "syntax": "!autocombat on" }, { "syntax": "!autocombat off" } ],
+      "effect": "Mit „on“ greift der Pawn von sich aus Feinde an."
+    },
+    {
+      "cmd": "gizmo", "group": "control", "src": "addon",
+      "summary": "Nutzt Fähigkeiten und Knöpfe deiner Ausrüstung, z. B. Feuerschaum-Rucksack.",
+      "usage": [ { "syntax": "!gizmo [Name]", "note": "Ohne Namen siehst du, was dein Pawn auslösen kann." } ],
+      "effect": "Die Fähigkeit wird sofort ausgelöst."
+    },
+    {
+      "cmd": "medpolicy", "group": "control", "src": "addon",
+      "summary": "Ändert die medizinische Versorgung deines Pawns.",
+      "usage": [ { "syntax": "!medpolicy [Stufe]" } ],
+      "effect": "Die Ärzte behandeln deinen Pawn danach mit dieser Stufe von Medizin."
+    },
+    {
+      "cmd": "hostility", "group": "control", "src": "addon",
+      "summary": "Legt fest, wie dein Pawn auf Feinde reagiert.",
+      "usage": [ { "syntax": "!hostility [flee|attack|ignore]", "note": "Ohne Angabe zeigt der Befehl die aktuelle Einstellung." } ],
+      "effect": "Dein Pawn flieht, kämpft oder ignoriert Feinde."
+    },
+    {
+      "cmd": "selftend", "group": "control", "src": "addon",
+      "summary": "Schaltet Selbstbehandlung an oder aus.",
+      "usage": [ { "syntax": "!selftend on" }, { "syntax": "!selftend off" } ],
+      "effect": "Mit „on“ verarztet sich dein Pawn bei Verletzungen selbst."
+    },
+    {
+      "cmd": "sidearms", "group": "control", "src": "addon",
+      "summary": "Verwaltet die Zweitwaffen deines Pawns.",
+      "usage": [ { "syntax": "!sidearms list", "note": "Zeigt deine Waffen mit Nummern." }, { "syntax": "!sidearms equip <Nr|unarmed>", "note": "Rüstet diese Waffe aus (oder kämpfe ohne Waffe)." }, { "syntax": "!sidearms drop <Nr>", "note": "Legt eine Waffe ab." } ],
+      "effect": "Dein Pawn wechselt die Waffe.",
+      "requires": "Simple Sidearms"
+    },
+    {
+      "cmd": "weapon", "group": "control", "src": "addon",
+      "summary": "Verwaltet die Waffen deines Pawns.",
+      "usage": [ { "syntax": "!weapon" } ],
+      "effect": "Zeigt und wechselt Waffen."
+    },
+    {
+      "cmd": "info", "group": "control", "src": "addon",
+      "summary": "Ausführliche Infos zu einem Ding oder Gen.",
+      "usage": [ { "syntax": "!info <Name>" } ],
+      "effect": "Reine Anzeige. Wird nichts gefunden, sagt der Bot es."
+    },
+    {
+      "cmd": "isekai", "group": "control", "src": "addon",
+      "summary": "Zeigt dein Isekai-Level und verteilt Punkte.",
+      "usage": [ { "syntax": "!isekai", "note": "Dein Stand." }, { "syntax": "!isekai level <str|dex|vit|int|wis|cha> [Menge]", "note": "Verteilt Punkte auf einen Wert." }, { "syntax": "!isekai aura", "note": "Wählt eine Aura." } ],
+      "effect": "Deine Werte steigen, wenn du Punkte hast.",
+      "requires": "Isekai RPG Leveling"
+    },
+    {
+      "cmd": "constellation", "group": "control", "src": "addon",
+      "summary": "Wählt und levelt eine Isekai-Klasse (Sternbild).",
+      "usage": [
+        { "syntax": "!constellation info" },
+        { "syntax": "!constellation unlock <Klasse>" },
+        { "syntax": "!constellation path <Keystone>" },
+        { "syntax": "!constellation learn" }
+      ],
+      "effect": "Du wählst eine Klasse und schaltest Knoten im Skill-Baum frei.",
+      "requires": "Isekai RPG Leveling"
+    },
+
+    {
+      "cmd": "vote", "group": "community", "src": "voting",
+      "summary": "Stimme ab, welches Event als Nächstes kommt.",
+      "usage": [ { "syntax": "1  (oder 2, 3, 4 …)", "note": "Schreibe einfach die Zahl in den Chat – mehr ist nicht nötig." }, { "syntax": "!vote <Nr>", "note": "Geht auch." } ],
+      "examples": ["2"],
+      "effect": "Wenn die Abstimmung endet, passiert das Event mit den meisten Stimmen. Du kannst deine Stimme ändern, bis die Zeit um ist."
+    },
+    {
+      "cmd": "goal", "group": "community", "src": "extras",
+      "summary": "Zeigt die Gemeinschaftsziele und deinen Beitrag.",
+      "usage": [ { "syntax": "!goal" } ],
+      "effect": "Ein Ziel schafft ihr gemeinsam – mit den Pawns oder mit Material im Lager. Ist es erreicht, passiert automatisch die Belohnung, z. B. ein Event oder ein Geschenk."
+    },
+
+    {
+      "cmd": "givecoins", "group": "mod", "src": "rics",
+      "summary": "Gibt Coins an einen oder alle Zuschauer.",
+      "usage": [ { "syntax": "!givecoins <Zuschauer|all> <Menge>" }, { "syntax": "!givecoins <Menge>", "note": "Nur die Menge: geht an alle." } ],
+      "effect": "Die Coins werden gutgeschrieben."
+    },
+    {
+      "cmd": "givekarma", "group": "mod", "src": "rics",
+      "summary": "Gibt Karma an einen oder alle Zuschauer.",
+      "usage": [ { "syntax": "!givekarma <Zuschauer|all> <Menge>" }, { "syntax": "!givekarma <Menge>", "note": "Nur die Menge: geht an alle." } ],
+      "effect": "Das Karma wird gutgeschrieben."
+    },
+    {
+      "cmd": "setkarma", "group": "mod", "src": "rics",
+      "summary": "Setzt das Karma eines Zuschauers auf einen festen Wert.",
+      "usage": [ { "syntax": "!setkarma <Zuschauer> <Menge>" } ],
+      "effect": "Der Wert wird übernommen."
+    },
+    {
+      "cmd": "togglestore", "group": "mod", "src": "rics",
+      "summary": "Schaltet den Store an oder aus.",
+      "usage": [ { "syntax": "!togglestore [on|off]" } ],
+      "effect": "Ist der Store aus, funktionieren Kaufbefehle nicht."
+    },
+    {
+      "cmd": "fixallpawns", "group": "mod", "src": "rics",
+      "summary": "Repariert die Zuordnung aller Zuschauer-Pawns.",
+      "usage": [ { "syntax": "!fixallpawns" } ],
+      "effect": "Hilft, wenn Pawns und Zuschauer durcheinander geraten sind."
+    },
+    {
+      "cmd": "cleanlootboxes", "group": "mod", "src": "rics",
+      "summary": "Räumt Lootboxen auf.",
+      "usage": [ { "syntax": "!cleanlootboxes [dry|dryrun|all|orphans]", "note": "dry zählt nur. orphans entfernt Lootboxen ohne Besitzer. all löscht alle – Vorsicht." } ],
+      "effect": "Entfernt Lootboxen je nach Modus."
+    },
+    {
+      "cmd": "cleanviewers", "group": "mod", "src": "rics",
+      "summary": "Räumt die Zuschauer-Datenbank auf.",
+      "usage": [ { "syntax": "!cleanviewers [dry|noplat|all]", "note": "noplat entfernt Einträge ohne Plattform-ID." } ],
+      "effect": "Entfernt alte oder kaputte Einträge."
+    },
+    {
+      "cmd": "rban", "group": "mod", "src": "rics",
+      "summary": "Sperrt einen Zuschauer nur für RICS-Befehle.",
+      "usage": [ { "syntax": "!rban <Zuschauer>" } ],
+      "effect": "Die Befehle der Person werden ignoriert. Das ist kein Bann auf Twitch.",
+      "notes": ["Rückgängig mit !runban."]
+    },
+    {
+      "cmd": "runban", "group": "mod", "src": "rics",
+      "summary": "Hebt einen RICS-Bann oder -Timeout auf.",
+      "usage": [ { "syntax": "!runban <Zuschauer>" } ],
+      "effect": "Die Person darf wieder Befehle nutzen."
+    },
+    {
+      "cmd": "rto", "group": "mod", "src": "rics",
+      "summary": "Timeout nur für RICS-Befehle.",
+      "usage": [ { "syntax": "!rto <Zuschauer> [Dauer]", "note": "Standard 5 Minuten, Echtzeit." } ],
+      "examples": ["!rto bob 10", "!rto bob 10m"],
+      "effect": "Die Befehle der Person werden für die Zeit ignoriert."
+    },
+    {
+      "cmd": "setalias", "group": "mod", "src": "rics",
+      "summary": "Gibt einem Befehl einen zweiten Namen.",
+      "usage": [ { "syntax": "!setalias <Befehl> <Alias>" }, { "syntax": "!setalias <Befehl>", "note": "Zeigt den Alias." }, { "syntax": "!setalias <Befehl> clear", "note": "Entfernt ihn." } ],
+      "examples": ["!setalias !bal !bald"],
+      "effect": "Der Befehl ist danach auch unter dem neuen Namen erreichbar; er wird nicht umbenannt."
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "_hinweis": "Auswahlhilfen zu Befehlen: Bei diesen Befehlen zeigt die Seite die möglichen Werte als antippbare Knöpfe. 'from' = Liste aus den Daten (weather, races, xenotypes) oder aus choices.json (colors, hairColors, skills, raidTypes, raidStrategies); 'values' = feste Liste; {c} = der gewählte Wert, {r} = erste Rasse (z. B. human).",
+  "pawn": [
+    { "label": "Rasse wählen", "from": "races", "template": "!pawn {c}" },
+    { "label": "Xenotyp wählen (für {r})", "from": "xenotypes", "template": "!pawn {r} {c}" }
+  ],
+  "weather": [ { "label": "Wetter wählen", "from": "weather", "template": "!weather {c}" } ],
+  "raid": [
+    { "label": "Art wählen", "from": "raidTypes", "template": "!raid {c}" },
+    { "label": "Strategie wählen (mit Art standard)", "from": "raidStrategies", "template": "!raid standard {c}" }
+  ],
+  "passion": [ { "label": "Fertigkeit wählen (Einsatz 100 – danach anpassen)", "from": "skills", "template": "!passion {c} 100" } ],
+  "hostility": [ { "label": "Verhalten wählen", "values": ["flee", "attack", "ignore"], "template": "!hostility {c}" } ],
+  "work": [ { "label": "Tätigkeit wählen", "values": ["sleep", "joy"], "template": "!work {c}" } ],
+  "sethead": [ { "label": "Auswahl", "values": ["list"], "template": "!sethead {c}" } ],
+  "setbody": [ { "label": "Auswahl", "values": ["list"], "template": "!setbody {c}" } ],
+  "sethair": [ { "label": "Auswahl", "values": ["list"], "template": "!sethair {c}" } ],
+  "setbeard": [ { "label": "Auswahl", "values": ["list"], "template": "!setbeard {c}" } ],
+  "settattoo": [ { "label": "Auswahl", "values": ["face list", "body list"], "template": "!settattoo {c}" } ],
+  "setskin": [
+    { "label": "Auswahl", "values": ["list"], "template": "!setskin {c}" },
+    { "label": "Farbe wählen", "from": "colors", "template": "!setskin {c}" }
+  ],
+  "dyehair": [
+    { "label": "Auswahl", "values": ["list", "genes"], "template": "!dyehair {c}" },
+    { "label": "Haarfarbe wählen", "from": "hairColors", "template": "!dyehair {c}" }
+  ],
+  "dye": [ { "label": "Farbe wählen", "from": "colors", "template": "!dye {c}" } ],
+  "setfavoritecolor": [ { "label": "Farbe wählen", "from": "colors", "template": "!setfavoritecolor {c}" } ],
+  "setstyle": [ { "label": "Auswahl", "values": ["list"], "template": "!setstyle {c}" } ],
+  "geneedit": [
+    { "label": "Aktion wählen", "values": ["activate"], "template": "!geneedit {c}" },
+    { "label": "Xenotyp wählen (für {r})", "from": "xenotypes", "template": "!geneedit set {c}" }
+  ],
+  "surgery": [ { "label": "Eingriff wählen", "values": ["genderswap", "fat body", "thin body", "hulking body", "masculine body", "feminine body", "transfusion", "hemogen", "sterilize", "tubal", "vasectomy", "iud", "iudremove", "vasreverse", "terminate"], "template": "!surgery {c}" } ],
+  "lookup": [ { "label": "Wonach suchen?", "values": ["item", "event", "weather", "trait", "race", "xenotype"], "template": "!lookup {c} " } ],
+  "mypawn": [ { "label": "Was anzeigen?", "values": ["needs", "health", "implants", "gear", "weapon", "skills", "stats", "traits", "story", "work", "job", "relations", "family", "friends", "rivals", "genes", "kills"], "template": "!mypawn {c}" } ],
+  "isekai": [ { "label": "Wert wählen", "values": ["str", "dex", "vit", "int", "wis", "cha"], "template": "!isekai level {c}" } ],
+  "sidearms": [ { "label": "Auswahl", "values": ["list", "equip unarmed"], "template": "!sidearms {c}" } ],
+  "zone": [ { "label": "Zonen anzeigen", "values": [""], "template": "!zone" } ],
+  "gizmo": [ { "label": "Fähigkeiten anzeigen", "values": [""], "template": "!gizmo" } ],
+  "expertise": [ { "label": "Auswahl anzeigen", "values": [""], "template": "!expertise" } ],
+  "wants": [ { "label": "Auswahl", "values": ["1", "2", "3", "reroll 1", "reroll 2", "reroll 3"], "template": "!wants {c}" } ],
+  "constellation": [ { "label": "Auswahl", "values": ["info", "path", "learn"], "template": "!constellation {c}" } ]
+}

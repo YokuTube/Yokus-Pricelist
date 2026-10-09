@@ -12,7 +12,7 @@
     "AllowedGenders": {
       "AllowMale": true,
       "AllowFemale": true,
-      "AllowOther": true
+      "AllowOther": false
     },
     "XenotypePrices": {
       "Baseliner": 1750.0,
