@@ -2,8 +2,14 @@
 
 Antworte auf Deutsch. Öffentliche Preislisten-/Befehlsseite für Andreas' RICS-Stream. Repo: `github.com/YokuTube/Yokus-Pricelist` (Fork von `ekudram/RICS-Pricelist`, inzwischen komplett neu geschrieben – ein „Sync fork“ vom Original würde Konflikte erzeugen). Gemeinsame Regeln: `../CLAUDE.md`.
 
+## Stand
+- **Live** unter https://yokutube.github.io/Yokus-Pricelist/ (GitHub Pages, Branch `main`), seit 9.10.2026 (Neuaufbau).
+- **Automatik eingerichtet** (vom Nutzer gewünscht): Windows-Aufgabe `YokusStoreSync` (als normaler Benutzer, beim Anmelden + alle 15 Min) startet `tools/sync-data.ps1`; sie lädt nur bei Änderungen der RICS-JSON-Dateien hoch. Entfernen: `tools/install-autosync.ps1 -Remove`.
+- Twitch-Senden ist **bewusst aus** (`data/site-config.json` leer; Nutzer will keine Twitch-App registrieren) – nicht wieder einschalten ohne Rückfrage.
+- Die RICS-Item-Einstellungen wurden am 9.10.2026 auf den alten Stand (ca. 70 Items) zurückgesetzt; Sicherung unter `...\Config\CAP_ChatInteractive\Backups\StoreItems_vor_Rueckstellung_*.json`.
+
 ## Regeln
-- **Nichts pushen oder veröffentlichen ohne Rückfrage** (öffentliche Seite). Auch das automatische Hochladen (`tools/install-autosync.ps1`) nur nach Zustimmung einrichten.
+- **Neue größere Änderungen an der öffentlichen Seite vorher kurz bestätigen lassen** (der Nutzer hat den Neuaufbau und das automatische Hochladen der Daten freigegeben).
 - Nur die sieben Dateien aus `tools/sync-data.ps1` (`$Allowed`) dürfen aus dem RICS-Config-Ordner ins Repo – nie `viewers.json` oder Einstellungsdateien mit Tokens.
 - `.ps1`-Dateien nur mit ASCII-Zeichen (Windows PowerShell 5.1 liest BOM-loses UTF-8 falsch).
 - Handy zuerst denken: 44-px-Ziele, keine Querscroll-Seiten, Filter am Handy eingeklappt.
