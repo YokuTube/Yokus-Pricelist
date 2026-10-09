@@ -1,6 +1,7 @@
 import { loadAll } from './data.js';
 import { copyText, esc, fmt } from './util.js';
 import { startView, commandsView, itemsView, eventsView, weatherView, traitsView, racesView, modsView } from './views.js';
+import { icon } from './icons.js';
 import { initChat, renderSlot, offerSend, handleSlotClick } from './chat.js';
 
 const TABS = [
@@ -45,7 +46,7 @@ function renderTabs() {
   const cur = currentTab();
   document.getElementById('tabs').innerHTML = TABS.map((t) => {
     const n = DATA && t.count ? `<span class="count">${fmt(t.count(DATA))}</span>` : '';
-    return `<a class="tab" role="tab" href="#/${t.id}" aria-selected="${t.id === cur}">${esc(t.label)} ${n}</a>`;
+    return `<a class="tab" role="tab" href="#/${t.id}" aria-selected="${t.id === cur}">${icon(t.id)}<span>${esc(t.label)}</span> ${n}</a>`;
   }).join('');
 }
 

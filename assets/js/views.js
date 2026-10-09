@@ -1,6 +1,7 @@
 // Alle Ansichten (Tabs). Jede Funktion liefert { html, bind(root) }.
 import { esc, rich, plain, cap, slug, fmt, debounce, cmdBtn, pickBtn, karmaBadge, karmaInfo, days, KARMA, makeMatcher } from './util.js';
 import { EVENT_TYPES } from './data.js';
+import { icon } from './icons.js';
 
 const PAGE = 48;
 const norm = (s) => plain(s).toLowerCase();
@@ -78,7 +79,7 @@ function showcase(data) {
   data.weather.forEach((w) => { if (wPick.length < 3 && !wPick.includes(w)) wPick.push(w); });
   const chips = (arr) => `<div class="cmd-row">${arr.join('')}</div>`;
   const card = (title, tab, desc, body, more) => `
-    <article class="card show-card"><h3><a href="#/${tab}">${esc(title)}</a></h3><p>${esc(desc)}</p>${body}${more ? `<a class="more" href="#/${tab}">${esc(more)} →</a>` : ''}</article>`;
+    <article class="card show-card"><h3><a href="#/${tab}">${icon(tab, 20)}${esc(title)}</a></h3><p>${esc(desc)}</p>${body}${more ? `<a class="more" href="#/${tab}">${esc(more)} →</a>` : ''}</article>`;
   const out = [];
   if (itemPick.length) out.push(card('Items kaufen', 'items', 'Rohstoffe, Medizin, Waffen und mehr – direkt in die Kolonie oder an deinen Pawn.',
     itemPick.map((i) => uniRow(esc(i.name), esc(i.category), i.price, '!buy ' + i.cmdName)).join(''), `Alle ${fmt(sold.length)} Items ansehen`));
