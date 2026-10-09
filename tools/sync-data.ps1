@@ -50,7 +50,21 @@ foreach ($name in $Allowed) {
   if (-not $DryRun) { Copy-Item -LiteralPath $src -Destination $dst -Force }
 }
 
-if ($changed.Count -eq 0) { Log "Nichts geaendert."; exit 0 }
+if ($changed.Count -eq 0) {
+  # Keine neuen Daten - aber falls ein frueherer Upload gescheitert ist, offene Commits jetzt nachholen.
+  Push-Location $RepoDir
+  try {
+    $ahead = 0
+    $up = git rev-parse --abbrev-ref '@{u}' 2>$null
+    if ($LASTEXITCODE -eq 0 -and $up) { $ahead = [int](git rev-list --count '@{u}..HEAD') }
+    if ($ahead -gt 0 -and -not $DryRun -and -not $NoPush) {
+      git push --quiet
+      if ($LASTEXITCODE -eq 0) { Log "Offene Aenderungen nachgeladen ($ahead)." } else { Log "Nachladen fehlgeschlagen, naechster Versuch folgt." }
+    } else { Log "Nichts geaendert." }
+  }
+  finally { Pop-Location }
+  exit 0
+}
 Log ("Geaendert: " + ($changed -join ', '))
 if ($DryRun) { Log "DryRun - nichts kopiert oder hochgeladen."; exit 0 }
 
