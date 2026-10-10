@@ -652,6 +652,7 @@ const SUBS = [
   { id: 'gear', label: 'Ausrüstung' },
   { id: 'style', label: 'Aussehen' },
   { id: 'ideo', label: 'Glaube' },
+  { id: 'psy', label: 'Psycasts' },
   { id: 'work', label: 'Arbeit' },
   { id: 'goals', label: 'Ziele' },
   { id: 'isekai', label: 'Isekai' },
@@ -666,7 +667,7 @@ let openTrait = null;
 
 const STATE_BADGE = { ok: 'good', sleeping: 'neutral', away: 'neutral', downed: 'bad', mental: 'doom', dead: 'doom' };
 const hasGoals = (p) => p.wants != null || p.quirks != null || p.aspirations != null;
-const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'ideo' || !!p.ideo) && (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null) && (s.id !== 'work' || Array.isArray(p.work)));
+const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'ideo' || !!p.ideo) && (s.id !== 'psy' || !!p.psycasts) && (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null) && (s.id !== 'work' || Array.isArray(p.work)));
 
 function portraitHtml(p, cls) {
   const ini = esc((p.name || p.displayName || '?').trim().charAt(0).toUpperCase() || '?');
@@ -1262,7 +1263,7 @@ async function applyWork(host) {
   repaint(host);
 }
 
-const PANELS = { ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+const PANELS = { psy: panelPsy, ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 function subsHtml(p) {
   const vis = visibleSubs(p);
@@ -1405,6 +1406,55 @@ function panelIdeo(p) {
     + '<p class="small muted trait-hint">Tippe auf einen Eintrag für die Beschreibung.</p>';
 }
 
+// Psycasts (Vanilla Psycasts Expanded): Pfade ("Stile") mit ihren Psycasts je Stufe; gelernt / lernbar / gesperrt.
+let psyData = null, psyLoading = false, psySel = null, psyAll = false;
+
+function ensurePsy(host) {
+  if (psyData || psyLoading) return;
+  psyLoading = true;
+  live.getJson('/api/psycasts').then((r) => { if (r?.status === 200 && r.data) psyData = r.data; })
+    .catch(() => {}).finally(() => { psyLoading = false; if (host.isConnected) repaint(host); });
+}
+
+function panelPsy(p) {
+  const k = p.psycasts;
+  if (!k) return '<div class="empty">Kein Psycaster.</div>';
+  const xpPct = k.xpNext > 0 ? (k.xp / k.xpNext) * 100 : 100;
+  const head = `<div class="psy-head"><span class="tag">Psylink Stufe ${fmt(k.level)}</span><span class="tag">${fmt(k.points)} Punkt${k.points === 1 ? '' : 'e'} frei</span></div>
+    <div class="bgrid">${barRow('Erfahrung', xpPct, `${fmt(k.xp)} / ${fmt(k.xpNext)}`)}</div>`;
+  const paths = psyData?.paths;
+  if (!paths) return head + '<div class="empty">Lade die Psycast-Pfade …</div>';
+  const mine = paths.filter((x) => k.paths.includes(x.id));
+  const shown = psyAll || !mine.length ? paths : mine;
+  if (!psySel || !shown.some((x) => x.id === psySel)) psySel = (mine[0] || paths[0])?.id;
+  const chips = shown.map((x) => {
+    const own = k.paths.includes(x.id), can = k.learnablePaths.includes(x.id);
+    return `<button type="button" class="seg psy-path${x.id === psySel ? ' on' : ''}${own ? ' own' : ''}" data-psypath="${esc(x.id)}">${own ? '★ ' : ''}${esc(x.label)}${can ? ' <span class="small">· freischaltbar</span>' : ''}</button>`;
+  }).join('');
+  const toggle = mine.length ? `<button type="button" class="linklike small" data-psyall>${psyAll ? 'Nur eigene Pfade' : `Alle ${paths.length} Pfade ansehen`}</button>` : '';
+  const path = paths.find((x) => x.id === psySel);
+  let body = '';
+  if (path) {
+    const own = k.paths.includes(path.id);
+    const byLevel = new Map();
+    for (const a of path.abilities) { if (!byLevel.has(a.level)) byLevel.set(a.level, []); byLevel.get(a.level).push(a); }
+    const names = new Map(path.abilities.map((a) => [a.id, a.label]));
+    const rows = [...byLevel.entries()].sort((a, b) => a[0] - b[0]).map(([lvl, list]) => `<div class="psy-row"><span class="psy-lvl">Stufe ${lvl}</span><div class="psy-abs">${list.map((a) => {
+      const st = k.learned.includes(a.id) ? 'learned' : k.learnable.includes(a.id) ? 'learnable' : 'locked';
+      const key = 'pa:' + a.id, open = openTrait === key;
+      return `<button type="button" class="psy-ab st-${st}" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(a.desc)}">${esc(a.label)}</button>`;
+    }).join('')}</div></div>`).join('');
+    const sel = path.abilities.find((a) => openTrait === 'pa:' + a.id);
+    const info = sel ? `<div class="isk-info"><b>${esc(sel.label)}</b> <span class="small muted">Stufe ${sel.level}</span>
+      ${sel.prereqs.length ? `<div class="small muted">Braucht: ${esc(sel.prereqs.map((x) => names.get(x) || x).join(', '))}</div>` : ''}
+      <p class="isk-desc">${esc(sel.desc)}</p></div>` : '<p class="small muted trait-hint">Tippe auf einen Psycast für die Beschreibung.</p>';
+    body = `<p class="ideo-desc">${esc(path.desc)}</p>${!own && path.locked ? `<p class="small muted">🔒 ${esc(path.locked)}</p>` : ''}
+      <div class="psy-grid">${rows}</div>
+      <p class="small muted isk-legend"><i class="lg learned"></i>gelernt <i class="lg learnable"></i>lernbar <i class="lg locked"></i>gesperrt</p>${info}`;
+  }
+  return head + section('Pfade', `<div class="log-switch psy-paths">${chips}</div>${toggle}`) + body;
+}
+
 function afterPaint(host) {
   startLogPoll(host);
   startRelPoll(host);
@@ -1415,6 +1465,7 @@ function afterPaint(host) {
   refreshBadges(host);
   if (host._pawn && activeSub(host._pawn) === 'isekai') ensureTrees(host);
   if (host._pawn && activeSub(host._pawn) === 'ideo') ensureIdeos(host);
+  if (host._pawn && activeSub(host._pawn) === 'psy') ensurePsy(host);
 }
 
 /** Inhalt des offenen Unterreiters per morph neu zeichnen (kein Flackern, Zustand der Knöpfe bleibt). */
@@ -1449,6 +1500,9 @@ function mountCharacter(host, p) {
     const at = e.target.closest('[data-alltrees]');
     const nd = e.target.closest('[data-node]');
     if (pawn && ab) { runAct(host, ab); return; }
+    const pp = e.target.closest('[data-psypath]');
+    if (pawn && pp) { psySel = pp.dataset.psypath; openTrait = null; repaint(host); return; }
+    if (pawn && e.target.closest('[data-psyall]')) { psyAll = !psyAll; repaint(host); return; }
     const wk = e.target.closest('[data-wk]');
     if (pawn && wk) {
       const key = pawn.id || pawn.user;

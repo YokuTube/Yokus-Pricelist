@@ -68,6 +68,7 @@ def make_pawn(user, display, name, full, gender, age, race, xeno, state, state_l
         "childhood": child, "adulthood": adult, "location": "Kolonie", "moodLabel": mood_label,
         "childhoodDesc": "Als Kind wuchs sie in den Gassen einer Glitzerwelt-Stadt auf und lernte früh, für sich selbst zu sorgen.",
         "adulthoodDesc": "Später kochte sie in einer Raumhafen-Kantine – schnell, laut und immer mit einem Lied auf den Lippen.",
+        "psycasts": {"level": 3, "xp": 120, "xpNext": 300, "points": 1, "paths": ["VPE_Conflagrator"], "learned": ["VPE_Fireball"], "learnable": ["VPE_FireBeam"], "learnablePaths": ["VPE_Empath"]} if user == "yoku" else None,
         "ideo": {"id": 1, "name": "Sonnenpfad", "certainty": 82, "role": "Moralführer" if user == "yoku" else None},
         "thoughts": [
             {"label": "Hat eine feine Mahlzeit gegessen", "value": 5, "count": 1, "desc": "Das war richtig gutes Essen."},
@@ -615,6 +616,15 @@ class H(BaseHTTPRequestHandler):
             return self.js(200, isekai_info())
         if p == "/api/vote":
             return self.js(200, vote_state())
+        if p == "/api/psycasts":
+            ab = lambda i, l, lv, o, pre=(): {"id": i, "label": l, "desc": "Beschreibung von " + l + ".", "level": lv, "order": o, "prereqs": list(pre)}
+            return self.js(200, {"paths": [
+                {"id": "VPE_Conflagrator", "label": "Feuerteufel", "desc": "Meister des Feuers.", "locked": None,
+                 "abilities": [ab("VPE_Fireball", "Feuerball", 1, 1), ab("VPE_FireBeam", "Feuerstrahl", 2, 1, ["VPE_Fireball"]), ab("VPE_HeatPearls", "Hitzeperlen", 3, 1, ["VPE_FireBeam"])]},
+                {"id": "VPE_Empath", "label": "Empath", "desc": "Fühlt und heilt die Seele.", "locked": None,
+                 "abilities": [ab("VPE_Calm", "Beruhigen", 1, 1), ab("VPE_Joyburst", "Freudenstoß", 2, 1, ["VPE_Calm"])]},
+                {"id": "VPE_Necropath", "label": "Nekropath", "desc": "Spricht mit den Toten.", "locked": "Braucht die Meme „Tod“.",
+                 "abilities": [ab("VPE_RaiseDead", "Tote erwecken", 4, 1)]}]})
         if p == "/api/ideos":
             return self.js(200, {"ideos": [{"id": 1, "name": "Sonnenpfad", "culture": "Astrisch", "primary": True, "followers": 4,
                 "desc": "Die Sonne gibt, die Sonne nimmt. Wer hart arbeitet, wird von ihr gesegnet.",

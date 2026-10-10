@@ -1039,3 +1039,16 @@ button.sty-chip:hover { border-color: var(--accent); }
 @media (max-width: 640px) {
   .vote-card.min { left: 10px; right: auto; bottom: 10px; border-radius: 999px; }
 }
+
+/* Psycasts */
+.psy-head { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.psy-paths { flex-wrap: wrap; }
+.psy-path.own { border-color: var(--accent); }
+.psy-grid { display: grid; gap: 6px; margin-top: 8px; }
+.psy-row { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 8px; align-items: start; }
+.psy-lvl { font-size: .8rem; color: var(--muted); padding-top: 8px; }
+.psy-abs { display: flex; flex-wrap: wrap; gap: 6px; }
+.psy-ab { min-height: 36px; padding: 4px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-2); color: var(--muted); font: inherit; font-size: .85rem; cursor: pointer; }
+.psy-ab.st-learned { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; }
+.psy-ab.st-learnable { border-color: var(--accent); color: var(--text); }
+.psy-ab[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--accent) inset; }
