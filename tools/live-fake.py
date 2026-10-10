@@ -68,6 +68,7 @@ def make_pawn(user, display, name, full, gender, age, race, xeno, state, state_l
         "childhood": child, "adulthood": adult, "location": "Kolonie", "moodLabel": mood_label,
         "childhoodDesc": "Als Kind wuchs sie in den Gassen einer Glitzerwelt-Stadt auf und lernte früh, für sich selbst zu sorgen.",
         "adulthoodDesc": "Später kochte sie in einer Raumhafen-Kantine – schnell, laut und immer mit einem Lied auf den Lippen.",
+        "expertise": {"owned": [{"id": "VSE_Chef", "level": 4}], "available": ["Precision"]} if user == "yoku" else {"owned": [], "available": []},
         "psycasts": {"level": 3, "xp": 120, "xpNext": 300, "points": 1, "paths": ["VPE_Conflagrator"], "learned": ["VPE_Fireball"], "learnable": ["VPE_FireBeam"], "learnablePaths": ["VPE_Empath"]} if user == "yoku" else None,
         "ideo": {"id": 1, "name": "Sonnenpfad", "certainty": 82, "role": "Moralführer" if user == "yoku" else None},
         "thoughts": [
@@ -616,6 +617,11 @@ class H(BaseHTTPRequestHandler):
             return self.js(200, isekai_info())
         if p == "/api/vote":
             return self.js(200, vote_state())
+        if p == "/api/expertise":
+            e = lambda i, l, d, eff: {"id": i, "label": l, "desc": d, "effects": eff}
+            return self.js(200, {"skills": [
+                {"skill": "Schießen", "skillId": "Shooting", "list": [e("Precision", "Scharfschießen", "Treffsicherheit mit Fernwaffen.", ["Schusspräzision +1 je Stufe"]), e("VSE_Sniping", "Präzisionsschütze", "Größere Reichweite.", ["Reichweite +1 % je Stufe"])]},
+                {"skill": "Kochen", "skillId": "Cooking", "list": [e("VSE_Chef", "Küchenchef", "Kocht schneller und sauberer.", ["Kochgeschwindigkeit +2 % je Stufe"])]}]})
         if p == "/api/psycasts":
             ab = lambda i, l, lv, o, pre=(): {"id": i, "label": l, "desc": "Beschreibung von " + l + ".", "level": lv, "order": o, "prereqs": list(pre)}
             return self.js(200, {"paths": [

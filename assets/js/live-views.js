@@ -785,7 +785,7 @@ function panelSkills(p) {
   const list = p.skills || [];
   if (!list.length) return '<div class="empty">Keine Fähigkeiten bekannt.</div>';
   return section('Fähigkeiten (0–20)', `<div class="bgrid">${list.map(skillRow).join('')}</div>
-    <p class="small muted" style="margin:10px 0 0">🔥 Leidenschaft · 🔥🔥 brennende Leidenschaft</p>`);
+    <p class="small muted" style="margin:10px 0 0">🔥 Leidenschaft · 🔥🔥 brennende Leidenschaft</p>`) + expertiseHtml(p);
 }
 
 function panelHealth(p) {
@@ -1455,6 +1455,40 @@ function panelPsy(p) {
   return head + section('Pfade', `<div class="log-switch psy-paths">${chips}</div>${toggle}`) + body;
 }
 
+// Expertise (Vanilla Skills Expanded): alle möglichen Expertisen je Fertigkeit zum Nachlesen, eigene hervorgehoben.
+// Vergeben tut sie der Streamer – hier nur lesen.
+let expData = null, expLoading = false;
+
+function ensureExp(host) {
+  if (expData || expLoading) return;
+  expLoading = true;
+  live.getJson('/api/expertise').then((r) => { if (r?.status === 200 && r.data) expData = r.data; })
+    .catch(() => {}).finally(() => { expLoading = false; if (host.isConnected) repaint(host); });
+}
+let expHost = null;
+const ensureExpLazy = () => { if (expHost) ensureExp(expHost); };
+
+function expertiseHtml(p) {
+  const ex = p.expertise;
+  if (!ex) return '';
+  if (!expData) { ensureExpLazy(); return ''; }
+  const own = new Map((ex.owned || []).map((e) => [e.id, e.level]));
+  const avail = new Set(ex.available || []);
+  const groups = expData.skills.map((g) => {
+    const items = g.list.filter((e) => own.has(e.id) || avail.has(e.id));
+    if (!items.length) return '';
+    const html = items.map((e) => {
+      const key = 'ex:' + e.id, open = openTrait === key, has = own.has(e.id);
+      return `<button type="button" class="trait exp-item${has ? ' own' : ''}" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(e.desc)}">${esc(e.label)}${has ? ` · Stufe ${own.get(e.id)}` : ' · möglich'}</button>`
+        + (open ? `<div class="trait-desc">${esc(e.desc)}${(e.effects || []).length ? `<ul class="isk-bonus">${e.effects.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</div>` : '');
+    }).join('');
+    return `<div class="exp-group"><div class="small muted exp-skill">${esc(g.skill)}</div><div class="traits">${html}</div></div>`;
+  }).join('');
+  if (!groups) return '';
+  const hint = avail.size ? `<p class="small muted" style="margin:0 0 6px">„möglich“ = ${esc(p.name)} kann diese Expertise jetzt bekommen – vergeben wird sie vom Streamer.</p>` : '';
+  return section('Expertise', hint + groups);
+}
+
 function afterPaint(host) {
   startLogPoll(host);
   startRelPoll(host);
@@ -1466,6 +1500,8 @@ function afterPaint(host) {
   if (host._pawn && activeSub(host._pawn) === 'isekai') ensureTrees(host);
   if (host._pawn && activeSub(host._pawn) === 'ideo') ensureIdeos(host);
   if (host._pawn && activeSub(host._pawn) === 'psy') ensurePsy(host);
+  expHost = host;
+  if (host._pawn && activeSub(host._pawn) === 'skills' && host._pawn.expertise) ensureExp(host);
 }
 
 /** Inhalt des offenen Unterreiters per morph neu zeichnen (kein Flackern, Zustand der Knöpfe bleibt). */
