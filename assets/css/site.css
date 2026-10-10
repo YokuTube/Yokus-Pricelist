@@ -1020,3 +1020,13 @@ button.sty-chip:hover { border-color: var(--accent); }
 /* Interaktionen mit anderen Kolonisten */
 .soc-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 .soc-row .gift-btn { border-color: var(--accent); font-weight: 700; }
+
+/* Glaube */
+.ch-ideo { margin-top: 4px; font-size: .85rem; color: var(--muted); }
+.ch-ideo b { color: var(--text); }
+.ideo-desc { margin: 6px 0; font-size: .9rem; }
+.ideo-precepts, .ideo-role { display: grid; gap: 4px; }
+.ideo-pre .trait, .ideo-role .trait { text-align: left; width: 100%; }
+.ideo-pre.imp-high .trait { border-color: var(--bad); }
+.ideo-pre.imp-medium .trait { border-color: var(--accent); }
+.ideo-item { text-align: left; }

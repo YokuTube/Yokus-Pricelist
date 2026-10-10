@@ -68,6 +68,7 @@ def make_pawn(user, display, name, full, gender, age, race, xeno, state, state_l
         "childhood": child, "adulthood": adult, "location": "Kolonie", "moodLabel": mood_label,
         "childhoodDesc": "Als Kind wuchs sie in den Gassen einer Glitzerwelt-Stadt auf und lernte früh, für sich selbst zu sorgen.",
         "adulthoodDesc": "Später kochte sie in einer Raumhafen-Kantine – schnell, laut und immer mit einem Lied auf den Lippen.",
+        "ideo": {"id": 1, "name": "Sonnenpfad", "certainty": 82, "role": "Moralführer" if user == "yoku" else None},
         "thoughts": [
             {"label": "Hat eine feine Mahlzeit gegessen", "value": 5, "count": 1, "desc": "Das war richtig gutes Essen."},
             {"label": "Schöne Umgebung", "value": 3, "count": 1, "desc": "Hier ist es hübsch."},
@@ -614,6 +615,16 @@ class H(BaseHTTPRequestHandler):
             return self.js(200, isekai_info())
         if p == "/api/vote":
             return self.js(200, vote_state())
+        if p == "/api/ideos":
+            return self.js(200, {"ideos": [{"id": 1, "name": "Sonnenpfad", "culture": "Astrisch", "primary": True, "followers": 4,
+                "desc": "Die Sonne gibt, die Sonne nimmt. Wer hart arbeitet, wird von ihr gesegnet.",
+                "memes": [{"label": "Arbeitsam", "desc": "Fleiß ist heilig.", "structure": False}, {"label": "Animistisch", "desc": "Alles hat eine Seele.", "structure": True}],
+                "precepts": [{"issue": "Kannibalismus", "label": "Verabscheut", "desc": "Menschenfleisch zu essen ist ein schweres Vergehen.", "impact": "high"},
+                             {"issue": "Drogen", "label": "Nur medizinisch", "desc": "Drogen nur zur Heilung.", "impact": "medium"},
+                             {"issue": "Bäume fällen", "label": "Missbilligt", "desc": "Bäume sind lebendig.", "impact": "low"}],
+                "roles": [{"label": "Moralführer", "desc": "Leitet Rituale und Gespräche über den Glauben.", "holders": ["Kira"]},
+                          {"label": "Erntemeister", "desc": "Spezialist für die Ernte.", "holders": []}],
+                "rituals": [{"label": "Sonnenfest", "desc": "Ein Fest zur Sommersonnenwende."}]}]})
         if p == "/api/events":
             return self.js(200, {"events": EVENTS, "social": [{"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "1 Stunde"}, {"text": "Luna hat Eddi ein Geschenk gemacht.", "ago": "3 Stunden"}, {"text": "Eddi hat Kira beleidigt.", "ago": "2 Tage"}]})
         if p == "/api/colony":

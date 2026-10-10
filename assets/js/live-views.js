@@ -628,6 +628,7 @@ const SUBS = [
   { id: 'health', label: 'Gesundheit' },
   { id: 'gear', label: 'Ausrüstung' },
   { id: 'style', label: 'Aussehen' },
+  { id: 'ideo', label: 'Glaube' },
   { id: 'work', label: 'Arbeit' },
   { id: 'goals', label: 'Ziele' },
   { id: 'isekai', label: 'Isekai' },
@@ -642,7 +643,7 @@ let openTrait = null;
 
 const STATE_BADGE = { ok: 'good', sleeping: 'neutral', away: 'neutral', downed: 'bad', mental: 'doom', dead: 'doom' };
 const hasGoals = (p) => p.wants != null || p.quirks != null || p.aspirations != null;
-const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null) && (s.id !== 'work' || Array.isArray(p.work)));
+const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'ideo' || !!p.ideo) && (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null) && (s.id !== 'work' || Array.isArray(p.work)));
 
 function portraitHtml(p, cls) {
   const ini = esc((p.name || p.displayName || '?').trim().charAt(0).toUpperCase() || '?');
@@ -704,6 +705,7 @@ function heroHtml(p) {
       <h2 class="ch-name">${esc(p.name)}</h2>
       <div class="ch-sub"><span class="muted">${p.user ? '@' + esc(p.displayName || p.user) : 'Kolonist'}</span>${p.fullName && p.fullName !== p.name ? ` · <span class="muted">${esc(p.fullName)}</span>` : ''}</div>
       <div class="ch-meta">${meta}</div>
+      ${p.ideo ? `<div class="ch-ideo" title="Überzeugung ${Math.round(p.ideo.certainty || 0)} %">☯ <b>${esc(p.ideo.name)}</b>${p.ideo.role ? ` · ${esc(p.ideo.role)}` : ''} · ${Math.round(p.ideo.certainty || 0)} % überzeugt</div>` : ''}
       <div class="ch-state"><span class="badge ${STATE_BADGE[p.state] || 'neutral'}">${esc(p.stateLabel || p.state)}</span>${p.job ? `<span class="ch-job">${esc(p.job)}</span>` : ''}</div>
       <div class="ch-badges">${badgesInner(p)}</div>
       ${p.id || p.user ? `<button type="button" class="linklike ch-share" data-share="${esc(p.id || p.user)}">Link kopieren</button>` : ''}
@@ -1237,7 +1239,7 @@ async function applyWork(host) {
   repaint(host);
 }
 
-const PANELS = { style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+const PANELS = { ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 function subsHtml(p) {
   const vis = visibleSubs(p);
@@ -1349,6 +1351,37 @@ function startStylePoll(host) {
   });
 }
 
+// Glaube (Ideology): Meme, Gebote, Rollen, Rituale aus /api/ideos (selten geändert -> einmal laden, alle 60 s auffrischen)
+let ideosData = null, ideosAt = 0, ideosLoading = false;
+
+function ensureIdeos(host) {
+  if (ideosLoading || (ideosData && Date.now() - ideosAt < 60000)) return;
+  ideosLoading = true;
+  live.getJson('/api/ideos').then((r) => { if (r?.status === 200 && r.data) { ideosData = r.data; ideosAt = Date.now(); } })
+    .catch(() => {}).finally(() => { ideosLoading = false; if (host.isConnected) repaint(host); });
+}
+
+function ideoItem(key, label, desc, extra = '') {
+  const open = openTrait === key; // gleicher Aufklapp-Mechanismus wie Eigenschaften
+  return `<button type="button" class="trait ideo-item" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(desc || '')}">${label}${extra}</button>${open && desc ? `<p class="trait-desc">${esc(desc)}</p>` : ''}`;
+}
+
+function panelIdeo(p) {
+  if (!p.ideo) return '<div class="empty">Kein Glaube.</div>';
+  const i = (ideosData?.ideos || []).find((x) => x.id === p.ideo.id);
+  const head = `<div class="bgrid">${barRow('Überzeugung', p.ideo.certainty)}</div>`;
+  if (!i) return head + '<div class="empty">Lade die Glaubensrichtung …</div>';
+  const memes = section('Meme', `<div class="traits">${i.memes.map((m, n) => ideoItem('im:' + n, `${m.structure ? '✦ ' : ''}${esc(m.label)}`, m.desc)).join('')}</div>`);
+  const precepts = i.precepts.length ? section('Gebote', `<div class="ideo-precepts">${i.precepts.map((x, n) =>
+    `<div class="ideo-pre imp-${esc(x.impact)}">${ideoItem('ip:' + n, `<span class="small muted">${esc(x.issue)}:</span> ${esc(x.label)}`, x.desc)}</div>`).join('')}</div>`) : '';
+  const roles = i.roles.length ? section('Rollen', i.roles.map((r, n) =>
+    `<div class="ideo-role">${ideoItem('ir:' + n, esc(r.label), r.desc, r.holders.length ? ` <span class="small muted">· ${esc(r.holders.join(', '))}</span>` : ' <span class="small muted">· unbesetzt</span>')}</div>`).join('')) : '';
+  const rituals = i.rituals.length ? section('Rituale', `<div class="traits">${i.rituals.map((r, n) => ideoItem('it:' + n, esc(r.label), r.desc)).join('')}</div>`) : '';
+  const about = `<p class="small muted" style="margin:6px 0 0">${esc(i.name)}${i.culture ? ` · Kultur: ${esc(i.culture)}` : ''} · ${fmt(i.followers)} Anhänger in der Kolonie${i.primary ? ' · Hauptglaube der Kolonie' : ''}</p>`;
+  return head + about + (i.desc ? `<p class="ideo-desc">${esc(i.desc)}</p>` : '') + memes + precepts + roles + rituals
+    + '<p class="small muted trait-hint">Tippe auf einen Eintrag für die Beschreibung.</p>';
+}
+
 function afterPaint(host) {
   startLogPoll(host);
   startRelPoll(host);
@@ -1358,6 +1391,7 @@ function afterPaint(host) {
   ensureBadgeLog(host);
   refreshBadges(host);
   if (host._pawn && activeSub(host._pawn) === 'isekai') ensureTrees(host);
+  if (host._pawn && activeSub(host._pawn) === 'ideo') ensureIdeos(host);
 }
 
 /** Inhalt des offenen Unterreiters per morph neu zeichnen (kein Flackern, Zustand der Knöpfe bleibt). */
