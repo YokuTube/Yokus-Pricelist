@@ -2,14 +2,14 @@
 
 :root {
   /* Yoku-Stil: dunkles Stream-Blau mit hellblauem Akzent */
-  --bg: #0b1324;
-  --surface: #111d33;
-  --surface-2: #172742;
-  --text: #e6edf8;
-  --muted: #9aabc6;
-  --border: #24395c;
-  --accent: #4ea8ff;
-  --accent-soft: #12304f;
+  --bg: #0a1220;
+  --surface: #121c2e;
+  --surface-2: #19263c;
+  --text: #ffffff;
+  --muted: #c8d3e4;
+  --border: #2c3e5c;
+  --accent: #6bb8ff;
+  --accent-soft: #173a60;
   --accent-text: #04111f;
   --good: #7fd18b;
   --neutral: #a3b4c7;
