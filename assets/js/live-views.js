@@ -1,6 +1,6 @@
 // RICS Live – Oberfläche: Live-Leiste, Verbinden-Dialog, Kauf-Dialog, Tabs „Ich“ und „Kolonie“, Charakter-Ansicht.
 // Alle Texte aus der Schnittstelle sind Zuschauernamen/Spielinhalte und werden mit esc() entschärft.
-import { esc, fmt, copyText, toast, cmdBtn } from './util.js';
+import { esc, fmt, copyText, toast, cmdBtn, morph } from './util.js';
 import * as live from './live.js';
 import { CHAT_POPOUT as CHAT_URL } from './stream.js';
 
@@ -246,7 +246,7 @@ function pawnBarHtml(list) {
       ? `<img src="${esc(live.portraitUrl(p.id || p.user, p.portrait))}" alt="" width="40" height="40" data-portrait data-initial="${ini}" class="portrait">`
       : `<div class="portrait ph" aria-hidden="true">${ini}</div>`;
     const st = p.state && p.state !== 'ok' ? `<i class="lp-state ${STATE_BADGE[p.state] || 'neutral'}" title="${esc(p.stateLabel || '')}"></i>` : '';
-    return `<a class="lp${mine ? ' mine' : ''}${p.user ? ' viewer' : ''}" href="#/kolonie/${encodeURIComponent(p.id || p.user)}"
+    return `<a data-key="${esc(p.id || p.user)}" class="lp${mine ? ' mine' : ''}${p.user ? ' viewer' : ''}" href="#/kolonie/${encodeURIComponent(p.id || p.user)}"
         title="${esc(p.name)}${p.user ? ' (@' + esc(p.displayName || p.user) + ')' : ''} – ${esc(p.stateLabel || '')}${mood != null ? ' · Stimmung ' + mood + ' %' : ''}">
       <span class="lp-pic">${img}${st}</span>
       <span class="lp-mood ${MOOD_TONE(p)}"><i style="width:${clamp(mood ?? 0)}%"></i></span>
@@ -257,9 +257,9 @@ function pawnBarHtml(list) {
 
 function fillBar() {
   const g = strip?.querySelector('#live-game-slot');
-  if (g) g.innerHTML = gameChipsHtml(barGame);
+  if (g) morph(g, gameChipsHtml(barGame));
   const pw = strip?.querySelector('#live-pawns');
-  if (pw) { pw.innerHTML = pawnBarHtml(barPawns); pw.hidden = !barPawns?.length; }
+  if (pw) { morph(pw, pawnBarHtml(barPawns)); pw.hidden = !barPawns?.length; }
 }
 
 function startBarPolling() {
@@ -495,9 +495,13 @@ function subsHtml(p) {
 const activeSub = (p) => (visibleSubs(p).some((s) => s.id === curSub) ? curSub : 'overview');
 
 /** Zeichnet Hero + Unterreiter + Inhalt in `host`. Der gewählte Reiter bleibt beim Aktualisieren erhalten. */
+function characterHtml(p) {
+  return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${PANELS[activeSub(p)](p)}</div></div>`;
+}
+
 function mountCharacter(host, p) {
   host._pawn = p;
-  host.innerHTML = `<div class="ch">${heroHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${PANELS[activeSub(p)](p)}</div></div>`;
+  morph(host, characterHtml(p));
   if (host._bound) return;
   host._bound = true;
   host.addEventListener('click', (e) => {
@@ -551,15 +555,14 @@ export function ichView() {
       const key = JSON.stringify({ ...me, coins: 0 });
       if (key === lastKey) return;                 // nur Münzen geändert: die Animation übernimmt
       lastKey = key;
-      host.innerHTML = `${walletHtml(me)}
-        <div id="ich-char" style="margin-top:14px"></div>
-        <p class="ich-foot small muted">Verbunden als <b>${esc(me.displayName || me.user)}</b> · <button type="button" class="linklike" data-live="logout">Abmelden</button></p>`;
-      const ch = host.querySelector('#ich-char');
-      if (me.pawn) mountCharacter(ch, me.pawn);
-      else ch.innerHTML = `<div class="card live-card"><h2>Du hast noch keinen Kolonisten</h2>
+      const noPawn = `<div class="card live-card"><h2>Du hast noch keinen Kolonisten</h2>
         <p>Schreib <code>${esc(live.prefix())}join</code> in den Chat, um der Kolonie beizutreten. Sobald dir ein Pawn zugeteilt ist, erscheint er hier.</p>
         <div class="cmd-row">${cmdBtn(live.prefix() + 'join')}</div>
         <p class="small" style="margin:12px 0 0"><a href="#/befehle">Alle Befehle ansehen</a></p></div>`;
+      morph(host, `${walletHtml(me)}
+        <div id="ich-char" style="margin-top:14px">${me.pawn ? characterHtml(me.pawn) : noPawn}</div>
+        <p class="ich-foot small muted">Verbunden als <b>${esc(me.displayName || me.user)}</b> · <button type="button" class="linklike" data-live="logout">Abmelden</button></p>`);
+      if (me.pawn) mountCharacter(host.querySelector('#ich-char'), me.pawn);
     };
     whileMounted(host, [['me', render], ['change', render]]);
     render();
@@ -572,7 +575,7 @@ export function ichView() {
 // =====================================================================
 function colonyCard(p, meUser) {
   const mine = p.user && p.user === meUser;
-  return `<a class="card kol-card${mine ? ' mine' : ''}" href="#/kolonie/${encodeURIComponent(p.id || p.user)}">
+  return `<a data-key="${esc(p.id || p.user)}" class="card kol-card${mine ? ' mine' : ''}" href="#/kolonie/${encodeURIComponent(p.id || p.user)}">
     ${portraitHtml(p, 'kol-portrait')}
     <div class="kol-main">
       <div class="kol-name"><b>${esc(p.name)}</b>${mine ? ' <span class="chip accent">Du</span>' : ''}</div>
@@ -606,8 +609,8 @@ function colonyList() {
       if (key === last) return;
       last = key;
       count.textContent = list.length ? `${fmt(list.length)} Kolonist${list.length === 1 ? '' : 'en'}` : '';
-      grid.innerHTML = list.length ? list.map((p) => colonyCard(p, me)).join('')
-        : `<div class="empty" style="grid-column:1/-1">Noch keine Kolonisten zu sehen. Mit <code>${esc(live.prefix())}join</code> im Chat kannst du die Erste oder der Erste sein.</div>`;
+      morph(grid, list.length ? list.map((p) => colonyCard(p, me)).join('')
+        : `<div class="empty" style="grid-column:1/-1">Noch keine Kolonisten zu sehen. Mit <code>${esc(live.prefix())}join</code> im Chat kannst du die Erste oder der Erste sein.</div>`);
     };
     live.poll({
       path: '/api/colony', every: 5000, alive: () => grid.isConnected,
@@ -681,7 +684,7 @@ export function spielView() {
         const key = JSON.stringify(r.data);
         if (key === last) return;
         last = key;
-        host.innerHTML = spielHtml(r.data);
+        morph(host, spielHtml(r.data));
       },
     });
   }

@@ -119,3 +119,39 @@ export const karmaBadge = (k) => {
 };
 
 export const days = (n) => `${n} ${n === 1 ? 'Tag' : 'Tage'}`;
+
+// Inhalt eines Elements auf neues HTML bringen, ohne bestehende Knoten neu zu erzeugen (kein Flackern bei Live-Updates:
+// Bilder bleiben stehen, Balken gleiten per CSS-Übergang). Elemente mit data-key werden nur bei gleichem Schlüssel
+// weiterverwendet; iframes und animierte Münzzähler (data-live-coins) bleiben unangetastet.
+export function morph(el, html) {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html;
+  morphChildren(el, tpl.content);
+}
+
+function morphChildren(a, b) {
+  const an = [...a.childNodes];
+  const bn = [...b.childNodes];
+  bn.forEach((y, i) => {
+    const x = an[i];
+    if (!x) a.appendChild(y);
+    else morphNode(a, x, y);
+  });
+  for (let i = bn.length; i < an.length; i++) an[i].remove();
+}
+
+function morphNode(parent, x, y) {
+  if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName
+      || (x.nodeType === 1 && (x.getAttribute('data-key') || '') !== (y.getAttribute('data-key') || ''))) {
+    parent.replaceChild(y, x);
+    return;
+  }
+  if (x.nodeType !== 1) {
+    if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue;
+    return;
+  }
+  if (x.hasAttribute('data-live-coins') || x.nodeName === 'IFRAME') return;
+  for (const { name, value } of [...y.attributes]) if (x.getAttribute(name) !== value) x.setAttribute(name, value);
+  for (const { name } of [...x.attributes]) if (!y.hasAttribute(name)) x.removeAttribute(name);
+  morphChildren(x, y);
+}
