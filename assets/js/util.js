@@ -150,7 +150,7 @@ function morphNode(parent, x, y) {
     if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue;
     return;
   }
-  if (x.hasAttribute('data-live-coins') || x.nodeName === 'IFRAME') return;
+  if (x.hasAttribute('data-live-coins') || x.nodeName === 'IFRAME' || x.hasAttribute('data-morph-keep')) return;
   for (const { name, value } of [...y.attributes]) if (x.getAttribute(name) !== value) x.setAttribute(name, value);
   for (const { name } of [...x.attributes]) if (!y.hasAttribute(name)) x.removeAttribute(name);
   morphChildren(x, y);

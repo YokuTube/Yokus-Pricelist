@@ -377,6 +377,7 @@ const SUBS = [
   { id: 'health', label: 'Gesundheit' },
   { id: 'gear', label: 'Ausrüstung' },
   { id: 'goals', label: 'Ziele' },
+  { id: 'log', label: 'Erlebnisse' },
   { id: 'origin', label: 'Herkunft' },
 ];
 const SUB_KEY = 'ys-live-sub';
@@ -502,10 +503,54 @@ function panelGoals(p) {
 
 function panelOrigin(p) {
   const row = (k, v) => `<div class="orow"><dt>${esc(k)}</dt><dd>${v == null || v === '' ? '<span class="muted">–</span>' : esc(v)}</dd></div>`;
-  return section('Herkunft', `<dl class="origin">${row('Kindheit', p.childhood)}${row('Erwachsenenleben', p.adulthood)}${row('Aufenthalt', p.location)}${row('Besiegte Gegner', p.kills != null ? fmt(p.kills) : null)}</dl>`);
+  // Backstory: antippen (oder am PC drüberfahren) zeigt den Text aus dem Spiel
+  const story = (k, title, desc) => {
+    if (!title) return row(k, null);
+    if (!desc) return row(k, title);
+    const key = 'b:' + k;
+    const open = openTrait === key;
+    return `<div class="orow"><dt>${esc(k)}</dt><dd><button type="button" class="trait story" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(desc)}">${esc(title)}</button>
+      ${open ? `<p class="trait-desc">${esc(desc)}</p>` : ''}</dd></div>`;
+  };
+  const hint = p.childhoodDesc || p.adulthoodDesc ? '<p class="small muted trait-hint">Tippe auf Kindheit oder Erwachsenenleben, um die Geschichte zu lesen.</p>' : '';
+  return section('Herkunft', `<dl class="origin">${story('Kindheit', p.childhood, p.childhoodDesc)}${story('Erwachsenenleben', p.adulthood, p.adulthoodDesc)}${row('Aufenthalt', p.location)}${row('Besiegte Gegner', p.kills != null ? fmt(p.kills) : null)}</dl>${hint}`);
 }
 
-const PANELS = { overview: panelOverview, mood: panelMood, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+// Erlebnisse: Unterhaltungen und Kampflog – eigene Abfrage (/api/log), nur solange dieser Unterreiter offen ist
+let logKind = lsGet('ys-live-log') || 'social';
+const logCache = new Map(); // Pawn-Schlüssel -> letzte Antwort (damit beim Umschalten nichts flackert)
+
+function logListHtml(data) {
+  const list = data?.[logKind] || [];
+  if (!list.length) return `<div class="empty">${logKind === 'social' ? 'Noch keine Unterhaltungen aufgezeichnet.' : 'Noch keine Kämpfe aufgezeichnet.'}</div>`;
+  return `<ol class="logl">${list.map((e) => `<li><span class="log-text">${esc(e.text)}</span><span class="log-ago">vor ${esc(e.ago)}</span></li>`).join('')}</ol>`;
+}
+
+function panelLog(p) {
+  const key = p.id || p.user;
+  const btn = (k, label) => `<button type="button" class="seg${logKind === k ? ' on' : ''}" data-logkind="${k}" aria-pressed="${logKind === k}">${label}</button>`;
+  return `<div class="log-switch">${btn('social', 'Unterhaltungen')}${btn('combat', 'Kämpfe')}</div>
+    <div class="log-host" data-key="${esc(key)}:${logKind}" data-morph-keep data-logfor="${esc(key)}">${logCache.has(key) ? logListHtml(logCache.get(key)) : '<div class="empty">Lade …</div>'}</div>
+    <p class="small muted">Die letzten Einträge aus dem Spiel-Log, neueste zuerst.</p>`;
+}
+
+function startLogPoll(host) {
+  const el = host.querySelector('.log-host');
+  if (!el || el._polling) return;
+  el._polling = true;
+  const key = el.dataset.logfor;
+  live.poll({
+    path: '/api/log/' + encodeURIComponent(key), every: 10000, alive: () => el.isConnected,
+    onResult: (r) => {
+      if (r.status === 404) { el.innerHTML = '<div class="empty">Noch keine Einträge – kommt gleich.</div>'; return; }
+      if (r.status !== 200 || !r.data) return;
+      logCache.set(key, r.data);
+      if (!r.unchanged || !el.dataset.filled) { morph(el, logListHtml(r.data)); el.dataset.filled = '1'; }
+    },
+  });
+}
+
+const PANELS = { overview: panelOverview, mood: panelMood, log: panelLog, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 function subsHtml(p) {
   const vis = visibleSubs(p);
@@ -523,12 +568,20 @@ function characterHtml(p) {
 function mountCharacter(host, p) {
   host._pawn = p;
   morph(host, characterHtml(p));
+  startLogPoll(host);
   if (host._bound) return;
   host._bound = true;
   host.addEventListener('click', (e) => {
     const pawn = host._pawn;
     const sub = e.target.closest('[data-sub]');
     const tr = e.target.closest('[data-trait]');
+    const lk = e.target.closest('[data-logkind]');
+    if (pawn && lk) {
+      logKind = lk.dataset.logkind; lsSet('ys-live-log', logKind);
+      host.querySelector('.ch-panel').innerHTML = PANELS.log(pawn);
+      startLogPoll(host);
+      return;
+    }
     if (!pawn || !(sub || tr)) return;
     if (sub) {
       curSub = sub.dataset.sub; lsSet(SUB_KEY, curSub);
@@ -537,6 +590,7 @@ function mountCharacter(host, p) {
       openTrait = openTrait === tr.dataset.trait ? null : tr.dataset.trait;
     }
     host.querySelector('.ch-panel').innerHTML = PANELS[activeSub(pawn)](pawn);
+    startLogPoll(host);
   });
 }
 

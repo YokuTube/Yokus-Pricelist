@@ -656,3 +656,16 @@ body:has(dialog.live-dialog[open]) { overflow: hidden; }
 .th-val.neutral { color: var(--muted); }
 .th-desc { margin: 0 0 4px; }
 .th-sum { margin: 10px 0 0; }
+
+/* ---------- Live: Erlebnisse (Unterhaltungen, Kampflog) und Herkunft ---------- */
+.log-switch { display: flex; gap: 6px; margin-bottom: 10px; }
+.seg { min-height: 40px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.seg.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.logl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.logl li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2, var(--surface)); }
+.log-text { min-width: 0; line-height: 1.4; }
+.log-ago { flex: 0 0 auto; font-size: .78rem; color: var(--muted); white-space: nowrap; }
+.trait.story { text-align: left; }
+@media (max-width: 640px) {
+  .logl li { flex-direction: column; gap: 2px; }
+}

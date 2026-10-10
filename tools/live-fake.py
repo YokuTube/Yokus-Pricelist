@@ -54,6 +54,8 @@ def make_pawn(user, display, name, full, gender, age, race, xeno, state, state_l
         "healthPct": health, "moodPct": mood, "state": state, "stateLabel": state_label, "job": job,
         "fullName": full, "gender": gender, "age": age, "race": race, "xenotype": xeno,
         "childhood": child, "adulthood": adult, "location": "Kolonie", "moodLabel": mood_label,
+        "childhoodDesc": "Als Kind wuchs sie in den Gassen einer Glitzerwelt-Stadt auf und lernte früh, für sich selbst zu sorgen.",
+        "adulthoodDesc": "Später kochte sie in einer Raumhafen-Kantine – schnell, laut und immer mit einem Lied auf den Lippen.",
         "thoughts": [
             {"label": "Hat eine feine Mahlzeit gegessen", "value": 5, "count": 1, "desc": "Das war richtig gutes Essen."},
             {"label": "Schöne Umgebung", "value": 3, "count": 1, "desc": "Hier ist es hübsch."},
@@ -263,6 +265,20 @@ class H(BaseHTTPRequestHandler):
             return self.js(200, game_info())
         if p == "/api/colony":
             return self.js(200, {"pawns": [summary(x) for x in PAWNS.values()]})
+        if p.startswith("/api/log/"):
+            if unquote(p[9:]).lower() not in PAWNS:
+                return self.js(404, {"error": "Noch keine Einträge"}, cache=False)
+            return self.js(200, {
+                "social": [
+                    {"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "2 Stunden"},
+                    {"text": "Kira hat Eddi beleidigt.", "ago": "5 Stunden"},
+                    {"text": "Luna hat Kira ein tiefes Gespräch über das Leben angeboten.", "ago": "1 Tag"},
+                ],
+                "combat": [
+                    {"text": "Kira hat einen Plünderer mit dem Revolver in den Kopf getroffen.", "ago": "3 Stunden"},
+                    {"text": "Ein Plünderer hat Kira verfehlt.", "ago": "3 Stunden"},
+                ],
+            })
         if p.startswith("/api/pawn/"):
             pw = PAWNS.get(unquote(p[10:]).lower())
             return self.js(200, pw) if pw else self.js(404, {"error": "Kein Kolonist mit diesem Namen."}, cache=False)
