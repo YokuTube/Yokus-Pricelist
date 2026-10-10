@@ -68,6 +68,17 @@ function renderTabs() {
     const n = DATA && t.count ? `<span class="count">${fmt(t.count(DATA))}</span>` : '';
     return `<a class="tab" role="tab" href="#/${t.id}" aria-selected="${t.id === cur}">${icon(t.id)}<span>${esc(t.label)}</span> ${n}</a>`;
   }).join('');
+  // Handy: aktiven Reiter ins Bild holen und zeigen, ob links/rechts noch mehr kommt
+  const nav = document.getElementById('tabs');
+  nav.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  updateTabFade();
+}
+
+function updateTabFade() {
+  const nav = document.getElementById('tabs');
+  if (!nav) return;
+  nav.classList.toggle('more-left', nav.scrollLeft > 4);
+  nav.classList.toggle('more-right', nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 4);
 }
 
 function currentTab() {
@@ -131,6 +142,8 @@ async function boot() {
   renderTabs();
   renderView();
   window.addEventListener('hashchange', renderView);
+  document.getElementById('tabs').addEventListener('scroll', updateTabFade, { passive: true });
+  window.addEventListener('resize', updateTabFade);
 
   // RICS Live: im Hintergrund suchen, die Seite wartet nicht darauf.
   initLiveUi();

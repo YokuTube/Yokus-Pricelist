@@ -900,3 +900,13 @@ button.an-group:hover { border-color: var(--accent); }
 .live-alert.doom { border-color: var(--doom); color: var(--doom); }
 .live-alert.good { border-color: var(--good); color: var(--good); }
 .notify-btn { margin-top: 10px; min-height: 44px; width: 100%; }
+
+/* Reiter: am PC umbrechen statt abschneiden; am Handy wischen mit sichtbarem Hinweis am Rand */
+@media (min-width: 760px) {
+  .tabs { flex-wrap: wrap; overflow-x: visible; row-gap: 0; }
+}
+@media (max-width: 759px) {
+  .tabs.more-right { -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); }
+  .tabs.more-left.more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 85%, transparent); mask-image: linear-gradient(to right, transparent, #000 12%, #000 85%, transparent); }
+  .tabs.more-left:not(.more-right) { -webkit-mask-image: linear-gradient(to right, transparent, #000 15%); mask-image: linear-gradient(to right, transparent, #000 15%); }
+}
