@@ -46,7 +46,7 @@ async function api(path, { method = 'GET', body, auth = false, etag, timeout = 8
   try {
     const res = await fetch(S.base + path, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined, signal: ctl.signal });
     let data = null;
-    if (res.status !== 304 && (res.headers.get('content-type') || '').includes('json')) data = await res.json().catch(() => null);
+    if (res.status !== 304 && (res.headers.get('content-type') || '').includes('json')) { data = await res.json().catch(() => null); if (data) cleanDescs(data); }
     return { status: res.status, ok: res.ok, data, etag: res.headers.get('ETag') };
   } catch {
     throw Object.assign(new Error('net'), { net: true });
@@ -188,6 +188,21 @@ function startMe() {
       emit('me', r.data);
     },
   });
+}
+
+// Manche Mods hängen ihren Namen an Beschreibungen an ("…\n\nCharacter Development", teils doppelt) – für
+// Zuschauer bedeutungslos. Neue Mod-Versionen entfernen das schon; das hier fängt ältere ab: kurze Absätze
+// ohne Satzzeichen am Ende einer Beschreibung weg.
+function cleanDescs(o, depth = 0) {
+  if (!o || typeof o !== 'object' || depth > 8) return;
+  for (const k in o) {
+    const v = o[k];
+    if (k === 'desc' && typeof v === 'string' && v.includes('\n\n')) {
+      const parts = v.split('\n\n');
+      while (parts.length > 1 && /^[^.!?:;…]{1,40}$/.test(parts[parts.length - 1].trim())) parts.pop();
+      o[k] = parts.join('\n\n').trim();
+    } else if (v && typeof v === 'object') cleanDescs(v, depth + 1);
+  }
 }
 
 /** Einmaliger Abruf (ohne Wiederholung), z. B. für statische Daten wie /api/isekai. Gibt { status, data } zurück; wirft bei Netzfehler. */

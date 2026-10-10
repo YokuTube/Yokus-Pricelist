@@ -562,7 +562,10 @@ export function initLiveUi() {
   // Beim Scrollen kompakter, damit am Handy genug Platz bleibt
   let compact = false;
   window.addEventListener('scroll', () => {
-    const c = window.scrollY > 160;
+    // Abstand zwischen Ein- und Ausschalten größer als der Höhenunterschied der Leiste (~45 px) –
+    // sonst schiebt das Schrumpfen die Seite zurück unter die Grenze und es flackert endlos
+    const y = window.scrollY;
+    const c = compact ? y > 60 : y > 220;
     if (c !== compact) { compact = c; document.body.classList.toggle('live-compact', c); }
   }, { passive: true });
 
@@ -1746,17 +1749,39 @@ function ranksHtml(list) {
   return `<div class="rank-grid">${cards}</div>`;
 }
 
+// Unterreiter in langen Seiten (Kolonie, Spiel): Wahl bleibt beim Seitenwechsel erhalten
+function subTabsHtml(tabs, cur, attr) {
+  return `<div class="log-switch page-subs" role="tablist">${tabs.map(([k, l]) =>
+    `<button type="button" class="seg${cur === k ? ' on' : ''}" data-${attr}="${k}" role="tab" aria-selected="${cur === k}">${l}</button>`).join('')}</div>`;
+}
+const loadSub = (key, def, ok) => { try { const v = localStorage.getItem(key); return ok.includes(v) ? v : def; } catch { return def; } };
+const saveSub = (key, v) => { try { localStorage.setItem(key, v); } catch { /* egal */ } };
+
+const KOL_SUBS = [['pawns', 'Kolonisten'], ['animals', 'Tiere'], ['ranks', 'Ranglisten']];
+let kolSub = loadSub('ys-kol-sub', 'pawns', KOL_SUBS.map((x) => x[0]));
+
 function colonyList() {
   const html = `<div class="live-page">
     <div class="kol-head"><h2 class="section-title" style="margin:0">Die Kolonie</h2><span class="small muted" id="kol-count"></span></div>
-    <div id="kol-grid" class="kol-grid"><div class="empty" style="grid-column:1/-1">Lade …</div></div>
-    <div id="kol-ranks"></div>
-    <section id="tiere-sec" hidden>
-      <div class="kol-head" style="margin-top:22px"><h2 class="section-title" style="margin:0">Tiere</h2><span class="small muted" id="tiere-count"></span></div>
-      <div id="tiere" class="an-grid"></div>
+    <div id="kol-subs">${subTabsHtml(KOL_SUBS, kolSub, 'kolsub')}</div>
+    <div id="kol-grid" class="kol-grid" data-sub="pawns"><div class="empty" style="grid-column:1/-1">Lade …</div></div>
+    <div id="kol-ranks" data-sub="ranks"></div>
+    <section id="tiere-sec" data-sub="animals">
+      <div class="kol-head"><span class="small muted" id="tiere-count"></span></div>
+      <div id="tiere" class="an-grid"><div class="empty">Lade …</div></div>
     </section></div>`;
   function bind(root) {
     const grid = root.querySelector('#kol-grid'), count = root.querySelector('#kol-count'), ranks = root.querySelector('#kol-ranks');
+    const showSub = () => {
+      root.querySelectorAll('[data-sub]').forEach((el) => { el.hidden = el.dataset.sub !== kolSub; });
+      root.querySelector('#kol-subs').innerHTML = subTabsHtml(KOL_SUBS, kolSub, 'kolsub');
+    };
+    showSub();
+    root.querySelector('#kol-subs').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-kolsub]');
+      if (!b || b.dataset.kolsub === kolSub) return;
+      kolSub = b.dataset.kolsub; saveSub('ys-kol-sub', kolSub); showSub();
+    });
     let last = '';
     const draw = (data) => {
       const list = Array.isArray(data?.pawns) ? data.pawns : [];
@@ -1783,7 +1808,6 @@ function colonyList() {
       const key = JSON.stringify(animals);
       if (!force && key === alast) return;
       alast = key;
-      sec.hidden = false;
       tcount.textContent = animals.length ? `${fmt(animals.length)} Tier${animals.length === 1 ? '' : 'e'}` : '';
       morph(box, animalsHtml(animals));
     };
@@ -1951,6 +1975,9 @@ function visitorsHtml(v) {
   return `<section class="card ch-sec"><h4>Besucher & Händler</h4><ul class="plain vis-list">${gl}${sl}</ul></section>`;
 }
 
+const SPIEL_SUBS = [['overview', 'Übersicht'], ['research', 'Forschung'], ['stock', 'Vorräte'], ['factions', 'Fraktionen & Besucher'], ['history', 'Verlauf']];
+let spielSub = loadSub('ys-spiel-sub', 'overview', SPIEL_SUBS.map((x) => x[0]));
+
 function spielHtml(g, res) {
   const hh = String(Math.floor(Number(g.hour) || 0)).padStart(2, '0');
   const stat = (k, v, sub) => `<div class="gstat"><span class="gk">${esc(k)}</span><b class="gv">${esc(v)}</b><span class="gs">${esc(sub || '')}</span></div>`;
@@ -1966,18 +1993,20 @@ function spielHtml(g, res) {
   const evs = (g.events || []).length
     ? `<ul class="gevents">${g.events.map((e) => `<li class="k-${KIND_LABEL[e.kind] ? esc(e.kind) : 'neutral'}"><span class="gdot" title="${esc(KIND_LABEL[e.kind] || 'Neutral')}"></span><span class="gl">${esc(e.label)}</span><span class="small muted ga">${esc(e.ago)}</span></li>`).join('')}</ul>`
     : '<p class="muted small" style="margin:0">Noch nichts passiert.</p>';
-  return `<div class="gstats">${stats}</div>
+  const tabs = subTabsHtml(SPIEL_SUBS, spielSub, 'spsub');
+  let body;
+  if (spielSub === 'research') body = `<section class="card ch-sec rs-card"><h4>Forschung</h4>${researchHtml(res, g)}</section>`;
+  else if (spielSub === 'stock') body = `<section class="card ch-sec"><h4>Vorräte</h4>${stockHtml(g.stock)}</section>`;
+  else if (spielSub === 'factions') body = `<div class="grid cols-2"><section class="card ch-sec"><h4>Fraktionen</h4>${factionsHtml(g.factions)}</section>${visitorsHtml(g.visitors)}</div>`;
+  else if (spielSub === 'history') body = `<section class="card ch-sec"><h4>Koloniewert-Verlauf</h4>${wealthHtml(g.wealthHistory)}</section>`;
+  else body = `<div class="gstats">${stats}</div>
     <div class="grid cols-2" style="margin-top:12px">
       <section class="card ch-sec"><h4>Gerade los</h4>${conds}</section>
       <section class="card ch-sec"><h4>Was zuletzt passiert ist</h4>${evs}</section>
-      <section class="card ch-sec rs-card" style="grid-column:1/-1"><h4>Forschung</h4>${researchHtml(res, g)}</section>
       <section class="card ch-sec" style="grid-column:1/-1"><h4>Gemeinschaftsziele</h4>${goalsHtml(g.goals)}</section>
-      <section class="card ch-sec" style="grid-column:1/-1"><h4>Koloniewert-Verlauf</h4>${wealthHtml(g.wealthHistory)}</section>
-      <section class="card ch-sec"><h4>Vorräte</h4>${stockHtml(g.stock)}</section>
-      <section class="card ch-sec"><h4>Fraktionen</h4>${factionsHtml(g.factions)}</section>
-      ${visitorsHtml(g.visitors)}
       <section class="card ch-sec"><h4>Erzähler</h4><p style="margin:0"><b>${esc(g.storyteller)}</b></p><p class="muted small" style="margin:4px 0 0">Schwierigkeit: ${esc(g.difficulty)}</p></section>
     </div>`;
+  return tabs + body;
 }
 
 export function spielView() {
@@ -2012,6 +2041,11 @@ export function spielView() {
       },
     });
     host.addEventListener('click', (e) => {
+      const sb = e.target.closest('[data-spsub]');
+      if (sb) {
+        if (sb.dataset.spsub !== spielSub) { spielSub = sb.dataset.spsub; saveSub('ys-spiel-sub', spielSub); draw(true); }
+        return;
+      }
       const t = e.target.closest('[data-rtab]'), pj = e.target.closest('[data-rproj]'), lk = e.target.closest('[data-rlocked]');
       if (!t && !pj && !lk) return;
       const flip = (set, k) => { if (set.has(k)) set.delete(k); else set.add(k); };

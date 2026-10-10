@@ -659,6 +659,7 @@ body:has(dialog.live-dialog[open]) { overflow: hidden; }
 
 /* ---------- Live: Erlebnisse (Unterhaltungen, Kampflog) und Herkunft ---------- */
 .log-switch { display: flex; gap: 6px; margin-bottom: 10px; }
+.page-subs { flex-wrap: wrap; margin: 8px 0 14px; }
 .seg { min-height: 40px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
 .seg.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 .logl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
