@@ -787,3 +787,8 @@ button.an-group:hover { border-color: var(--accent); }
 
 .ch-panel { grid-template-columns: minmax(0, 1fr); }
 .ch-panel > *, .ch-sec, .isk-scroll { min-width: 0; }
+
+/* Schaufenster: Item-Zeilen mit Menge (Start) */
+.show-item .uni-act { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.show-item .qty-box { display: flex; align-items: center; gap: 4px; }
+.show-item .qty-box .qty { width: 64px; }

@@ -600,7 +600,7 @@ function panelGoals(p) {
     const canWant = mine && live.isAllowed('wants');
     html += section('Wünsche', `${barRow('Punkte', pct, `${fmt(w.points)} / ${fmt(w.needed)}`, 'acc', 'wide')}
       ${(w.list || []).length ? `<ul class="goal-list">${w.list.map((x, i) => `<li><div><b>${esc(x.label)}</b>${x.desc ? `<div class="small muted">${esc(x.desc)}</div>` : ''}</div>
-        <span class="goal-side"><span class="tag">+${esc(fmt(x.reward))}</span>${canWant && x.rerollable ? actBtn('wants', `reroll ${i + 1}`, '↻ Tauschen', { confirm: true, title: 'Diesen Wunsch gegen einen neuen tauschen' }) : ''}</span></li>`).join('')}</ul>` : '<p class="muted small" style="margin:8px 0 0">Gerade keine offenen Wünsche.</p>'}`);
+        <span class="goal-side"><span class="tag">+${esc(fmt(x.reward))}</span>${canWant && x.rerollable ? actBtn('wants', `reroll ${i + 1}`, w.rerollCost ? `↻ Tauschen · ${fmt(w.rerollCost)} 🪙` : '↻ Tauschen', { confirm: true, armedLabel: w.rerollCost ? `${fmt(w.rerollCost)} Münzen – sicher?` : 'Sicher?', title: w.rerollCost ? `Diesen Wunsch für ${fmt(w.rerollCost)} Münzen gegen einen neuen tauschen` : 'Diesen Wunsch gegen einen neuen tauschen' }) : ''}</span></li>`).join('')}</ul>` : '<p class="muted small" style="margin:8px 0 0">Gerade keine offenen Wünsche.</p>'}`);
   }
   const showOffers = mine && offersLoaded && quirkOffers != null;
   if (p.quirks || showOffers) {
@@ -614,7 +614,7 @@ function panelGoals(p) {
     const canAsp = mine && live.isAllowed('aspirations');
     html += section('Lebensziele', `${barRow('Fortschritt', a.pct, `${Math.round(clamp(a.pct))} %`, 'acc', 'wide')}
       ${(a.list || []).length ? `<ul class="goal-list">${a.list.map((x, i) => `<li class="${x.done ? 'done' : ''}"><div>${x.done ? '✓' : '○'} ${esc(x.label)}</div>
-        ${!x.done && canAsp ? `<span class="goal-side">${actBtn('aspirations', `reroll ${i + 1}`, '↻ Tauschen', { confirm: true, armedLabel: 'Teuer – sicher?', title: 'Lebensziel tauschen (kostet viel)' })}</span>` : ''}</li>`).join('')}</ul>` : ''}`);
+        ${!x.done && canAsp ? `<span class="goal-side">${actBtn('aspirations', `reroll ${i + 1}`, a.rerollCost ? `↻ Tauschen · ${fmt(a.rerollCost)} 🪙` : '↻ Tauschen', { confirm: true, armedLabel: a.rerollCost ? `${fmt(a.rerollCost)} Münzen – sicher?` : 'Teuer – sicher?', title: a.rerollCost ? `Lebensziel für ${fmt(a.rerollCost)} Münzen tauschen` : 'Lebensziel tauschen (kostet viel)' })}</span>` : ''}</li>`).join('')}</ul>` : ''}`);
   }
   return html || '<div class="empty">Keine Ziele.</div>';
 }

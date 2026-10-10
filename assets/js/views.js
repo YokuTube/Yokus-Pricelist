@@ -64,6 +64,21 @@ function uniRow(title, sub, price, cmd, link) {
     ${price ? `<div class="price">${fmt(price)}</div>` : ''}<div class="uni-act">${cmd ? cmdBtn(cmd) : link || ''}</div></div>`;
 }
 
+/** Item im Schaufenster: wie im Items-Reiter mit Menge (wird in den Befehl eingebaut). */
+function showItemRow(i) {
+  const max = i.limit > 0 ? i.limit : 9999;
+  const base = '!buy ' + i.cmdName;
+  const btn = cmdBtn(base).replace('class="cmd "', `class="cmd" data-qty data-base="${esc(base)}"`);
+  const qty = max > 1 ? `<div class="qty-box" title="Wie viele? Wird automatisch in den Befehl eingebaut">
+      <button type="button" class="qty-btn" data-d="-1" aria-label="Weniger">−</button>
+      <input class="qty" type="number" inputmode="numeric" min="1" max="${max}" value="1" aria-label="Menge">
+      <button type="button" class="qty-btn" data-d="1" aria-label="Mehr">+</button>
+      <span class="sum small muted"></span>
+    </div>` : '';
+  return `<div class="uni-row item-row show-item" data-price="${i.price}"><div class="uni-main"><div class="uni-title">${esc(i.name)}</div><div class="small muted">${esc(i.category)}</div></div>
+    <div class="price">${fmt(i.price)}</div><div class="uni-act">${qty}<div class="cmd-row">${btn}</div></div></div>`;
+}
+
 /** Schaufenster: je ein Beispiel-Ausschnitt, damit man sofort sieht, was alles geht. */
 function showcase(data) {
   const on = (cmd) => data.commands.list.some((c) => c.cmd === cmd && c.enabled);
@@ -82,7 +97,7 @@ function showcase(data) {
     <article class="card show-card"><h3><a href="#/${tab}">${icon(tab, 20)}${esc(title)}</a></h3><p>${esc(desc)}</p>${body}${more ? `<a class="more" href="#/${tab}">${esc(more)} →</a>` : ''}</article>`;
   const out = [];
   if (itemPick.length) out.push(card('Items kaufen', 'items', 'Rohstoffe, Medizin, Waffen und mehr – direkt in die Kolonie oder an deinen Pawn.',
-    itemPick.map((i) => uniRow(esc(i.name), esc(i.category), i.price, '!buy ' + i.cmdName)).join(''), `Alle ${fmt(sold.length)} Items ansehen`));
+    itemPick.map(showItemRow).join(''), `Alle ${fmt(sold.length)} Items ansehen`));
   if (evPick.length) out.push(card('Events auslösen', 'events', 'Gutes wie Schlechtes passiert sofort im Spiel – für Coins.',
     evPick.map((e) => uniRow(`${esc(cap(e.label))} ${karmaBadge(e.karma)}`, esc(e.text || ''), e.cost, '!event ' + e.cmdName)).join(''), `Alle ${fmt(data.events.length)} Events ansehen`));
   if (wPick.length) out.push(card('Wetter ändern', 'wetter', 'Vom Sonnenschein bis zum Sturm.',
@@ -147,6 +162,7 @@ export function startView(data) {
     ${data.failed.length ? `<p class="warn" style="margin-top:16px">Einige Daten konnten nicht geladen werden (${data.failed.map(esc).join(', ')}). Manche Tabs sind deshalb leer.</p>` : ''}
   `;
   function bind(root) {
+    bindQuantity(root); // Menge im Schaufenster
     // Einführung ausblendbar (wird im Browser gemerkt)
     const welcome = root.querySelector('#welcome'), showLink = root.querySelector('#welcome-show');
     const setWelcome = (visible, remember) => {
