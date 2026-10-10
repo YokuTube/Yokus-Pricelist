@@ -372,6 +372,7 @@ export function initLiveUi() {
 // =====================================================================
 const SUBS = [
   { id: 'overview', label: 'Überblick' },
+  { id: 'mood', label: 'Stimmung' },
   { id: 'skills', label: 'Fähigkeiten' },
   { id: 'health', label: 'Gesundheit' },
   { id: 'gear', label: 'Ausrüstung' },
@@ -384,7 +385,7 @@ let openTrait = null;
 
 const STATE_BADGE = { ok: 'good', sleeping: 'neutral', away: 'neutral', downed: 'bad', mental: 'doom', dead: 'doom' };
 const hasGoals = (p) => p.wants != null || p.quirks != null || p.aspirations != null;
-const visibleSubs = (p) => SUBS.filter((s) => s.id !== 'goals' || hasGoals(p));
+const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)));
 
 function portraitHtml(p, cls) {
   const ini = esc((p.name || p.displayName || '?').trim().charAt(0).toUpperCase() || '?');
@@ -428,6 +429,26 @@ function panelOverview(p) {
       ${open ? `<p class="trait-desc"><b>${esc(open.label)}:</b> ${esc(open.desc)}</p>` : '<p class="small muted trait-hint">Tippe auf eine Eigenschaft, um sie zu lesen.</p>'}`);
   }
   return needs + skills + traits || '<div class="empty">Keine Angaben.</div>';
+}
+
+// Gedanken wie im Stimmungs-Reiter des Spiels; Antippen zeigt die Beschreibung (gleicher Mechanismus wie Eigenschaften)
+function panelMood(p) {
+  const head = p.moodPct == null ? '' : `<div class="bgrid">${barRow('Stimmung', p.moodPct, p.moodLabel || `${Math.round(p.moodPct)} %`)}</div>`;
+  const list = [...(p.thoughts || [])].sort((a, b) => b.value - a.value);
+  if (!list.length) return head + '<div class="empty">Gerade keine besonderen Gedanken.</div>';
+  const sum = list.reduce((s, t) => s + (Number(t.value) || 0), 0);
+  const sign = (v) => (v > 0 ? '+' : v < 0 ? '−' : '±') + fmt(Math.abs(Math.round(v * 10) / 10));
+  const rows = list.map((t) => {
+    const key = 't:' + t.label;
+    const open = openTrait === key;
+    const tn = t.value > 0 ? 'good' : t.value < 0 ? 'doom' : 'neutral';
+    return `<button type="button" class="thought" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(t.desc)}">
+        <span class="th-label">${esc(t.label)}${t.count > 1 ? ` <span class="muted">×${t.count}</span>` : ''}</span>
+        <span class="th-val ${tn}">${sign(t.value)}</span>
+      </button>${open && t.desc ? `<p class="trait-desc th-desc">${esc(t.desc)}</p>` : ''}`;
+  }).join('');
+  return head + section('Was gerade auf die Stimmung wirkt', `<div class="thoughts">${rows}</div>
+    <p class="small muted th-sum">Zusammen: <b class="${sum >= 0 ? 'th-pos' : 'th-neg'}">${sign(sum)}</b> · Tippe auf einen Eintrag für Details.</p>`);
 }
 
 function panelSkills(p) {
@@ -484,7 +505,7 @@ function panelOrigin(p) {
   return section('Herkunft', `<dl class="origin">${row('Kindheit', p.childhood)}${row('Erwachsenenleben', p.adulthood)}${row('Aufenthalt', p.location)}${row('Besiegte Gegner', p.kills != null ? fmt(p.kills) : null)}</dl>`);
 }
 
-const PANELS = { overview: panelOverview, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+const PANELS = { overview: panelOverview, mood: panelMood, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 function subsHtml(p) {
   const vis = visibleSubs(p);

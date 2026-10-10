@@ -640,3 +640,19 @@ body:has(dialog.live-dialog[open]) { overflow: hidden; }
   .live-colony { display: none; }
   .buy-now { min-height: 44px; }
 }
+
+/* ---------- Live: Stimmung (Gedanken) ---------- */
+.thoughts { display: flex; flex-direction: column; gap: 4px; }
+.thought {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 40px;
+  padding: 6px 10px; background: var(--surface-2, var(--surface)); border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.thought:hover, .thought[aria-expanded="true"] { border-color: var(--accent); }
+.th-label { min-width: 0; }
+.th-val { flex: 0 0 auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+.th-val.good, .th-pos { color: var(--good); }
+.th-val.doom, .th-neg { color: var(--doom); }
+.th-val.neutral { color: var(--muted); }
+.th-desc { margin: 0 0 4px; }
+.th-sum { margin: 10px 0 0; }

@@ -54,6 +54,12 @@ def make_pawn(user, display, name, full, gender, age, race, xeno, state, state_l
         "healthPct": health, "moodPct": mood, "state": state, "stateLabel": state_label, "job": job,
         "fullName": full, "gender": gender, "age": age, "race": race, "xenotype": xeno,
         "childhood": child, "adulthood": adult, "location": "Kolonie", "moodLabel": mood_label,
+        "thoughts": [
+            {"label": "Hat eine feine Mahlzeit gegessen", "value": 5, "count": 1, "desc": "Das war richtig gutes Essen."},
+            {"label": "Schöne Umgebung", "value": 3, "count": 1, "desc": "Hier ist es hübsch."},
+            {"label": "Hat im Regen geschlafen", "value": -4, "count": 2, "desc": "Nass und kalt."},
+            {"label": "Schmerz", "value": -6.5, "count": 1, "desc": "Es tut weh."},
+        ],
         "needs": needs or [need("Nahrung", 72), need("Erholung", 55), need("Schlaf", 81), need("Komfort", 64), need("Schönheit", 40), need("Freude", 33)],
         "capacities": [need("Bewusstsein", 100 if state != "downed" else 28), need("Bewegung", 100 if state != "downed" else 0),
                        need("Sehen", 100), need("Hören", 100), need("Manipulation", 92), need("Sprechen", 100)],
