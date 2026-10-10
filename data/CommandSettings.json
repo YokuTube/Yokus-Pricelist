@@ -3538,5 +3538,25 @@
     "MinLootBoxSize": 1,
     "MaxLootBoxSize": 10,
     "CustomData": ""
+  },
+  "geschenk": {
+    "Enabled": true,
+    "CooldownSeconds": 5,
+    "Cost": 0,
+    "SupportsCost": false,
+    "PermissionLevel": "everyone",
+    "RequiresConfirmation": false,
+    "CommandAlias": "",
+    "useCommandCooldown": true,
+    "MaxUsesPerCooldownPeriod": 0,
+    "Label": "Geschenk",
+    "CommandDescription": "Schenke einem anderen Kolonisten etwas Zufälliges (Bier, Schokolade, Jade …): !geschenk Name. Gibt Meinung und gute Laune.",
+    "ExcludeFromPricelist": false,
+    "AllowedRaidTypes": [],
+    "AllowedRaidStrategies": [],
+    "DefaultLootBoxSize": 1,
+    "MinLootBoxSize": 1,
+    "MaxLootBoxSize": 10,
+    "CustomData": "{\"price\":\"150\",\"giverCooldownHours\":\"6\",\"pairCooldownHours\":\"24\",\"maxPerHour\":\"10\"}"
   }
 }

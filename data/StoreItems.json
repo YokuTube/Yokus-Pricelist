@@ -57247,12 +57247,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 5400,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_LavanderRose": {
@@ -57262,12 +57262,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 5600,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_ButterflyHeart": {
@@ -57277,12 +57277,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 7400,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_SeaWill": {
@@ -57292,12 +57292,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 7600,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_NebulaStar": {
@@ -57307,12 +57307,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 10500,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_UnicornStar": {
@@ -57322,12 +57322,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 10800,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_HarpGod": {
@@ -57337,12 +57337,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 16200,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_PiercingGod": {
@@ -57352,12 +57352,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 15000,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_SlashingGod": {
@@ -57367,12 +57367,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 15500,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_DestroyingGod": {
@@ -57382,12 +57382,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 16500,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_Cristaline": {
@@ -57397,12 +57397,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 5200,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_DeathWish": {
@@ -57412,12 +57412,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 5800,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_LionsPride": {
@@ -57427,12 +57427,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 5000,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_PirateGamble": {
@@ -57442,12 +57442,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 5400,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_RagingClaymore": {
@@ -57457,12 +57457,12 @@
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
       "IsUsable": false,
-      "IsEquippable": true,
+      "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 5600,
       "Category": "Weapon",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_GateScroll_F": {
@@ -57471,13 +57471,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 150,
       "Category": "Artefakte",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_GateScroll_E": {
@@ -57486,13 +57486,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 250,
       "Category": "Artefakte",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_GateScroll_D": {
@@ -57501,13 +57501,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 400,
       "Category": "Artefakte",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_GateScroll_C": {
@@ -57516,13 +57516,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 650,
       "Category": "Artefakte",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_GateScroll_B": {
@@ -57531,13 +57531,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 1000,
       "Category": "Artefakte",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_GateScroll_A": {
@@ -57546,13 +57546,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 1500,
       "Category": "Artefakte",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_GateScroll_S": {
@@ -57561,13 +57561,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 2200,
       "Category": "Artefakte",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_GateScroll_SS": {
@@ -57576,13 +57576,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 3200,
       "Category": "Artefakte",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_GateScroll_SSS": {
@@ -57591,13 +57591,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 4500,
       "Category": "Artefakte",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_TreasureChestPlain": {
@@ -57612,7 +57612,7 @@
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 400,
       "Category": "Schatztruhen",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_TreasureChestFine": {
@@ -57627,7 +57627,7 @@
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 950,
       "Category": "Schatztruhen",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_TreasureChestGrand": {
@@ -57642,7 +57642,7 @@
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 1900,
       "Category": "Schatztruhen",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_TreasureChestMythic": {
@@ -57657,7 +57657,7 @@
       "Mod": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
       "BasePrice": 3600,
       "Category": "Schatztruhen",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     }
   }
