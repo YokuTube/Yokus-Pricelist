@@ -14,6 +14,10 @@ Verhalten:
   quirks/isekai antworten mit Beispieltext; bei "yoku" aendern "isekai lernen/stat" und "quirks nehmen" die Daten wirklich.
   Mehr Tiere (Gruppierung testen): Umgebungsvariable FAKE_MANY=1.
 - Pawn "mira_spielt" ist niedergestreckt und blutet, "eddi_tv" schlaeft und hat keine Wuensche/Quirks (null).
+- Neu: /api/vote (Abstimmung 90 s offen, 20 s Pause, Stimmen per Aktion "vote"), /api/events (Chronik mit Texten),
+  relations in /api/log, work/workEditable (nur yoku darf setzen: Aktion mypawn "work <id> <prio>"),
+  duelIncoming (alle 120 s Herausforderung von Mira fuer 45 s; "duel ja/nein" beantworten, "duel <Name>" fordert),
+  goals und stock in /api/game.
 """
 import hashlib
 import os
@@ -30,7 +34,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 ORIGINS = {"https://yokutube.github.io", "http://localhost:8765", "http://127.0.0.1:8765"}
-ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai"]
+ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote"]
 ARGS_RE = re.compile(r"^[\w \-.'#]{0,80}$", re.UNICODE)
 
 LOCK = threading.Lock()
@@ -231,6 +235,90 @@ for _p in PAWNS.values():
         for _i, _w in enumerate(_p["wants"]["list"]):
             _w["rerollable"] = _i % 2 == 0
 
+# ---------- Arbeit (work/workEditable) ----------
+WORK_DEFS = [("Cooking", "Kochen"), ("Doctor", "Medizin"), ("Firefighter", "Feuerwehr"), ("Construction", "Bauen"),
+             ("Mining", "Bergbau"), ("Hauling", "Transport"), ("Cleaning", "Reinigen"), ("Art", "Kunst")]
+WORK_PRIO = {
+    "yoku": {"Cooking": 1, "Doctor": 3, "Firefighter": 2, "Construction": 2, "Mining": 0, "Hauling": 4, "Cleaning": 3, "Art": 0},
+    "mira_spielt": {"Cooking": 0, "Doctor": 2, "Firefighter": 1, "Construction": 3, "Mining": 4, "Hauling": 0, "Cleaning": 0, "Art": 0},
+    "eddi_tv": {"Cooking": 3, "Doctor": 0, "Firefighter": 4, "Construction": 1, "Mining": 2, "Hauling": 0, "Cleaning": 3, "Art": 2},
+    "luna_88": {"Cooking": 2, "Doctor": 1, "Firefighter": 0, "Construction": 0, "Mining": 0, "Hauling": 3, "Cleaning": 1, "Art": 4},
+}
+for _p in PAWNS.values():
+    _u = _p["user"]
+    _p["work"] = [{"id": i, "label": l, "prio": WORK_PRIO[_u].get(i, 0),
+                   "disabled": (_p["state"] == "downed" and i in ("Construction", "Mining", "Hauling", "Cleaning"))}
+                  for i, l in WORK_DEFS]
+    _p["workEditable"] = _u == "yoku"
+
+
+# ---------- Beziehungen (Log: relations) ----------
+def rel(name, user, rels, op, theirs, dead=False, animal=False):
+    return {"name": name, "user": user, "relations": rels, "opinion": op, "theirs": theirs,
+            "colonist": user is not None, "dead": dead, "animal": animal}
+
+
+RELATIONS = {
+    "yoku": [rel("Luna Mertens", "luna_88", ["Mutter"], 60, 55),
+             rel("Eddi Brandt", "eddi_tv", ["Bruder"], 20, 15),
+             rel("Jonas Krag", None, ["Ex-Partner"], -40, -55),
+             rel("Olaf Aldemar", None, ["Vater"], 0, 0, dead=True),
+             rel("Mira Voss", "mira_spielt", [], 35, -10),
+             rel("Sven Reiter", None, [], -25, -30),
+             rel("Rex", None, [], 0, 0, animal=True)],
+    "mira_spielt": [rel("Kira Aldemar", "yoku", [], 30, 35),
+                    rel("Luna Mertens", "luna_88", [], -15, 5)],
+    "luna_88": [rel("Kira Aldemar", "yoku", ["Tochter"], 70, 60),
+                rel("Eddi Brandt", "eddi_tv", [], 10, 8)],
+    "eddi_tv": [rel("Kira Aldemar", "yoku", ["Schwester"], 25, 15)],
+}
+
+# ---------- Ereignisse (Chronik mit Text) ----------
+EVENTS = [
+    {"label": "Überfall: Plünderer", "text": "Fünf Plünderer sind über den Nordpass gekommen. Zwei wurden erledigt, die übrigen flohen.", "kind": "threat", "ago": "2 Stunden", "day": 37},
+    {"label": "Händler aus Fernost", "text": "Ein Händler hat drei Kisten Stahl gegen Reis getauscht.", "kind": "good", "ago": "7 Stunden", "day": 37},
+    {"label": "Pawn ist krank: Grippe", "text": "Mira hat sich bei einem Wanderer angesteckt und liegt im Bett.", "kind": "bad", "ago": "1 Tag", "day": 36},
+    {"label": "Wanderer schließt sich an", "text": "Ein Wanderer aus dem Westen wollte bleiben. Sein Name ist Jan.", "kind": "good", "ago": "2 Tage", "day": 35},
+    {"label": "Wetterwechsel", "text": "Der Regen hat aufgehört. Es ist jetzt trocken und warm.", "kind": "neutral", "ago": "3 Tage", "day": 34},
+    {"label": "Kurze Kälte", "text": "Die Temperatur ist für einen Tag unter den Gefrierpunkt gefallen.", "kind": "bad", "ago": "4 Tage", "day": 33},
+    {"label": "Schwarm Fledermäuse", "text": "Ein Schwarm ist in die Höhle gezogen. Niemand wurde verletzt.", "kind": "neutral", "ago": "5 Tage", "day": 32},
+    {"label": "Mondfest", "text": "Die Kolonie hat gefeiert. Die Stimmung ist deutlich gestiegen.", "kind": "good", "ago": "6 Tage", "day": 31},
+]
+
+# ---------- Abstimmung (RICS Voting): 90 s offen, dann 20 s Pause ----------
+VOTE_OPTS = ["Überfall: Plünderer", "Hitzewelle", "Händler-Besuch", "Wanderer aufnehmen"]
+VOTE = {"cycle": -1, "counts": [0, 0, 0, 0]}
+
+
+def vote_phase():
+    t = int(time.time())
+    return t // 110, t % 110
+
+
+def vote_state():
+    cyc, ph = vote_phase()
+    if ph >= 90:
+        return {"open": False}
+    if VOTE["cycle"] != cyc:
+        VOTE["cycle"] = cyc
+        VOTE["counts"] = [5 + secrets.randbelow(20) for _ in VOTE_OPTS]
+    total = sum(VOTE["counts"])
+    opts = [{"label": l, "count": c, "pct": round(c * 100 / total) if total else 0} for l, c in zip(VOTE_OPTS, VOTE["counts"])]
+    return {"open": True, "options": opts, "total": total, "secondsLeft": 90 - ph}
+
+
+# ---------- Herausforderung (Duell): alle 120 s fuer 45 s, Antwort beendet sie ----------
+DUEL = {"answered": -1}
+
+
+def duel_state():
+    t = int(time.time())
+    cyc, ph = t // 120, t % 120
+    if not (30 <= ph < 75) or DUEL["answered"] == cyc:
+        return None
+    return {"from": "Mira", "fromUser": "mira_spielt", "secondsLeft": 75 - ph}
+
+
 # ---------- Tiere, Quirk-Angebote, Forschung ----------
 ANIMALS = [
     {"name": "Rex", "kind": "Husky", "gender": "Männlich", "age": 4.2, "healthPct": 96, "bond": "Kira", "master": "Kira"},
@@ -331,6 +419,14 @@ def game_info():
         "animalList": ANIMALS,
         "quirkOffers": QUIRK_OFFERS,
         "isekaiSkilling": True,
+        "goals": [
+            {"title": "Festmahl", "what": "Die Kolonie serviert gemeinsam 50 Mahlzeiten.", "current": 32, "target": 50, "done": False,
+             "reward": "300 Coins für alle", "top": [{"user": "yoku", "amount": 12}, {"user": "mira_spielt", "amount": 9}, {"user": "luna_88", "amount": 6}]},
+            {"title": "Rosenfest", "what": "20 Rosen anbauen.", "current": 20, "target": 20, "done": True,
+             "reward": 500, "top": [{"user": "luna_88", "amount": 14}, {"user": "yoku", "amount": 6}]},
+        ],
+        "stock": {"foodNutrition": 2140, "foodDays": 6.4,
+                  "items": [{"label": "Reis", "count": 120}, {"label": "Bier", "count": 14}, {"label": "Medizin", "count": 22}, {"label": "Stahl", "count": 540}]},
     }
 
 
@@ -345,6 +441,29 @@ def fake_effect(user, cmd, args):
     """Beispielantworten der neuen Knoepfe; fuer "yoku" aendern Lernen/Stat/Quirk die Daten wirklich."""
     pw = PAWNS.get(user)
     a = args.split()
+    if cmd == "vote" and a[:1] and a[0].isdigit():
+        cyc, ph = vote_phase()
+        n = int(a[0])
+        if ph >= 90 or not (1 <= n <= len(VOTE["counts"])):
+            return "@%s Gerade ist keine Abstimmung mit dieser Nummer offen." % user
+        VOTE["counts"][n - 1] += 1      # fake_effect laeuft schon unter LOCK (nicht erneut sperren)
+        return "@%s Stimme für „%s“ gezählt." % (user, VOTE_OPTS[n - 1])
+    if cmd == "mypawn" and pw and a[:1] == ["work"] and len(a) == 3 and a[2].isdigit():
+        if not pw.get("workEditable"):
+            return "@%s Der Streamer erlaubt das Setzen gerade nicht." % user
+        for w in pw["work"]:
+            if w["id"] == a[1] and not w["disabled"]:
+                w["prio"] = int(a[2])
+                return "@%s %s: Priorität %s." % (user, w["label"], "aus" if a[2] == "0" else a[2])
+        return "@%s Die Arbeit gibt es nicht oder sie ist gesperrt." % user
+    if cmd == "duel":
+        if a[:1] in (["ja"], ["nein"]):
+            if duel_state() is None:
+                return "@%s Gerade liegt keine Herausforderung vor." % user
+            DUEL["answered"] = int(time.time()) // 120
+            return "@%s Herausforderung %s." % (user, "angenommen – möge der Bessere gewinnen!" if a[0] == "ja" else "abgelehnt")
+        if a:
+            return "@%s Herausforderung an %s gesendet." % (user, " ".join(a))
     if cmd == "wants" and a[:1] == ["reroll"]:
         return "@%s Wunsch %s getauscht: Neuer Wunsch – Bau ein Beet (+20)." % (user, a[1] if len(a) > 1 else "?")
     if cmd == "aspirations" and a[:1] == ["reroll"]:
@@ -441,12 +560,18 @@ class H(BaseHTTPRequestHandler):
             return self.js(200, research_info())
         if p == "/api/isekai":
             return self.js(200, isekai_info())
+        if p == "/api/vote":
+            return self.js(200, vote_state())
+        if p == "/api/events":
+            return self.js(200, {"events": EVENTS})
         if p == "/api/colony":
             return self.js(200, {"pawns": [summary(x) for x in PAWNS.values()]})
         if p.startswith("/api/log/"):
             if unquote(p[9:]).lower() not in PAWNS:
                 return self.js(404, {"error": "Noch keine Einträge"}, cache=False)
+            key = unquote(p[9:]).lower()
             return self.js(200, {
+                "relations": RELATIONS.get(key, []),
                 "social": [
                     {"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "2 Stunden"},
                     {"text": "Kira hat Eddi beleidigt.", "ago": "5 Stunden"},
@@ -466,8 +591,11 @@ class H(BaseHTTPRequestHandler):
                 return self.js(401, {"error": "Nicht angemeldet."}, cache=False)
             with LOCK:
                 coins, karma = STATE["coins"], STATE["karma"]
+            pawn = dict(PAWNS[user]) if user in PAWNS else None
+            if pawn is not None:
+                pawn["duelIncoming"] = duel_state()
             return self.js(200, {"user": user, "displayName": ALLOWED_USERS.get(user, user), "coins": coins,
-                                 "karma": karma, "pawn": PAWNS.get(user)})
+                                 "karma": karma, "pawn": pawn})
         if p.startswith("/api/portrait/"):
             user = unquote(p[14:]).lower()
             if user not in PAWNS or PAWNS[user]["portrait"] == 0:

@@ -11,6 +11,7 @@ const P = {
   kolonie: '<path d="M3 20V10l5-4 5 4v10M13 20v-7l4-3 4 3v7M3 20h18"/><path d="M6.500 20v-4h3v4"/>',
   stream: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M10 9l5 2.500-5 2.500z"/><path d="M8 21h8"/>',
   spiel: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  ereignisse: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
   mods: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.900 4.900l2.100 2.100M17 17l2.100 2.100M19.100 4.900L17 7M7 17l-2.100 2.100"/>',
 };
 

@@ -348,6 +348,184 @@ function markBuyable() {
   });
 }
 
+// =====================================================================
+// Abstimmungs-Popup (RICS Voting): festes Kärtchen unten, auf jedem Reiter, solange eine Abstimmung läuft
+// =====================================================================
+const VOTE_KEY = 'ys-vote';                 // sessionStorage: eigene Stimme zur laufenden Abstimmung
+let voteEl = null, voteState = null, voteAt = 0, voteBusy = false, voteTick = null, votePolling = false;
+
+const voteKey = (opts) => opts.map((o) => o.label).join('|');
+function myVote(opts) {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(VOTE_KEY) || 'null');
+    return v && v.key === voteKey(opts) ? v.n : null;
+  } catch { return null; }
+}
+function rememberVote(opts, n) {
+  try { sessionStorage.setItem(VOTE_KEY, JSON.stringify({ key: voteKey(opts), n })); } catch { /* egal */ }
+}
+const voteLeft = () => Math.max(0, Math.round((Number(voteState?.secondsLeft) || 0) - (Date.now() - voteAt) / 1000));
+
+function voteHtml(v) {
+  const opts = v.options || [];
+  const mine = myVote(opts);
+  const linked = live.isLinked();
+  const rows = opts.map((o, i) => {
+    const n = i + 1, pct = clamp(o.pct), isMine = mine === n;
+    let act = '';
+    if (linked && mine == null) act = `<button type="button" class="btn primary vote-go" data-vote="${n}"${voteBusy ? ' disabled' : ''}>Stimme ${n}</button>`;
+    else if (isMine) act = '<span class="vote-mine">✓ Deine Stimme</span>';
+    return `<li class="vote-opt${isMine ? ' mine' : ''}">
+      <div class="vo-top"><span class="vo-label"><b>${n}</b> ${esc(o.label)}</span><span class="vo-pct">${Math.round(pct)} %${o.count ? ` · ${fmt(o.count)}` : ''}</span></div>
+      ${bar(pct, 'acc')}${act}</li>`;
+  }).join('');
+  const note = linked ? '' : `<p class="small muted vote-note">Schreib die Zahl (1–${opts.length}) in den Chat, oder verbinde dich oben, um hier abzustimmen.</p>`;
+  return `<div class="vote-head"><b>Abstimmung</b><span class="vt-left">Noch ${voteLeft()} s</span><span class="small muted">${fmt(v.total)} Stimmen</span></div>
+    <ol class="vote-opts">${rows}</ol>${note}`;
+}
+
+function startVoteTick() {
+  if (voteTick) return;
+  voteTick = setInterval(() => { const el = voteEl?.querySelector('.vt-left'); if (el) el.textContent = `Noch ${voteLeft()} s`; }, 1000);
+}
+function stopVoteTick() { clearInterval(voteTick); voteTick = null; }
+
+function renderVote() {
+  if (!voteEl) return;
+  if (!voteState?.open || !live.isLive()) {
+    voteEl.hidden = true; stopVoteTick(); morph(voteEl, '');
+    return;
+  }
+  voteEl.hidden = false;
+  morph(voteEl, voteHtml(voteState));
+  startVoteTick();
+}
+
+async function castVote(n) {
+  if (voteBusy || !voteState?.open) return;
+  const opts = voteState.options || [];
+  voteBusy = true; renderVote();
+  try {
+    const msgs = await live.act('vote', String(n));
+    rememberVote(opts, n);
+    toast(msgs.length ? msgs.join(' · ') : `Stimme ${n} abgegeben`, 4000);
+  } catch (e) {
+    toast(e.message, 5000);
+  } finally {
+    voteBusy = false; renderVote();
+  }
+}
+
+function ensureVotePoll() {
+  if (votePolling || !live.isLive()) return;
+  votePolling = true;
+  live.poll({
+    path: '/api/vote', every: 2000, alive: () => live.isLive(),
+    onResult: (r) => {
+      if (r.status !== 200 || !r.data || r.unchanged) return;
+      voteState = r.data; voteAt = Date.now();
+      if (!voteState.open) { try { sessionStorage.removeItem(VOTE_KEY); } catch { /* egal */ } }
+      renderVote();
+    },
+  });
+}
+
+// ---------- Duell: eingehende Herausforderung als Popup (Annehmen / Ablehnen) ----------
+let duelDlg = null, duelKey = null, duelDismissed = null, duelTimer = null;
+
+function closeDuel() {
+  clearInterval(duelTimer); duelTimer = null;
+  if (duelDlg?.open) duelDlg.close();
+}
+
+function answerDuel(v) {
+  duelDismissed = duelKey;
+  closeDuel();
+  live.act('duel', v)
+    .then((msgs) => toast(msgs.length ? msgs.join(' · ') : (v === 'ja' ? 'Angenommen – der Kampf kommt.' : 'Abgelehnt.'), 6000))
+    .catch((e) => toast(e.message, 5000));
+}
+
+function handleDuel() {
+  const inc = live.isLive() ? (live.getMe()?.pawn?.duelIncoming || null) : null;
+  if (!inc) { duelDismissed = null; duelKey = null; closeDuel(); return; }
+  const key = `${inc.from}|${inc.fromUser || ''}`;
+  if (duelDlg?.open && duelKey === key) return;   // läuft schon
+  if (duelDismissed === key) return;              // schon weggeklickt
+  closeDuel();
+  duelKey = key;
+  let left = Math.max(0, Math.round(Number(inc.secondsLeft) || 0));
+  const from = esc(inc.from);
+  const d = makeDialog(`
+    <h3>Herausforderung!</h3>
+    <p class="ld-lead"><b>${from}</b> fordert dich zur Prügelei heraus.</p>
+    <p class="small muted">Antwort in <b id="duel-left">${left}</b> s – sonst gilt es als abgelehnt.</p>
+    <div class="ld-actions">
+      <button type="button" class="btn primary" data-duel="ja">Annehmen</button>
+      <button type="button" class="btn" data-duel="nein">Ablehnen</button>
+    </div>`);
+  duelDlg = d;
+  d.querySelectorAll('[data-duel]').forEach((b) => b.addEventListener('click', () => answerDuel(b.dataset.duel)));
+  d.addEventListener('close', () => {
+    clearInterval(duelTimer); duelTimer = null;
+    if (duelKey) duelDismissed = duelKey;         // mit Escape/Hintergrund weggeschoben: nicht wieder öffnen
+    duelDlg = null;
+  });
+  const out = d.querySelector('#duel-left');
+  const t0 = Date.now();
+  duelTimer = setInterval(() => {
+    const now = Math.max(0, left - Math.round((Date.now() - t0) / 1000));
+    if (out) out.textContent = now;
+  }, 1000);
+}
+
+// ---------- Benachrichtigungen: Zustandswechsel des eigenen Kolonisten und erfüllte Wünsche ----------
+const notes = { key: null, state: null, wants: null };
+const STATE_ALERT = {
+  downed: (n) => ({ text: `${n} ist niedergestreckt!`, tone: 'bad' }),
+  mental: (n, l) => ({ text: `${n}: ${l || 'Nervenzusammenbruch'}!`, tone: 'bad' }),
+  dead: (n) => ({ text: `${n} ist gestorben.`, tone: 'doom' }),
+};
+let alertEl = null, alertTimer = null;
+
+/** Auffällige Einblendung oben (antippen schließt sie). textContent statt HTML: Texte kommen aus dem Spiel. */
+function flashAlert(text, tone = 'bad') {
+  if (!alertEl) return;
+  alertEl.className = `live-alert ${tone}`;
+  alertEl.textContent = text;
+  alertEl.hidden = false;
+  clearTimeout(alertTimer);
+  alertTimer = setTimeout(() => { alertEl.hidden = true; }, 9000);
+}
+
+/** Browser-Benachrichtigung – nur wenn der Tab im Hintergrund ist und die Erlaubnis erteilt wurde. */
+function osNotify(text) {
+  try {
+    if (document.hidden && 'Notification' in window && Notification.permission === 'granted') new Notification('RICS Live', { body: text });
+  } catch { /* egal */ }
+}
+
+function checkNotices() {
+  const p = live.isLive() ? live.getMe()?.pawn : null;
+  if (!p) { notes.key = null; return; }
+  const key = p.id || p.user || p.name;
+  const cnt = Array.isArray(p.wants?.list) ? p.wants.list.length : null;
+  if (notes.key !== key) {                         // neuer Kolonist: einmal still merken, nichts melden
+    notes.key = key; notes.state = p.state; notes.wants = cnt;
+    return;
+  }
+  if (notes.state !== p.state && STATE_ALERT[p.state]) {
+    const a = STATE_ALERT[p.state](p.name, p.stateLabel);
+    flashAlert(a.text, a.tone); osNotify(a.text);
+  }
+  notes.state = p.state;
+  if (notes.wants != null && cnt != null && cnt < notes.wants) {
+    const txt = `Wunsch erfüllt! ${p.name} hat noch ${cnt} offen.`;
+    flashAlert(txt, 'good'); osNotify(txt);
+  }
+  notes.wants = cnt;
+}
+
 export function initLiveUi() {
   const header = document.querySelector('.site-header');
   if (!header) return;
@@ -400,6 +578,41 @@ export function initLiveUi() {
     ph.setAttribute('aria-hidden', 'true');
     img.replaceWith(ph);
   }, true);
+
+  // Abstimmungs-Kärtchen (unten, über allen Reitern)
+  voteEl = document.createElement('aside');
+  voteEl.className = 'vote-card card';
+  voteEl.hidden = true;
+  voteEl.setAttribute('aria-label', 'Laufende Abstimmung');
+  document.body.appendChild(voteEl);
+  voteEl.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-vote]');
+    if (b && !b.disabled) castVote(Number(b.dataset.vote));
+  });
+  live.on('change', () => {
+    if (!live.isLive()) { votePolling = false; voteState = null; renderVote(); }
+    else ensureVotePoll();
+  });
+  ensureVotePoll();
+  live.on('me', handleDuel);
+  live.on('change', handleDuel);
+
+  // Benachrichtigungen
+  alertEl = document.createElement('div');
+  alertEl.className = 'live-alert';
+  alertEl.setAttribute('role', 'alert');
+  alertEl.hidden = true;
+  alertEl.addEventListener('click', () => { alertEl.hidden = true; });
+  document.body.appendChild(alertEl);
+  live.on('me', checkNotices);
+  live.on('change', () => { if (!live.isLive()) notes.key = null; });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-notify]')) return;
+    if (!('Notification' in window)) { toast('Dieser Browser kann keine Benachrichtigungen.'); return; }
+    Notification.requestPermission().then((perm) => {
+      toast(perm === 'granted' ? 'Benachrichtigungen sind an.' : 'Keine Erlaubnis – du bekommst die Hinweise nur auf der Seite.', 4000);
+    }).catch(() => {});
+  });
 }
 
 // =====================================================================
@@ -411,9 +624,11 @@ const SUBS = [
   { id: 'skills', label: 'Fähigkeiten' },
   { id: 'health', label: 'Gesundheit' },
   { id: 'gear', label: 'Ausrüstung' },
+  { id: 'work', label: 'Arbeit' },
   { id: 'goals', label: 'Ziele' },
   { id: 'isekai', label: 'Isekai' },
   { id: 'log', label: 'Erlebnisse' },
+  { id: 'relations', label: 'Beziehungen' },
   { id: 'origin', label: 'Herkunft' },
 ];
 const SUB_KEY = 'ys-live-sub';
@@ -422,7 +637,7 @@ let openTrait = null;
 
 const STATE_BADGE = { ok: 'good', sleeping: 'neutral', away: 'neutral', downed: 'bad', mental: 'doom', dead: 'doom' };
 const hasGoals = (p) => p.wants != null || p.quirks != null || p.aspirations != null;
-const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null));
+const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null) && (s.id !== 'work' || Array.isArray(p.work)));
 
 function portraitHtml(p, cls) {
   const ini = esc((p.name || p.displayName || '?').trim().charAt(0).toUpperCase() || '?');
@@ -811,7 +1026,80 @@ function startLogPoll(host) {
   });
 }
 
-const PANELS = { overview: panelOverview, mood: panelMood, log: panelLog, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+// Beziehungen: Daten aus demselben /api/log/<id> (relations), eigene Abfrage nur solange dieser Unterreiter offen ist
+const relSign = (v) => (v > 0 ? '+' : v < 0 ? '−' : '±') + fmt(Math.abs(Math.round(Number(v) || 0)));
+const relTone = (v) => (v > 0 ? 'good' : v < 0 ? 'doom' : 'neutral');
+
+function relRow(p, r) {
+  const who = r.user ? ` <span class="chip accent" title="Zuschauer">@${esc(r.user)}</span>` : '';
+  const dead = r.dead ? ' <span class="tag">tot</span>' : '';
+  const label = (r.relations || []).length ? `<div class="small muted">${esc(r.relations.join(' · '))}</div>` : '';
+  const ops = r.dead ? '' : `<div class="rel-ops">
+      <span class="rel-op ${relTone(r.opinion)}" title="Meinung von ${esc(p.name)} über ${esc(r.name)}">${esc(p.name)} → ${relSign(r.opinion)}</span>
+      <span class="rel-op ${relTone(r.theirs)}" title="Meinung von ${esc(r.name)} über ${esc(p.name)}">${esc(r.name)} → ${relSign(r.theirs)}</span></div>`;
+  return `<li class="rel-row"><div class="rel-main"><b class="rel-name">${esc(r.name)}</b>${who}${dead}</div>${label}${ops}</li>`;
+}
+
+function relHtml(p, data) {
+  const list = (data?.relations || []).filter((r) => r && !r.animal);
+  if (!list.length) return '<div class="empty">Noch keine Beziehungen erfasst.</div>';
+  const fam = list.filter((r) => (r.relations || []).length);
+  const others = list.filter((r) => !(r.relations || []).length && !r.dead).sort((a, b) => (Number(b.opinion) || 0) - (Number(a.opinion) || 0));
+  const famHtml = fam.length ? section('Partner & Familie', `<ul class="rel-list">${fam.map((r) => relRow(p, r)).join('')}</ul>`) : '';
+  const othHtml = others.length ? section('Freunde & Rivalen', `<ul class="rel-list">${others.map((r) => relRow(p, r)).join('')}</ul>
+    <p class="small muted" style="margin:8px 0 0">Zahlen: Meinung des einen über den anderen. Grün = mag, rot = mag nicht.</p>`) : '';
+  return famHtml + othHtml || '<div class="empty">Noch keine Beziehungen erfasst.</div>';
+}
+
+function panelRelations(p) {
+  const key = p.id || p.user;
+  const cached = logCache.get(key);
+  return `<div class="rel-host" data-key="${esc(key)}" data-morph-keep data-logfor="${esc(key)}">${cached ? relHtml(p, cached) : '<div class="empty">Lade …</div>'}</div>`;
+}
+
+function startRelPoll(host) {
+  const el = host.querySelector('.rel-host');
+  if (!el || el._polling) return;
+  el._polling = true;
+  const key = el.dataset.logfor;
+  live.poll({
+    path: '/api/log/' + encodeURIComponent(key), every: 10000, alive: () => el.isConnected,
+    onResult: (r) => {
+      if (r.status === 404) { morph(el, '<div class="empty">Noch keine Einträge – kommt gleich.</div>'); return; }
+      if (r.status !== 200 || !r.data || !host._pawn) return;
+      logCache.set(key, r.data);
+      if (!r.unchanged || !el.dataset.filled) { morph(el, relHtml(host._pawn, r.data)); el.dataset.filled = '1'; }
+    },
+  });
+}
+
+// Arbeit: Prioritäten je Tätigkeit. Setzen nur für den eigenen Kolonisten, wenn der Streamer es erlaubt (workEditable).
+const WORK_PRIOS = [[0, 'aus'], [1, '1'], [2, '2'], [3, '3'], [4, '4']];
+
+function panelWork(p) {
+  const list = Array.isArray(p.work) ? p.work : [];
+  if (!list.length) return '<div class="empty">Keine Arbeiten bekannt.</div>';
+  const mine = isMine(p);
+  const can = mine && p.workEditable === true && live.isAllowed('mypawn');
+  const hint = can
+    ? '<p class="small muted" style="margin:0 0 8px">Tippe eine Priorität an: 1 ist die höchste, „aus“ schaltet die Arbeit ab.</p>'
+    : `<p class="small muted" style="margin:0 0 8px">${mine ? 'Der Streamer erlaubt das Ändern der Arbeiten gerade nicht.' : 'Nur ansehen.'}</p>`;
+  const rows = list.map((w) => {
+    const pr = Number(w.prio) || 0;
+    let right;
+    if (can && !w.disabled) {
+      right = `<span class="wk-prios">${WORK_PRIOS.map(([n, l]) => actBtn('mypawn', `work ${w.id} ${n}`, l, {
+        cls: pr === n ? 'on' : '', title: `${w.label}: Priorität ${n === 0 ? 'aus' : n}`,
+      })).join('')}</span>`;
+    } else {
+      right = `<span class="tag">${w.disabled ? 'gesperrt' : pr === 0 ? 'aus' : `Priorität ${esc(pr)}`}</span>`;
+    }
+    return `<li class="wk${w.disabled ? ' off' : pr === 0 ? ' idle' : ''}"><span class="wk-label">${esc(w.label)}</span>${right}</li>`;
+  }).join('');
+  return `${hint}<ul class="wk-list">${rows}</ul>`;
+}
+
+const PANELS = { overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 function subsHtml(p) {
   const vis = visibleSubs(p);
@@ -822,13 +1110,22 @@ function subsHtml(p) {
 const activeSub = (p) => (visibleSubs(p).some((s) => s.id === curSub) ? curSub : 'overview');
 
 /** Zeichnet Hero + Unterreiter + Inhalt in `host`. Der gewählte Reiter bleibt beim Aktualisieren erhalten. */
+/** Herausfordern: nur bei fremden Kolonisten und nur, wenn ich selbst einen Kolonisten habe. Ziel = Twitch-Name bzw. Rufname. */
+function duelHtml(p) {
+  if (!live.isLinked() || !live.getMe()?.pawn || isMine(p) || !live.isAllowed('duel')) return '';
+  return `<div class="duel-row">${actBtn('duel', p.user || p.name || '', '⚔ Herausfordern', {
+    confirm: true, armedLabel: 'Wirklich herausfordern?', cls: 'duel-btn', title: `${p.name} zu einer Prügelei herausfordern`,
+  })}</div>`;
+}
+
 function characterHtml(p) {
-  return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${PANELS[activeSub(p)](p)}</div></div>`;
+  return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${duelHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${PANELS[activeSub(p)](p)}</div></div>`;
 }
 
 /** Hintergrundabfragen, die nur zum gerade offenen Unterreiter gehören. */
 function afterPaint(host) {
   startLogPoll(host);
+  startRelPoll(host);
   startGoalsPoll(host);
   if (host._pawn && activeSub(host._pawn) === 'isekai') ensureTrees(host);
 }
@@ -901,9 +1198,11 @@ const connectCard = () => `<div class="card live-card">
 </div>`;
 
 function walletHtml(me) {
+  const askNotify = 'Notification' in window && Notification.permission === 'default';
   return `<div class="card wallet">
     <div><span class="wallet-label">Deine Münzen</span><div class="wallet-coins">${coinsHtml(me.coins)}</div></div>
     <div class="wallet-karma"><span class="wallet-label">Karma</span><div><b>${esc(fmt(me.karma))}</b></div></div>
+    ${askNotify ? '<button type="button" class="btn notify-btn" data-notify="1">🔔 Benachrichtigungen erlauben</button>' : ''}
   </div>`;
 }
 
@@ -1063,7 +1362,10 @@ function pawnDetail(user) {
   function bind(root) {
     window.scrollTo({ top: 0 });
     const host = root.querySelector('#pd-host');
-    let last = '';
+    let last = '', cur = null, vk = null;
+    // Verknüpfung oder eigener Kolonist ändert sich: Ansicht neu zeichnen (z. B. Knopf „Herausfordern“)
+    const linkKey = () => (live.isLinked() && live.getMe()?.pawn ? 'me' : '-');
+    whileMounted(host, [['me', () => { const k = linkKey(); if (cur && k !== vk) { vk = k; mountCharacter(host, cur); } }]]);
     live.poll({
       path: '/api/pawn/' + encodeURIComponent(user), every: 2000, alive: () => host.isConnected,
       onResult: (r) => {
@@ -1071,7 +1373,7 @@ function pawnDetail(user) {
         const key = r.status + JSON.stringify(r.data);
         if (key === last) return;
         last = key;
-        if (r.status === 200 && r.data) mountCharacter(host, r.data);
+        if (r.status === 200 && r.data) { cur = r.data; vk = linkKey(); mountCharacter(host, r.data); }
         else if (r.status === 404) host.innerHTML = '<div class="empty">Diesen Kolonisten gibt es nicht (mehr).</div>';
       },
     });
@@ -1120,6 +1422,35 @@ function researchHtml(res, g) {
   return html;
 }
 
+// Zahl oder Text aus der Mod: Zahlen eindeutschen, Text entschärfen
+const valTxt = (v) => (typeof v === 'number' ? fmt(v) : esc(v ?? ''));
+
+/** Gemeinschaftsziele (RICS Extras): Fortschritt, Belohnung, Top-3. */
+function goalsHtml(goals) {
+  if (!Array.isArray(goals) || !goals.length) return '<p class="muted small" style="margin:0">Gerade keine Gemeinschaftsziele.</p>';
+  return `<ul class="goal-list gc-list">${goals.map((g) => {
+    const cur = Number(g.current) || 0, tgt = Number(g.target) || 0;
+    const pct = tgt > 0 ? (cur / tgt) * 100 : 0;
+    const top = (g.top || []).slice(0, 3).map((t) => `<li><span class="gt-user">${esc(t.user)}</span> <span class="muted">${valTxt(t.amount)}</span></li>`).join('');
+    return `<li class="gc${g.done ? ' done' : ''}">
+      <div class="gc-top"><div><b>${esc(g.title)}</b>${g.what ? `<div class="small muted">${esc(g.what)}</div>` : ''}</div>${g.done ? '<span class="badge good">Geschafft</span>' : ''}</div>
+      <div class="gc-bar">${bar(pct, g.done ? 'good' : 'acc')}<span class="gc-num">${fmt(cur)} / ${fmt(tgt)}</span></div>
+      ${g.reward != null && g.reward !== '' ? `<div class="small"><span class="tag">Belohnung</span> ${valTxt(g.reward)}</div>` : ''}
+      ${top ? `<ol class="gc-top3" aria-label="Beste Beiträge">${top}</ol>` : ''}
+    </li>`;
+  }).join('')}</ul>`;
+}
+
+/** Vorräte (RICS Extras): Essen in Tagen und Kacheln. */
+function stockHtml(s) {
+  if (!s) return '<p class="muted small" style="margin:0">Keine Angaben zu den Vorräten.</p>';
+  const days = Number(s.foodDays) || 0;
+  const tn = days >= 10 ? 'good' : days >= 4 ? 'mid' : 'low';
+  const tiles = (s.items || []).map((i) => `<div class="stock-tile"><span class="st-label">${esc(i.label)}</span><b>${fmt(i.count)}</b></div>`).join('');
+  return `<div class="stock-food ${tn}"><span>Essen reicht für</span><b>${fmt(days)} ${days === 1 ? 'Tag' : 'Tage'}</b><span class="small muted">Nährwert ${fmt(s.foodNutrition)}</span></div>
+    ${tiles ? `<div class="stock-grid">${tiles}</div>` : '<p class="muted small" style="margin:8px 0 0">Keine Vorräte erfasst.</p>'}`;
+}
+
 function spielHtml(g, res) {
   const hh = String(Math.floor(Number(g.hour) || 0)).padStart(2, '0');
   const stat = (k, v, sub) => `<div class="gstat"><span class="gk">${esc(k)}</span><b class="gv">${esc(v)}</b><span class="gs">${esc(sub || '')}</span></div>`;
@@ -1140,6 +1471,8 @@ function spielHtml(g, res) {
       <section class="card ch-sec"><h4>Gerade los</h4>${conds}</section>
       <section class="card ch-sec"><h4>Was zuletzt passiert ist</h4>${evs}</section>
       <section class="card ch-sec rs-card" style="grid-column:1/-1"><h4>Forschung</h4>${researchHtml(res, g)}</section>
+      <section class="card ch-sec" style="grid-column:1/-1"><h4>Gemeinschaftsziele</h4>${goalsHtml(g.goals)}</section>
+      <section class="card ch-sec"><h4>Vorräte</h4>${stockHtml(g.stock)}</section>
       <section class="card ch-sec"><h4>Erzähler</h4><p style="margin:0"><b>${esc(g.storyteller)}</b></p><p class="muted small" style="margin:4px 0 0">Schwierigkeit: ${esc(g.difficulty)}</p></section>
     </div>`;
 }
@@ -1182,6 +1515,66 @@ export function spielView() {
       if (t) flip(openRTabs, t.dataset.rtab);
       else if (lk) flip(shownLocked, lk.dataset.rlocked);
       else openProj = openProj === pj.dataset.rproj ? null : pj.dataset.rproj;
+      draw(true);
+    });
+  }
+  return { html, bind };
+}
+
+// =====================================================================
+// Ansicht „Ereignisse“ (nur live): Chronik der letzten Briefe, /api/events alle 10 s, nur solange offen
+// =====================================================================
+const EV_FILTERS = [['all', 'Alle'], ['threat', 'Gefahr'], ['bad', 'Schlecht'], ['good', 'Gut'], ['neutral', 'Neutral']];
+let evFilter = 'all';
+const evOpen = new Set();   // aufgeklappte Einträge (über Schlüssel, übersteht Aktualisierungen)
+const evKey = (e) => `${e.day}|${e.label}|${e.ago}`;
+
+function eventsLiveHtml(list) {
+  const filters = `<div class="ev-filter" role="group" aria-label="Nach Art filtern">${EV_FILTERS.map(([k, l]) =>
+    `<button type="button" class="seg${evFilter === k ? ' on' : ''}" data-evf="${k}" aria-pressed="${evFilter === k}">${l}</button>`).join('')}</div>`;
+  if (!list.length) return `${filters}<div class="empty">Noch keine Briefe aufgezeichnet.</div>`;
+  const shown = list.filter((e) => evFilter === 'all' || e.kind === evFilter);
+  if (!shown.length) return `${filters}<div class="empty">Keine Ereignisse in dieser Art.</div>`;
+  return `${filters}<ol class="ev-list">${shown.map((e) => {
+    const kind = KIND_LABEL[e.kind] ? e.kind : 'neutral';
+    const key = evKey(e), open = evOpen.has(key);
+    return `<li class="ev k-${kind}">
+      <button type="button" class="ev-main" data-evopen="${esc(key)}" aria-expanded="${open}">
+        <span class="gdot" aria-hidden="true"></span>
+        <span class="ev-label">${esc(e.label)}</span>
+        <span class="ev-meta small muted">Tag ${fmt(e.day)} · vor ${esc(e.ago)}</span>
+        <span class="ev-chev" aria-hidden="true">${open ? '▾' : '▸'}</span>
+      </button>
+      ${open && e.text ? `<p class="ev-text">${esc(e.text)}</p>` : ''}
+    </li>`;
+  }).join('')}</ol>`;
+}
+
+export function ereignisseView() {
+  const html = `<div class="live-page"><h2 class="section-title" style="margin:0 0 10px">Ereignisse</h2><div id="ev-host"><div class="empty">Lade …</div></div></div>`;
+  function bind(root) {
+    const host = root.querySelector('#ev-host');
+    let list = null, last = '';
+    const draw = (force) => {
+      if (!list) return;
+      const key = JSON.stringify([list, evFilter, [...evOpen]]);
+      if (!force && key === last) return;
+      last = key;
+      morph(host, eventsLiveHtml(list));
+    };
+    live.poll({
+      path: '/api/events', every: 10000, alive: () => host.isConnected,
+      onResult: (r) => {
+        if (r.unchanged || r.status !== 200 || !r.data) return;
+        list = Array.isArray(r.data.events) ? r.data.events : [];
+        draw(false);
+      },
+    });
+    host.addEventListener('click', (e) => {
+      const f = e.target.closest('[data-evf]'), o = e.target.closest('[data-evopen]');
+      if (!f && !o) return;
+      if (f) evFilter = f.dataset.evf;
+      else { const k = o.dataset.evopen; if (evOpen.has(k)) evOpen.delete(k); else evOpen.add(k); }
       draw(true);
     });
   }

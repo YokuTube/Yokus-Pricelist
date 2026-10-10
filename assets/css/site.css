@@ -808,3 +808,95 @@ button.an-group:hover { border-color: var(--accent); }
 @media (max-width: 640px) {
   .live-compact .live-game-slot { display: none; }
 }
+
+/* Beziehungen (Charakter-Unterreiter) */
+.rel-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rel-row { display: grid; gap: 4px; padding: 10px 12px; min-height: 44px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
+.rel-main { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.rel-name { overflow-wrap: anywhere; }
+.rel-ops { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .9rem; font-variant-numeric: tabular-nums; }
+.rel-op { overflow-wrap: anywhere; color: var(--muted); }
+.rel-op.good { color: var(--good); font-weight: 600; }
+.rel-op.doom { color: var(--doom); font-weight: 600; }
+
+/* Abstimmungs-Kärtchen: unten, über allen Reitern (am Handy als Bottom-Sheet) */
+.vote-card { position: fixed; z-index: 45; left: 16px; bottom: 16px; width: min(380px, calc(100vw - 32px)); max-height: 60vh; overflow: auto; margin: 0; padding: 12px 14px; border-top: 3px solid var(--accent); box-shadow: 0 10px 30px rgba(0, 0, 0, .35); display: grid; gap: 8px; }
+.vote-card[hidden] { display: none; }
+.vote-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.vote-head .vt-left { margin-left: auto; color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+.vote-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.vote-opt { display: grid; gap: 6px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
+.vote-opt.mine { border-color: var(--good); }
+.vo-top { display: flex; justify-content: space-between; gap: 8px; min-width: 0; }
+.vo-label { overflow-wrap: anywhere; min-width: 0; }
+.vo-pct { color: var(--muted); font-size: .9rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vote-go { min-height: 44px; width: 100%; }
+.vote-mine { color: var(--good); font-weight: 600; font-size: .9rem; }
+.vote-note { margin: 0; }
+@media (max-width: 640px) {
+  .vote-card { left: 0; right: 0; bottom: 0; width: auto; max-height: 42vh; border-radius: 12px 12px 0 0; }
+}
+
+/* Gemeinschaftsziele und Vorräte (Reiter Spiel) */
+.gc-list { gap: 8px; }
+.gc { display: grid; gap: 6px; padding: 10px 12px; min-width: 0; }
+.gc.done { border-color: var(--good); }
+.gc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; min-width: 0; }
+.gc-top > div { min-width: 0; overflow-wrap: anywhere; }
+.gc-bar { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.gc-bar .lbar { flex: 1; }
+.gc-num { color: var(--muted); font-size: .85rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.gc-top3 { margin: 0; padding-left: 20px; font-size: .9rem; }
+.gt-user { overflow-wrap: anywhere; }
+.stock-food { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 10px 12px; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); background: var(--surface-2); }
+.stock-food.good { border-left-color: var(--good); }
+.stock-food.mid { border-left-color: var(--bad); }
+.stock-food.low { border-left-color: var(--doom); }
+.stock-food b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; margin-top: 8px; }
+.stock-tile { display: grid; gap: 2px; padding: 8px 10px; min-height: 44px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); min-width: 0; }
+.st-label { color: var(--muted); font-size: .82rem; overflow-wrap: anywhere; }
+.stock-tile b { font-variant-numeric: tabular-nums; }
+
+/* Ereignisse (Reiter, nur live) */
+.ev-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.ev-filter .seg { min-height: 44px; }
+.ev-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ev { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--neutral); border-radius: var(--radius); min-width: 0; }
+.ev.k-threat { border-left-color: var(--doom); }
+.ev.k-bad { border-left-color: #e0872b; }
+.ev.k-good { border-left-color: var(--good); }
+.ev-main { width: 100%; min-height: 44px; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto 1.2em; align-items: center; gap: 4px 10px; padding: 6px 10px; background: none; border: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.ev-main:hover { background: var(--surface-2); }
+.ev-label { overflow-wrap: anywhere; font-weight: 600; }
+.ev-meta { white-space: nowrap; }
+.ev-chev { color: var(--muted); text-align: right; }
+.ev-text { margin: 0; padding: 0 12px 10px 32px; overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .ev-main { grid-template-columns: 12px minmax(0, 1fr) 1.2em; }
+  .ev-meta { grid-column: 2; grid-row: 2; white-space: normal; }
+  .ev-chev { grid-column: 3; grid-row: 1; }
+}
+
+/* Arbeit (Charakter-Unterreiter) */
+.wk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.wk { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; min-height: 44px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
+.wk.idle .wk-label { color: var(--muted); }
+.wk.off { opacity: .55; }
+.wk-label { overflow-wrap: anywhere; min-width: 0; }
+.wk-prios { display: flex; flex-wrap: wrap; gap: 4px; }
+.wk-prios .act-btn { min-width: 44px; min-height: 44px; justify-content: center; }
+.act-btn.on { border-color: var(--accent); background: var(--accent-soft); color: var(--text); font-weight: 700; }
+
+/* Duell */
+.duel-row { display: flex; justify-content: flex-end; margin: -4px 0 10px; }
+.duel-btn { min-height: 44px; padding: 0 16px; font-size: .95rem; border-color: var(--doom); color: var(--doom); }
+.duel-btn.armed { background: var(--doom); color: var(--accent-text); border-color: var(--doom); }
+
+/* Auffällige Einblendung bei Zustandswechseln (oben, antippen schließt) */
+.live-alert { position: fixed; z-index: 70; top: 12px; left: 50%; transform: translateX(-50%); width: min(520px, calc(100vw - 24px)); padding: 14px 16px; border-radius: var(--radius); border: 2px solid var(--bad); background: var(--surface); color: var(--text); font-weight: 700; font-size: 1.05rem; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, .45); cursor: pointer; }
+.live-alert[hidden] { display: none; }
+.live-alert.bad { border-color: var(--bad); }
+.live-alert.doom { border-color: var(--doom); color: var(--doom); }
+.live-alert.good { border-color: var(--good); color: var(--good); }
+.notify-btn { margin-top: 10px; min-height: 44px; width: 100%; }
