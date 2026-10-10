@@ -37,8 +37,8 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 ORIGINS = {"https://yokutube.github.io", "http://localhost:8765", "http://127.0.0.1:8765"}
-ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor"]
-ARGS_RE = re.compile(r"^[\w \-.'#]{0,80}$", re.UNICODE)
+ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult"]
+ARGS_RE = re.compile(r"^[\w \-.'#@]{0,80}$", re.UNICODE)
 
 LOCK = threading.Lock()
 STATE = {"coins": 1234, "karma": 100}
@@ -448,6 +448,7 @@ STORY = {
 def game_info():
     t = int(time.time())
     return {
+        "giftPrice": 150,
         "colony": "Neu-Yoku", "date": "5. Aprimay 5501", "day": 37, "hour": (t // 20) % 24,
         "season": "Frühling", "weather": "Leichter Regen", "temperature": "12 °C", "wealth": 48250 + (t // 10) % 7 * 10,
         "colonists": 6, "prisoners": 1, "animals": 9, "viewerPawns": len(PAWNS),
@@ -614,7 +615,7 @@ class H(BaseHTTPRequestHandler):
         if p == "/api/vote":
             return self.js(200, vote_state())
         if p == "/api/events":
-            return self.js(200, {"events": EVENTS})
+            return self.js(200, {"events": EVENTS, "social": [{"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "1 Stunde"}, {"text": "Luna hat Eddi ein Geschenk gemacht.", "ago": "3 Stunden"}, {"text": "Eddi hat Kira beleidigt.", "ago": "2 Tage"}]})
         if p == "/api/colony":
             return self.js(200, {"pawns": [summary(x) for x in PAWNS.values()]})
         if p.startswith("/api/log/"):

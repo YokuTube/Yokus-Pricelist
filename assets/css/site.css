@@ -1016,3 +1016,7 @@ button.sty-chip:hover { border-color: var(--accent); }
 .coin-rate.idle { color: var(--muted); }
 .coin-rate:empty { display: none; }
 .wallet-rate { margin-top: 2px; max-width: 46ch; }
+
+/* Interaktionen mit anderen Kolonisten */
+.soc-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.soc-row .gift-btn { border-color: var(--accent); font-weight: 700; }

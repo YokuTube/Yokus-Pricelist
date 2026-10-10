@@ -295,7 +295,7 @@ function startBarPolling() {
   if (barPolling || !live.isLive()) return;
   barPolling = true;
   const alive = () => { const ok = live.isLive(); if (!ok) barPolling = false; return ok; };
-  live.poll({ path: '/api/game', every: 5000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barGame = r.data; fillBar(); } } });
+  live.poll({ path: '/api/game', every: 5000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barGame = r.data; giftPrice = Number(r.data?.giftPrice) || 0; fillBar(); } } });
   live.poll({ path: '/api/colony', every: 2000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barPawns = r.data?.pawns || []; fillBar(); } } });
 }
 
@@ -1256,8 +1256,21 @@ function duelHtml(p) {
   })}</div>`;
 }
 
+// Mit anderen Kolonisten interagieren (nur mit eigenem Kolonisten). Geschenk = RICS Extras, Gespräche = RICS.
+const SOCIAL_ACTS = [['chitchat', 'Plaudern'], ['deeptalk', 'Tiefes Gespräch'], ['buildrapport', 'Annähern'], ['reassure', 'Beruhigen'], ['flirt', 'Flirten'], ['insult', 'Beleidigen']];
+let giftPrice = 0;
+function socialActsHtml(p) {
+  if (!live.isLinked() || !live.getMe()?.pawn || isMine(p)) return '';
+  const target = p.user ? '@' + p.user : (p.name || '');
+  const btns = [];
+  if (live.isAllowed('geschenk')) btns.push(actBtn('geschenk', target, giftPrice ? `🎁 Geschenk · ${fmt(giftPrice)} 🪙` : '🎁 Geschenk',
+    { confirm: true, armedLabel: 'Wirklich schenken?', cls: 'gift-btn', title: `${p.name} etwas Zufälliges schenken (Bier, Schokolade, Jade …)` }));
+  for (const [cmd, label] of SOCIAL_ACTS) if (live.isAllowed(cmd)) btns.push(actBtn(cmd, target, label, { title: `${label} mit ${p.name}` }));
+  return btns.length ? `<div class="soc-row">${btns.join('')}</div>` : '';
+}
+
 function characterHtml(p) {
-  return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${duelHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${PANELS[activeSub(p)](p)}</div></div>`;
+  return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${duelHtml(p)}${socialActsHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${PANELS[activeSub(p)](p)}</div></div>`;
 }
 
 /** Hintergrundabfragen, die nur zum gerade offenen Unterreiter gehören. */
@@ -1872,7 +1885,22 @@ let evFilter = 'all';
 const evOpen = new Set();   // aufgeklappte Einträge (über Schlüssel, übersteht Aktualisierungen)
 const evKey = (e) => `${e.day}|${e.label}|${e.ago}`;
 
+let evView = 'letters'; // 'letters' = Briefe, 'social' = Gespräche unter Kolonisten
+let evSocial = [];
+
+function socialHtml() {
+  if (!evSocial.length) return '<div class="empty">Noch keine Gespräche aufgezeichnet.</div>';
+  return `<ol class="logl">${evSocial.map((e) => `<li><span class="log-text">${esc(e.text)}</span><span class="log-ago">vor ${esc(agoDe(e.ago))}</span></li>`).join('')}</ol>`;
+}
+
 function eventsLiveHtml(list) {
+  const views = `<div class="log-switch">${[['letters', 'Briefe'], ['social', 'Gespräche']].map(([k, l]) =>
+    `<button type="button" class="seg${evView === k ? ' on' : ''}" data-evv="${k}" aria-pressed="${evView === k}">${l}</button>`).join('')}</div>`;
+  if (evView === 'social') return views + socialHtml();
+  return views + eventsLettersHtml(list);
+}
+
+function eventsLettersHtml(list) {
   const filters = `<div class="ev-filter" role="group" aria-label="Nach Art filtern">${EV_FILTERS.map(([k, l]) =>
     `<button type="button" class="seg${evFilter === k ? ' on' : ''}" data-evf="${k}" aria-pressed="${evFilter === k}">${l}</button>`).join('')}</div>`;
   if (!list.length) return `${filters}<div class="empty">Noch keine Briefe aufgezeichnet.</div>`;
@@ -1900,7 +1928,7 @@ export function ereignisseView() {
     let list = null, last = '';
     const draw = (force) => {
       if (!list) return;
-      const key = JSON.stringify([list, evFilter, [...evOpen]]);
+      const key = JSON.stringify([list, evSocial, evView, evFilter, [...evOpen]]);
       if (!force && key === last) return;
       last = key;
       morph(host, eventsLiveHtml(list));
@@ -1910,13 +1938,15 @@ export function ereignisseView() {
       onResult: (r) => {
         if (r.unchanged || r.status !== 200 || !r.data) return;
         list = Array.isArray(r.data.events) ? r.data.events : [];
+        evSocial = Array.isArray(r.data.social) ? r.data.social : [];
         draw(false);
       },
     });
     host.addEventListener('click', (e) => {
-      const f = e.target.closest('[data-evf]'), o = e.target.closest('[data-evopen]');
-      if (!f && !o) return;
-      if (f) evFilter = f.dataset.evf;
+      const f = e.target.closest('[data-evf]'), o = e.target.closest('[data-evopen]'), vv = e.target.closest('[data-evv]');
+      if (!f && !o && !vv) return;
+      if (vv) evView = vv.dataset.evv;
+      else if (f) evFilter = f.dataset.evf;
       else { const k = o.dataset.evopen; if (evOpen.has(k)) evOpen.delete(k); else evOpen.add(k); }
       draw(true);
     });
