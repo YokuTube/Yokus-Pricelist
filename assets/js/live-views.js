@@ -354,7 +354,15 @@ export function initLiveUi() {
   strip = document.createElement('div');
   strip.className = 'live-strip';
   strip.hidden = true;
-  header.appendChild(strip);
+  // Leiste klebt zusammen mit den Reitern oben (auch beim Runterscrollen sichtbar und anklickbar)
+  const bar = document.querySelector('.tabs-bar');
+  if (bar) bar.prepend(strip); else header.appendChild(strip);
+  // Beim Scrollen kompakter, damit am Handy genug Platz bleibt
+  let compact = false;
+  window.addEventListener('scroll', () => {
+    const c = window.scrollY > 160;
+    if (c !== compact) { compact = c; document.body.classList.toggle('live-compact', c); }
+  }, { passive: true });
 
   live.on('change', () => { renderStrip(); markBuyable(); });
   const viewEl = document.getElementById('view');

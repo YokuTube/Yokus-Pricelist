@@ -796,3 +796,15 @@ button.an-group:hover { border-color: var(--accent); }
 /* Isekai: Boni eines Knotens */
 .isk-bonus { margin: 6px 0 0; padding-left: 18px; }
 .isk-bonus li { margin: 2px 0; color: var(--good); font-weight: 600; }
+
+/* Live-Leiste klebt mit den Reitern oben; beim Scrollen kompakter */
+.tabs-bar .live-strip { margin-top: 0; border-top: 0; border-bottom: 1px solid var(--border); background: var(--bg); }
+.live-compact .live-pawns { padding: 2px 0 4px; gap: 4px; }
+.live-compact .lp { width: 40px; padding: 2px; gap: 2px; }
+.live-compact .lp-name { display: none; }
+.live-compact .lp-pic, .live-compact .lp-pic .portrait { width: 30px; height: 30px; }
+.live-compact .lp-mood { width: 30px; height: 4px; }
+.live-compact .live-in { min-height: 40px; }
+@media (max-width: 640px) {
+  .live-compact .live-game-slot { display: none; }
+}
