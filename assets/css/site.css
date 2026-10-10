@@ -999,3 +999,14 @@ button.an-group:hover { border-color: var(--accent); }
 
 /* Charakter: Link-Knopf */
 .ch-share { display: inline-flex; align-items: center; margin-top: 4px; padding: 0 8px; }
+
+/* Aussehen */
+.sty-search { margin: 8px 0; }
+.sty-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sty-chip { display: inline-flex; align-items: center; min-height: 36px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: .85rem; }
+.sty-chip.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+button.sty-chip { cursor: pointer; }
+button.sty-chip:hover { border-color: var(--accent); }
+.sty-color { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
+.sty-swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); }
+.sty-color input[type=color] { width: 44px; height: 36px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius); background: none; }

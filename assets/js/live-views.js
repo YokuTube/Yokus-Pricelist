@@ -626,6 +626,7 @@ const SUBS = [
   { id: 'skills', label: 'Fähigkeiten' },
   { id: 'health', label: 'Gesundheit' },
   { id: 'gear', label: 'Ausrüstung' },
+  { id: 'style', label: 'Aussehen' },
   { id: 'work', label: 'Arbeit' },
   { id: 'goals', label: 'Ziele' },
   { id: 'isekai', label: 'Isekai' },
@@ -1235,7 +1236,7 @@ async function applyWork(host) {
   repaint(host);
 }
 
-const PANELS = { overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+const PANELS = { style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 function subsHtml(p) {
   const vis = visibleSubs(p);
@@ -1259,10 +1260,86 @@ function characterHtml(p) {
 }
 
 /** Hintergrundabfragen, die nur zum gerade offenen Unterreiter gehören. */
+// Aussehen: Frisur/Bart aus Listen (RICS Addon: !sethair/!setbeard mit DefName), Haar-/Lieblingsfarbe per Farbwähler.
+// Daten aus /api/log/<id>.style (10 s). Ändern nur für den eigenen Kolonisten.
+let styleFilter = '';
+
+function styleListHtml(p, kind, cur, options) {
+  if (!Array.isArray(options)) return '';
+  const q = styleFilter.trim().toLowerCase();
+  const list = options.filter(([id, label]) => !q || label.toLowerCase().includes(q) || id.toLowerCase().includes(q));
+  const mine = isMine(p) && live.isAllowed(kind);
+  const chips = list.slice(0, 60).map(([id, label]) => id === cur
+    ? `<span class="sty-chip on" title="Aktuell">${esc(label)}</span>`
+    : mine ? actBtn(kind, id, label, { confirm: true, armedLabel: `${label}?`, cls: 'sty-chip', title: `Zu „${label}“ wechseln` })
+      : `<span class="sty-chip">${esc(label)}</span>`).join('');
+  const more = list.length > 60 ? `<p class="small muted">… und ${fmt(list.length - 60)} weitere – oben suchen.</p>` : '';
+  return `<div class="sty-chips">${chips || '<span class="small muted">Nichts gefunden.</span>'}</div>${more}`;
+}
+
+function colorRow(p, kind, label, value) {
+  const mine = isMine(p) && live.isAllowed(kind);
+  const v = /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#888888';
+  return `<div class="sty-color"><span class="sty-swatch" style="background:${esc(v)}"></span><b>${esc(label)}</b>
+    ${mine ? `<input type="color" value="${esc(v)}" data-style-color="${kind}" aria-label="${esc(label)} wählen">${actBtn(kind, v, 'Übernehmen', { cls: 'sty-apply', title: `${label} setzen` })}` : ''}</div>`;
+}
+
+function styleHtml(p, st) {
+  if (!st) return '<div class="empty">Lade …</div>';
+  const search = `<input class="search sty-search" type="search" placeholder="Frisur oder Bart suchen …" value="${esc(styleFilter)}" data-style-search>`;
+  const hair = section(`Frisur: ${st.hairLabel || '–'}`, styleListHtml(p, 'sethair', st.hair, st.hairOptions));
+  const beard = st.beardOptions ? section(`Bart: ${st.beardLabel || 'keiner'}`, styleListHtml(p, 'setbeard', st.beard, st.beardOptions)) : '';
+  const colors = section('Farben', `${colorRow(p, 'dyehair', 'Haarfarbe', st.hairColor)}${colorRow(p, 'setfavoritecolor', 'Lieblingsfarbe', st.favColor)}`);
+  const hint = isMine(p) ? '<p class="small muted">Antippen, dann zum Bestätigen noch einmal. RICS prüft Preis und ob es zu Genen/Rasse passt.</p>' : '<p class="small muted">Nur ansehen.</p>';
+  return `${hint}${search}${hair}${beard}${colors}`;
+}
+
+function panelStyle(p) {
+  const key = p.id || p.user;
+  const cached = logCache.get(key);
+  return `<div class="sty-host" data-key="${esc(key)}:style" data-morph-keep data-logfor="${esc(key)}">${styleHtml(p, cached?.style)}</div>`;
+}
+
+function startStylePoll(host) {
+  const el = host.querySelector('.sty-host');
+  if (!el || el._polling) return;
+  el._polling = true;
+  const key = el.dataset.logfor;
+  const draw = () => { if (host._pawn) morph(el, styleHtml(host._pawn, logCache.get(key)?.style)); };
+  el._draw = draw; // repaint() zeichnet so auch den Bestätigungs-/Lade-Zustand der Knöpfe
+  el.addEventListener('input', (e) => {
+    if (e.target.matches('[data-style-search]')) {
+      styleFilter = e.target.value;
+      const pos = e.target.selectionStart;
+      draw();
+      const inp = el.querySelector('[data-style-search]');
+      if (inp) { inp.focus(); try { inp.setSelectionRange(pos, pos); } catch { /* egal */ } }
+    } else if (e.target.matches('[data-style-color]')) {
+      const row = e.target.closest('.sty-color');
+      const btn = row?.querySelector('.sty-apply');
+      if (btn) btn.dataset.args = e.target.value;
+      const sw = row?.querySelector('.sty-swatch');
+      if (sw) sw.style.background = e.target.value;
+    }
+  });
+  live.poll({
+    path: '/api/log/' + encodeURIComponent(key), every: 10000, alive: () => el.isConnected,
+    onResult: (r) => {
+      if (r.status !== 200 || !r.data) return;
+      logCache.set(key, r.data);
+      if (!r.unchanged || !el.dataset.filled) {
+        if (document.activeElement?.matches?.('[data-style-search], [data-style-color]') && el.contains(document.activeElement)) return; // nicht beim Tippen/Wählen
+        draw(); el.dataset.filled = '1';
+      }
+    },
+  });
+}
+
 function afterPaint(host) {
   startLogPoll(host);
   startRelPoll(host);
   startStoryPoll(host);
+  startStylePoll(host);
   startGoalsPoll(host);
   ensureBadgeLog(host);
   refreshBadges(host);
@@ -1271,6 +1348,7 @@ function afterPaint(host) {
 
 /** Inhalt des offenen Unterreiters per morph neu zeichnen (kein Flackern, Zustand der Knöpfe bleibt). */
 function repaint(host) {
+  host.querySelector('.sty-host')?._draw?.();
   const p = host._pawn;
   const panel = host.querySelector('.ch-panel');
   if (!p || !panel) return;

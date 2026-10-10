@@ -37,7 +37,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 ORIGINS = {"https://yokutube.github.io", "http://localhost:8765", "http://127.0.0.1:8765"}
-ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote"]
+ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor"]
 ARGS_RE = re.compile(r"^[\w \-.'#]{0,80}$", re.UNICODE)
 
 LOCK = threading.Lock()
@@ -624,6 +624,9 @@ class H(BaseHTTPRequestHandler):
             return self.js(200, {
                 "relations": RELATIONS.get(key, []),
                 "story": STORY.get(key, []),
+                "style": {"hair": "Bob", "hairLabel": "Bob", "hairColor": "#8a5a2b", "favColor": "#3a7bd5",
+                          "hairOptions": [["Bob", "Bob"], ["Braids", "Zöpfe"], ["Mohawk", "Irokese"], ["Pigtails", "Rattenschwänze"], ["Shaved", "Rasiert"]],
+                          "beard": None, "beardLabel": None, "beardOptions": None},
                 "social": [
                     {"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "2 Stunden"},
                     {"text": "Kira hat Eddi beleidigt.", "ago": "5 Stunden"},
