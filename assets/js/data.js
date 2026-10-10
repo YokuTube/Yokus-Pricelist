@@ -28,12 +28,15 @@ export async function loadAll() {
   }));
 
   const notes = out.notes || { names: {}, events: {}, weather: {}, types: {} };
+  // Namen, wie das Spiel sie anzeigt (bei Andreas Deutsch) – exportiert von RICS Extras beim Hochladen; optional.
+  let labels = {};
+  try { labels = (await getJson('data/RICSExtras_Labels.json', v)) || {}; } catch { /* gibt es erst nach dem ersten Upload */ }
   return {
     meta,
     failed: out.failed,
-    items: processItems(out.items),
-    events: processEvents(out.events, notes),
-    weather: processWeather(out.weather, notes),
+    items: processItems(out.items, labels.items || {}),
+    events: processEvents(out.events, notes, labels.events || {}),
+    weather: processWeather(out.weather, notes, labels.weather || {}),
     traits: processTraits(out.traits),
     races: processRaces(out.races),
     mods: processMods(out.mods),
@@ -49,7 +52,7 @@ export async function loadAll() {
 function assignCmdNames(list, labelOf) {
   // RICS sucht Items per Name OHNE Leerzeichen (graniteblocks) oder exaktem DefName. Leerzeichen raus, Satzzeichen bleiben;
   // bei ungewöhnlichen Zeichen oder doppelten Namen den DefName nehmen (der passt immer, auch mit Unterstrich).
-  const simple = (s) => (/^[A-Za-z0-9 '\-.]+$/.test(s.trim()) ? s.trim().toLowerCase().replace(/ +/g, '') : '');
+  const simple = (s) => (/^[A-Za-z0-9ÄÖÜäöüß '\-.]+$/.test(s.trim()) ? s.trim().toLowerCase().replace(/ +/g, '') : '');
   const counts = new Map();
   list.forEach((x) => { const t = simple(plain(labelOf(x))); if (t) counts.set(t, (counts.get(t) || 0) + 1); });
   list.forEach((x) => {
@@ -59,11 +62,12 @@ function assignCmdNames(list, labelOf) {
 }
 
 // ---------- Items ----------
-function processItems(raw) {
+function processItems(raw, game = {}) {
   const obj = raw?.items ?? raw ?? {};
   const all = Object.entries(obj).map(([key, d]) => ({
     defName: d.DefName || key,
-    name: cap(d.CustomName || d.DefName || key),
+    // Spielname (Deutsch) zuerst: RICS findet Items auch über den aktuellen Spielnamen ohne Leerzeichen (!buy granitblöcke)
+    name: cap(game[d.DefName || key] || d.CustomName || d.DefName || key),
     price: d.BasePrice || 0,
     category: plain(d.Category) || 'Sonstiges',
     limit: d.HasQuantityLimit ? (d.QuantityLimit || 0) : 0,
@@ -95,14 +99,14 @@ export const EVENT_TYPES = {
   threat_big: 'Große Gefahr', threat_small: 'Kleine Gefahr', misc: 'Ereignis',
 };
 
-function processEvents(raw, notes) {
+function processEvents(raw, notes, game = {}) {
   const list = Object.entries(raw || {}).map(([key, d]) => {
     const defName = d.DefName || key;
     const type = eventType(d);
     const own = plain(d.Description || '');
     return {
       defName,
-      label: d.Label || defName,
+      label: game[defName] || d.Label || defName,
       de: notes.names?.[defName] || '',
       cost: d.BaseCost || 0,
       karma: d.KarmaType || 'Neutral',
@@ -116,16 +120,17 @@ function processEvents(raw, notes) {
       active: d.modactive === true,
     };
   }).filter((e) => e.active && e.enabled && e.cost > 0);
-  assignCmdNames(list, (e) => e.label);
+  // RICS sucht Events nur über den internen Namen oder den gespeicherten ENGLISCHEN Namen -> Befehl immer mit DefName
+  list.forEach((e) => { e.cmdName = e.defName; });
   return list;
 }
 
-function processWeather(raw, notes) {
+function processWeather(raw, notes, game = {}) {
   const list = Object.entries(raw || {}).map(([key, d]) => {
     const defName = d.DefName || key;
     return {
       defName,
-      label: d.Label || defName,
+      label: game[defName] || d.Label || defName,
       cost: d.BaseCost || 0,
       karma: d.KarmaType || 'Neutral',
       mod: modName(d.ModSource),
@@ -134,7 +139,7 @@ function processWeather(raw, notes) {
       active: d.modactive === true,
     };
   }).filter((w) => w.active && w.enabled && w.cost > 0);
-  assignCmdNames(list, (w) => w.label);
+  list.forEach((w) => { w.cmdName = w.defName; }); // wie bei Events: DefName passt immer
   return list;
 }
 

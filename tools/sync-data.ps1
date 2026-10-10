@@ -23,7 +23,7 @@ $ErrorActionPreference = 'Stop'
 if (-not $RepoDir) { $RepoDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path) }
 
 # Ausschliesslich diese Dateien duerfen die Seite erreichen.
-$Allowed = 'StoreItems.json', 'Incidents.json', 'Traits.json', 'RaceSettings.json', 'Weather.json', 'ActiveMods.json', 'CommandSettings.json'
+$Allowed = 'StoreItems.json', 'Incidents.json', 'Traits.json', 'RaceSettings.json', 'Weather.json', 'ActiveMods.json', 'CommandSettings.json', 'RICSExtras_Labels.json'
 
 function Log($m) { Write-Host ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $m) }
 
