@@ -650,7 +650,7 @@ class H(BaseHTTPRequestHandler):
             if pawn is not None:
                 pawn["duelIncoming"] = duel_state()
             return self.js(200, {"user": user, "displayName": ALLOWED_USERS.get(user, user), "coins": coins,
-                                 "karma": karma, "pawn": pawn})
+                                 "karma": karma, "coinsPerMinute": 7.5, "earning": True, "activeMinutesLeft": 24, "pawn": pawn})
         if p.startswith("/api/portrait/"):
             user = unquote(p[14:]).lower()
             if user not in PAWNS or PAWNS[user]["portrait"] == 0:

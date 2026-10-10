@@ -1010,3 +1010,9 @@ button.sty-chip:hover { border-color: var(--accent); }
 .sty-color { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
 .sty-swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); }
 .sty-color input[type=color] { width: 44px; height: 36px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius); background: none; }
+
+/* Münzen pro Minute */
+.coin-rate { margin-left: 6px; font-size: .78rem; font-weight: 700; color: var(--good); white-space: nowrap; }
+.coin-rate.idle { color: var(--muted); }
+.coin-rate:empty { display: none; }
+.wallet-rate { margin-top: 2px; max-width: 46ch; }

@@ -308,7 +308,7 @@ function renderStrip() {
   let right;
   if (!live.isLinked()) right = '<button type="button" class="btn live-connect" data-live="connect">Verbinden</button>';
   else if (!me) right = '<span class="small muted">Verbunden …</span>';
-  else right = `<a class="live-me" href="#/ich" title="Zu deiner Seite"><span class="live-name">${esc(me.displayName || me.user)}</span>${coinsHtml(me.coins)}</a>`;
+  else right = `<a class="live-me" href="#/ich" title="Zu deiner Seite"><span class="live-name">${esc(me.displayName || me.user)}</span>${coinsHtml(me.coins)}${rateHtml(me)}</a>`;
   strip.hidden = false;
   strip.innerHTML = `<div class="wrap live-in">
     <span class="live-badge" title="Der Stream läuft – die Seite ist mit dem Spiel verbunden"><i aria-hidden="true"></i>LIVE</span>
@@ -554,6 +554,7 @@ export function initLiveUi() {
   live.on('me', (e) => {
     if ((e.detail?.displayName || null) !== stripName && live.isLinked()) renderStrip();
     updateCoins(e.detail?.coins);
+    updateRate(e.detail);
     markBuyable();
     fillBar(); // eigener Kolonist hervorheben
   });
@@ -1433,10 +1434,34 @@ const connectCard = () => `<div class="card live-card">
   <button type="button" class="btn primary" data-live="connect">Verbinden</button>
 </div>`;
 
+// Münzen pro Minute (RICS zahlt alle 2 Min. an aktive Zuschauer). Wird bei jedem /api/me aktualisiert.
+function rateText(me) {
+  const r = Number(me?.coinsPerMinute) || 0;
+  if (!r) return '';
+  const n = r.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  return me.earning ? `+${n}/Min` : `+0/Min`;
+}
+function rateTitle(me) {
+  if (!me || !Number(me.coinsPerMinute)) return '';
+  const n = Number(me.coinsPerMinute).toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  return me.earning
+    ? `Du verdienst gerade ${n} Münzen pro Minute (Auszahlung alle 2 Minuten). Noch ${me.activeMinutesLeft} Min. aktiv ohne neue Chat-Nachricht.`
+    : `Gerade keine Münzen: Schreib etwas in den Twitch-Chat, dann verdienst du wieder ${n} pro Minute.`;
+}
+const rateHtml = (me) => `<span class="coin-rate${me?.earning ? '' : ' idle'}" data-live-rate title="${esc(rateTitle(me))}">${esc(rateText(me))}</span>`;
+function updateRate(me) {
+  document.querySelectorAll('[data-live-rate]').forEach((el) => {
+    el.textContent = rateText(me);
+    el.title = rateTitle(me);
+    el.classList.toggle('idle', !me?.earning);
+  });
+}
+
 function walletHtml(me) {
   const askNotify = 'Notification' in window && Notification.permission === 'default';
   return `<div class="card wallet">
-    <div><span class="wallet-label">Deine Münzen</span><div class="wallet-coins">${coinsHtml(me.coins)}</div></div>
+    <div><span class="wallet-label">Deine Münzen</span><div class="wallet-coins">${coinsHtml(me.coins)} ${rateHtml(me)}</div>
+      <div class="small muted wallet-rate">${esc(rateTitle(me))}</div></div>
     <div class="wallet-karma"><span class="wallet-label">Karma</span><div><b>${esc(fmt(me.karma))}</b></div></div>
     ${askNotify ? '<button type="button" class="btn notify-btn" data-notify="1">🔔 Benachrichtigungen erlauben</button>' : ''}
   </div>`;
