@@ -1,15 +1,15 @@
 /* Yokus Store – ruhiges Design. Standard: dunkles Blau. Helles Design über den Umschalter. */
 
 :root {
-  /* Yoku-Stil: dunkles Stream-Blau mit hellblauem Akzent */
-  --bg: #0a1220;
-  --surface: #121c2e;
-  --surface-2: #19263c;
-  --text: #ffffff;
-  --muted: #c8d3e4;
-  --border: #2c3e5c;
-  --accent: #6bb8ff;
-  --accent-soft: #173a60;
+  /* Yoku-Stil: ruhiges Dunkelblau, gebrochenes Weiß (reines Weiß auf sattem Blau wirkt unscharf) */
+  --bg: #10151f;
+  --surface: #171e2a;
+  --surface-2: #1f2836;
+  --text: #e8edf4;
+  --muted: #b4bfcf;
+  --border: #2e3a4d;
+  --accent: #5aa6f0;
+  --accent-soft: #1b3350;
   --accent-text: #04111f;
   --good: #7fd18b;
   --neutral: #a3b4c7;
