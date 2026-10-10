@@ -193,10 +193,37 @@ function buyLabel(p) {
   return { verb, price: pr?.price ?? null };
 }
 
+/** Katastrophen-Event (Karma „Doom“)? Dann vor dem Auslösen nachfragen. */
+function isDoom({ cmd, args }) {
+  if (!DATA || (cmd !== 'event' && cmd !== 'weather')) return false;
+  const list = cmd === 'event' ? DATA.events : DATA.weather;
+  const name = normName(args);
+  const hit = list.find((x) => x.cmdName === name || x.defName.toLowerCase() === name);
+  return hit?.karma === 'Doom';
+}
+
+function confirmDoom(label) {
+  return new Promise((resolve) => {
+    const d = makeDialog(`
+      <h3>Katastrophe auslösen?</h3>
+      <p class="ld-warn">Willst du das wirklich tun? Es wird bestimmt eine Ente sterben. 🦆</p>
+      ${label ? `<p class="ld-info">${esc(label)}</p>` : ''}
+      <div class="ld-actions">
+        <button type="button" class="btn primary" id="ld-doom-go">Ja, auslösen</button>
+        <button type="button" class="btn" data-close>Lieber nicht</button>
+      </div>`);
+    let ok = false;
+    d.querySelector('#ld-doom-go').addEventListener('click', () => { ok = true; d.close(); });
+    d.addEventListener('close', () => resolve(ok));
+    d.querySelector('[data-close]').focus();
+  });
+}
+
 async function buyNow(btn) {
   const src = btn.previousElementSibling?.matches?.('[data-copy]') ? btn.previousElementSibling.dataset.copy : btn.dataset.liveBuy;
   const p = parseCommand(src);
   if (!p || btn.disabled) return;
+  if (isDoom(p) && !(await confirmDoom(priceOf(p)?.label))) return;
   const old = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<span>Läuft …</span>';
