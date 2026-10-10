@@ -1,6 +1,6 @@
 {
-  "exportedAt": "2026-10-09T16:18:24.7029455Z",
-  "totalActiveMods": 283,
+  "exportedAt": "2026-10-10T19:08:08.8098178Z",
+  "totalActiveMods": 285,
   "mods": [
     {
       "author": "Krkr",
@@ -360,7 +360,7 @@
       "author": "Dubwise",
       "name": "Dubs Mint Menus",
       "steamId": "1446523594",
-      "version": "1.3.1684"
+      "version": "1.3.1685"
     },
     {
       "author": "Dubwise",
@@ -553,6 +553,12 @@
       "name": "ISEKAI CREATURES ADD-ON - Isekai RPG Leveling",
       "steamId": "3757560461",
       "version": null
+    },
+    {
+      "author": "Poupun",
+      "name": "ISEKAI DUNGEONS ADD-ON - Isekai RPG Leveling",
+      "steamId": "3813394602",
+      "version": "1.05.1"
     },
     {
       "author": "Jelly Creative",
@@ -1031,6 +1037,12 @@
     {
       "author": "Andreas",
       "name": "RICS Extras",
+      "steamId": null,
+      "version": null
+    },
+    {
+      "author": "Andreas",
+      "name": "RICS Live",
       "steamId": null,
       "version": null
     },
