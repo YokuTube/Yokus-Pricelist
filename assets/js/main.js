@@ -4,7 +4,7 @@ import { startView, commandsView, itemsView, eventsView, weatherView, traitsView
 import { icon } from './icons.js';
 import { initChat, renderSlot, offerSend, handleSlotClick } from './chat.js';
 import * as live from './live.js';
-import { initLiveUi, setLiveData, offerLive, ichView, kolonieView, spielView, ereignisseView } from './live-views.js';
+import { initLiveUi, setLiveData, offerLive, ichView, kolonieView, spielView, ereignisseView, gedenkenView } from './live-views.js';
 import { streamView, streamTabVisible, initStreamSettings, syncStreamDock } from './stream.js';
 
 const TABS = [
@@ -24,6 +24,7 @@ const LIVE_TABS = [
   { id: 'kolonie', label: 'Kolonie', view: kolonieView },
   { id: 'spiel', label: 'Spiel', view: spielView },
   { id: 'ereignisse', label: 'Ereignisse', view: ereignisseView },
+  { id: 'gedenken', label: 'Gedenken', view: gedenkenView },
 ];
 const LIVE_IDS = LIVE_TABS.map((t) => t.id);
 // Reiter „Stream“ (Twitch-Player/-Chat) unabhängig von der Mod; jeder Zuschauer kann ihn ausblenden.

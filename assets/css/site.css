@@ -935,3 +935,67 @@ button.an-group:hover { border-color: var(--accent); }
 .wk-num.p3 { color: var(--text); }
 .wk-num.p4 { color: var(--muted); }
 .wk-num.p0, .wk-num.px { color: var(--muted); font-weight: 400; }
+
+/* Gedenken: ruhige Karten, ohne grelle Farben */
+.memo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.memo { position: relative; display: grid; align-content: start; gap: 4px; min-width: 0; border-top-color: var(--border); padding-top: 16px; }
+.memo-cross { position: absolute; top: 10px; right: 14px; color: var(--muted); font-size: 1.2rem; line-height: 1; }
+.memo-name { margin: 0; padding-right: 24px; font-family: var(--head-font); font-size: 1.05rem; letter-spacing: .04em; overflow-wrap: anywhere; }
+.memo-facts { margin: 8px 0 0; display: grid; gap: 4px; }
+.memo-facts > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.memo-facts dt { color: var(--muted); font-size: .85rem; }
+.memo-facts dd { margin: 0; font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.memo-ago { margin: 6px 0 0; font-style: italic; }
+
+/* Lebensgeschichte: Zeitleiste mit Tag */
+.story { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--border); display: grid; gap: 12px; }
+.st-item { position: relative; display: grid; gap: 2px; min-width: 0; }
+.st-item::before { content: ""; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.st-day { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
+.st-text { overflow-wrap: anywhere; }
+.st-ago { font-size: .85rem; }
+
+/* Abzeichen im Charakter-Kopf */
+.ch-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ch-badges:empty { display: none; }
+.ach { display: inline-flex; align-items: center; min-height: 26px; padding: 2px 10px; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent-soft); color: var(--text); font-size: .78rem; font-weight: 600; }
+
+/* Ranglisten in der Kolonie (Top 5) */
+.rank-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 22px; }
+.rank-grid > * { min-width: 0; }
+.rank-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.rank-row { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 6px; border-radius: var(--radius); color: var(--text); text-decoration: none; }
+.rank-row:hover { background: var(--surface-2); }
+.rank-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rank-pos { flex: 0 0 2em; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rank-list li:first-child .rank-pos { color: var(--accent); }
+.rank-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.rank-val { flex-shrink: 0; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+/* Spiel: Koloniewert-Verlauf, Fraktionen, Besucher */
+.wv-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 8px; }
+.wv-diff { font-weight: 700; font-size: .9rem; }
+.wv-diff.good { color: var(--good); }
+.wv-diff.doom { color: var(--doom); }
+.wv-diff.neutral { color: var(--neutral); }
+.wv-plot { position: relative; height: 120px; border-bottom: 1px solid var(--border); }
+.wv-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.wv-grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.wv-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.wv-area { fill: var(--accent); opacity: .14; }
+.wv-hi, .wv-lo { position: absolute; left: 0; padding: 0 4px; font-size: .75rem; color: var(--muted); background: var(--surface); font-variant-numeric: tabular-nums; }
+.wv-hi { top: 0; }
+.wv-lo { bottom: 0; }
+.wv-axis { display: flex; justify-content: space-between; margin-top: 4px; }
+.fac-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fac-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; }
+.fac-top > div { min-width: 0; overflow-wrap: anywhere; }
+.fac-bar { display: grid; grid-template-columns: minmax(0, 1fr) 5ch; align-items: center; gap: 8px; margin-top: 4px; }
+.fac-num { font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.fac-num.good { color: var(--good); }
+.fac-num.doom { color: var(--doom); }
+.fac-num.neutral { color: var(--neutral); }
+.vis-list li { padding: 4px 0; overflow-wrap: anywhere; }
+
+/* Charakter: Link-Knopf */
+.ch-share { display: inline-flex; align-items: center; margin-top: 4px; padding: 0 8px; }

@@ -18,6 +18,9 @@ Verhalten:
   relations in /api/log, work/workEditable (nur yoku darf setzen: Aktion mypawn "work <id> <prio>"),
   duelIncoming (alle 120 s Herausforderung von Mira fuer 45 s; "duel ja/nein" beantworten, "duel <Name>" fordert),
   goals und stock in /api/game.
+- Neu: memorials (2 Gedenk-Eintraege), wealthHistory (30 Tage), factions (4), visitors (1 Haendlergruppe + 1 Schiff)
+  in /api/game; story (Lebensgeschichte) in /api/log (yoku 6, mira 3 Eintraege, sonst leer); kills, daysInColony und
+  isekaiLevel in /api/colony und /api/pawn. Alles nur aus Konstanten, keine Sperre noetig.
 """
 import hashlib
 import os
@@ -251,6 +254,12 @@ for _p in PAWNS.values():
                   for i, l in WORK_DEFS]
     _p["workEditable"] = _u == "yoku"
 
+# ---------- Tage in der Kolonie, Isekai-Stufe (PawnSummary/PawnDetail, für Abzeichen und Ranglisten) ----------
+DAYS_IN_COLONY = {"yoku": 212, "mira_spielt": 37, "eddi_tv": 9, "luna_88": 365}
+for _p in PAWNS.values():
+    _p["daysInColony"] = DAYS_IN_COLONY[_p["user"]]
+    _p["isekaiLevel"] = _p["isekai"]["level"] if _p["isekai"] else None
+
 
 # ---------- Beziehungen (Log: relations) ----------
 def rel(name, user, rels, op, theirs, dead=False, animal=False):
@@ -394,8 +403,46 @@ def png(seed):
 
 
 def summary(p):
-    keys = ["user", "displayName", "name", "portrait", "healthPct", "moodPct", "state", "stateLabel", "job"]
+    keys = ["user", "displayName", "name", "portrait", "healthPct", "moodPct", "state", "stateLabel", "job",
+            "kills", "daysInColony", "isekaiLevel"]
     return {k: p[k] for k in keys}
+
+
+# ---------- Gedenkwand, Koloniewert-Verlauf, Fraktionen, Besucher (GameInfo) ----------
+MEMORIALS = [
+    {"name": "Olaf", "fullName": "Olaf Aldemar", "user": None, "cause": "Schussverletzung (Plünderer)",
+     "diedDay": 29, "joinedDay": 3, "age": 58, "kills": 6, "ago": "8 Tage"},
+    {"name": "Fenja", "fullName": "Fenja Pixel", "user": "fenja_pixel", "cause": "Blutverlust nach einem Angriff",
+     "diedDay": 33, "joinedDay": 20, "age": 22, "kills": 2, "ago": "4 Tage"},
+]
+NOISE = [0, 90, -60, 40, -120, 70, 20, 0, 10]   # kleine Schwankungen; Tag 37 (letzter Punkt) ist exakt 48250
+WEALTH_HISTORY = [[d, 41000 + (d - 8) * 250 + NOISE[(d * 7) % 9]] for d in range(8, 38)]
+FACTIONS = [
+    {"name": "Glitzerwelt", "kind": "Imperium", "goodwill": 62, "hasGoodwill": True, "relation": "ally"},
+    {"name": "Pilzbund", "kind": "Stamm", "goodwill": 8, "hasGoodwill": True, "relation": "neutral"},
+    {"name": "Schwarzer Pakt", "kind": "Piraten", "goodwill": -74, "hasGoodwill": True, "relation": "hostile"},
+    {"name": "Raumhafen-Kette", "kind": "Händler", "goodwill": 0, "hasGoodwill": False, "relation": "neutral"},
+]
+VISITORS = {
+    "groups": [{"faction": "Glitzerwelt", "count": 4, "trader": "Waffenhändler"}],
+    "ships": ["Handelsschiff Silbermöwe"],
+}
+
+# ---------- Lebensgeschichte (Log: story) ----------
+STORY = {
+    "yoku": [
+        {"day": 3, "text": "Kira kam als Wanderin in die Kolonie und fing gleich an zu kochen.", "ago": "34 Tage"},
+        {"day": 9, "text": "Ihr erstes Festmahl: 40 Portionen für die ganze Kolonie.", "ago": "28 Tage"},
+        {"day": 17, "text": "Im Kampf gegen Plünderer hat sie zum ersten Mal den Revolver benutzt.", "ago": "20 Tage"},
+        {"day": 24, "text": "Die Narbe am linken Arm ist verheilt. Sie sagt, es sehe gefährlich aus.", "ago": "13 Tage"},
+        {"day": 31, "text": "Hat Eddi bei einem Streit beigestanden und ihn nach Hause gebracht.", "ago": "6 Tage"},
+        {"day": 36, "text": "Hat Rex gefunden, der seitdem ihr treuer Begleiter ist.", "ago": "1 Tag"},
+    ],
+    "mira_spielt": [
+        {"day": 20, "text": "Nach einem Überfall niedergestreckt, aber von den anderen gerettet.", "ago": "17 Tage"},
+        {"day": 30, "text": "Hat zum ersten Mal einen Plünderer alleine besiegt.", "ago": "7 Tage"},
+    ],
+}
 
 
 def game_info():
@@ -425,6 +472,10 @@ def game_info():
             {"title": "Rosenfest", "what": "20 Rosen anbauen.", "current": 20, "target": 20, "done": True,
              "reward": 500, "top": [{"user": "luna_88", "amount": 14}, {"user": "yoku", "amount": 6}]},
         ],
+        "memorials": MEMORIALS,
+        "wealthHistory": WEALTH_HISTORY,
+        "factions": FACTIONS,
+        "visitors": VISITORS,
         "stock": {"foodNutrition": 2140, "foodDays": 6.4,
                   "items": [{"label": "Reis", "count": 120}, {"label": "Bier", "count": 14}, {"label": "Medizin", "count": 22}, {"label": "Stahl", "count": 540}]},
     }
@@ -572,6 +623,7 @@ class H(BaseHTTPRequestHandler):
             key = unquote(p[9:]).lower()
             return self.js(200, {
                 "relations": RELATIONS.get(key, []),
+                "story": STORY.get(key, []),
                 "social": [
                     {"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "2 Stunden"},
                     {"text": "Kira hat Eddi beleidigt.", "ago": "5 Stunden"},

@@ -11,6 +11,8 @@ export const setLiveData = (d) => { DATA = d; };
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch { /* egal */ } };
 
+// RimWorld liefert „34 Tage“; nach „vor“ braucht es den Dativ („vor 34 Tagen“)
+const agoDe = (s) => String(s || '').replace(/(Tage|Jahre|Monate|Quadrums|Quartale)/g, (w) => ({ Tage: 'Tagen', Jahre: 'Jahren', Monate: 'Monaten', Quadrums: 'Quadrums', Quartale: 'Quartalen' }[w]));
 const clamp = (n, a = 0, b = 100) => Math.max(a, Math.min(b, Number(n) || 0));
 const tone = (p) => (p >= 60 ? 'good' : p >= 30 ? 'mid' : 'low');
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -629,6 +631,7 @@ const SUBS = [
   { id: 'isekai', label: 'Isekai' },
   { id: 'log', label: 'Erlebnisse' },
   { id: 'relations', label: 'Beziehungen' },
+  { id: 'story', label: 'Geschichte' },
   { id: 'origin', label: 'Herkunft' },
 ];
 const SUB_KEY = 'ys-live-sub';
@@ -645,6 +648,50 @@ function portraitHtml(p, cls) {
   return `<img class="portrait ${cls}" src="${esc(live.portraitUrl(p.id || p.user, p.portrait))}" alt="Porträt von ${esc(p.name)}" width="96" height="96" loading="lazy" data-portrait data-initial="${ini}">`;
 }
 
+// Abzeichen im Charakter-Kopf: werden hier aus den Daten berechnet (nur das jeweils höchste je Gruppe)
+const DAY_BADGES = [[365, '1 Jahr in der Kolonie'], [100, '100 Tage in der Kolonie'], [50, '50 Tage in der Kolonie'], [10, '10 Tage in der Kolonie']];
+const KILL_BADGES = [[50, '50 Gegner besiegt'], [10, '10 Gegner besiegt'], [1, 'Ersten Gegner besiegt']];
+const ISEKAI_BADGES = [[50, 'Isekai-Meister'], [20, 'Isekai-Veteran'], [10, 'Isekai-Erfahren']];
+const topBadge = (list, v) => list.find(([n]) => v >= n);
+
+function badgeList(p) {
+  const out = [];
+  const add = (label, title) => out.push({ label, title: title || label });
+  const d = topBadge(DAY_BADGES, Number(p.daysInColony) || 0);
+  if (d) add(d[1]);
+  const k = topBadge(KILL_BADGES, Number(p.kills) || 0);
+  if (k) add(k[1]);
+  const lvl = p.isekaiLevel ?? p.isekai?.level ?? null;
+  const iz = lvl != null ? topBadge(ISEKAI_BADGES, Number(lvl) || 0) : null;
+  if (iz) add(iz[1], `${iz[1]} – Isekai-Stufe ${fmt(lvl)}`);
+  // Beziehungen stehen erst nach der ersten Abfrage von /api/log zur Verfügung (siehe ensureBadgeLog)
+  const labels = (logCache.get(p.id || p.user)?.relations || []).flatMap((r) => r.relations || []);
+  if (labels.some((x) => /^ehe/i.test(x))) add('Verheiratet');
+  else if (labels.some((x) => /^verlob/i.test(x))) add('Verlobt');
+  const q = Array.isArray(p.quirks) ? p.quirks.length : 0;
+  if (q >= 3) add(`${fmt(q)} Eigenheiten`, 'Ab drei Eigenheiten gibt es dieses Abzeichen');
+  return out;
+}
+
+const badgesInner = (p) => badgeList(p).map((b) => `<span class="ach" title="${esc(b.title)}">${esc(b.label)}</span>`).join('');
+
+function refreshBadges(host) {
+  const el = host.querySelector('.ch-badges');
+  if (el && host._pawn) morph(el, badgesInner(host._pawn));
+}
+
+/** Einmalig /api/log holen, falls noch nicht geschehen – nur für die Beziehungs-Abzeichen. */
+function ensureBadgeLog(host) {
+  const p = host._pawn;
+  if (!p) return;
+  const key = p.id || p.user;
+  if (!key || logCache.has(key) || host._badgeLog === key) return;
+  host._badgeLog = key;
+  live.getJson('/api/log/' + encodeURIComponent(key)).then((r) => {
+    if (r.status === 200 && r.data) { logCache.set(key, r.data); refreshBadges(host); }
+  }).catch(() => {});
+}
+
 function heroHtml(p) {
   const meta = [p.race, p.xenotype && p.xenotype !== p.race ? p.xenotype : null, p.age != null ? `${p.age} Jahre` : null, p.gender]
     .filter(Boolean).map(esc).join(' · ');
@@ -656,6 +703,8 @@ function heroHtml(p) {
       <div class="ch-sub"><span class="muted">${p.user ? '@' + esc(p.displayName || p.user) : 'Kolonist'}</span>${p.fullName && p.fullName !== p.name ? ` · <span class="muted">${esc(p.fullName)}</span>` : ''}</div>
       <div class="ch-meta">${meta}</div>
       <div class="ch-state"><span class="badge ${STATE_BADGE[p.state] || 'neutral'}">${esc(p.stateLabel || p.state)}</span>${p.job ? `<span class="ch-job">${esc(p.job)}</span>` : ''}</div>
+      <div class="ch-badges">${badgesInner(p)}</div>
+      ${p.id || p.user ? `<button type="button" class="linklike ch-share" data-share="${esc(p.id || p.user)}">Link kopieren</button>` : ''}
     </div>
     <div class="ch-bars">${barRow('Gesundheit', p.healthPct)}${mood}</div>
   </div>`;
@@ -999,7 +1048,7 @@ const logCache = new Map(); // Pawn-Schlüssel -> letzte Antwort (damit beim Ums
 function logListHtml(data) {
   const list = data?.[logKind] || [];
   if (!list.length) return `<div class="empty">${logKind === 'social' ? 'Noch keine Unterhaltungen aufgezeichnet.' : 'Noch keine Kämpfe aufgezeichnet.'}</div>`;
-  return `<ol class="logl">${list.map((e) => `<li><span class="log-text">${esc(e.text)}</span><span class="log-ago">vor ${esc(e.ago)}</span></li>`).join('')}</ol>`;
+  return `<ol class="logl">${list.map((e) => `<li><span class="log-text">${esc(e.text)}</span><span class="log-ago">vor ${esc(agoDe(e.ago))}</span></li>`).join('')}</ol>`;
 }
 
 function panelLog(p) {
@@ -1085,6 +1134,39 @@ function startRelPoll(host) {
       if (r.status !== 200 || !r.data || !host._pawn) return;
       logCache.set(key, r.data);
       if (!r.unchanged || !el.dataset.filled) { morph(el, relHtml(host._pawn, r.data)); el.dataset.filled = '1'; }
+      refreshBadges(host);
+    },
+  });
+}
+
+// Lebensgeschichte: Erinnerungen (story) aus demselben /api/log, eigene Abfrage nur solange dieser Unterreiter offen ist
+function storyHtml(list) {
+  if (!Array.isArray(list) || !list.length) return '<div class="empty">Noch keine Erinnerungen erfasst.</div>';
+  return `<ol class="story">${list.map((e) => `<li class="st-item">
+      <span class="st-day">Tag ${fmt(e.day)}</span>
+      <span class="st-text">${esc(e.text)}</span>
+      ${e.ago ? `<span class="small muted st-ago">vor ${esc(agoDe(e.ago))}</span>` : ''}</li>`).join('')}</ol>`;
+}
+
+function panelStory(p) {
+  const key = p.id || p.user;
+  const cached = logCache.get(key);
+  return `<div class="story-host" data-key="${esc(key)}" data-morph-keep data-logfor="${esc(key)}">${cached ? storyHtml(cached.story) : '<div class="empty">Lade …</div>'}</div>
+    <p class="small muted">Die Erinnerungen dieses Kolonisten, neueste zuerst.</p>`;
+}
+
+function startStoryPoll(host) {
+  const el = host.querySelector('.story-host');
+  if (!el || el._polling) return;
+  el._polling = true;
+  const key = el.dataset.logfor;
+  live.poll({
+    path: '/api/log/' + encodeURIComponent(key), every: 10000, alive: () => el.isConnected,
+    onResult: (r) => {
+      if (r.status === 404) { morph(el, '<div class="empty">Noch keine Einträge – kommt gleich.</div>'); return; }
+      if (r.status !== 200 || !r.data) return;
+      logCache.set(key, r.data);
+      if (!r.unchanged || !el.dataset.filled) { morph(el, storyHtml(r.data.story)); el.dataset.filled = '1'; }
     },
   });
 }
@@ -1153,7 +1235,7 @@ async function applyWork(host) {
   repaint(host);
 }
 
-const PANELS = { overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+const PANELS = { overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 function subsHtml(p) {
   const vis = visibleSubs(p);
@@ -1180,7 +1262,10 @@ function characterHtml(p) {
 function afterPaint(host) {
   startLogPoll(host);
   startRelPoll(host);
+  startStoryPoll(host);
   startGoalsPoll(host);
+  ensureBadgeLog(host);
+  refreshBadges(host);
   if (host._pawn && activeSub(host._pawn) === 'isekai') ensureTrees(host);
 }
 
@@ -1201,6 +1286,12 @@ function mountCharacter(host, p) {
   host._bound = true;
   host.addEventListener('click', (e) => {
     const pawn = host._pawn;
+    const share = e.target.closest('[data-share]');
+    if (share) {
+      // Direktlink zur Charakter-Seite (gleiche Adresse wie „Kolonie“ → Kolonist)
+      copyText(`${location.origin}${location.pathname}#/kolonie/${encodeURIComponent(share.dataset.share)}`);
+      return;
+    }
     const sub = e.target.closest('[data-sub]');
     const tr = e.target.closest('[data-trait]');
     const lk = e.target.closest('[data-logkind]');
@@ -1370,16 +1461,39 @@ function animalsHtml(list) {
   return out;
 }
 
+// Ranglisten (je Top 5) aus /api/colony – keine Münzen, nur Leistung der Kolonisten
+const RANK_CATS = [
+  { key: 'kills', title: 'Meiste Gegner', val: (v) => `${fmt(v)} besiegt` },
+  { key: 'daysInColony', title: 'Am längsten dabei', val: (v) => `${fmt(v)} Tage` },
+  { key: 'isekaiLevel', title: 'Höchste Isekai-Stufe', val: (v) => `Stufe ${fmt(v)}` },
+];
+
+function ranksHtml(list) {
+  if (!list.length) return '';
+  const cards = RANK_CATS.map((c) => {
+    const rows = list.filter((p) => Number(p[c.key]) > 0).sort((a, b) => Number(b[c.key]) - Number(a[c.key])).slice(0, 5);
+    const body = rows.length
+      ? `<ol class="rank-list">${rows.map((p, i) => `<li><a class="rank-row" href="#/kolonie/${encodeURIComponent(p.id || p.user)}">
+          <span class="rank-pos">${i + 1}.</span>
+          <span class="rank-name">${esc(p.name)}${p.user ? ` <span class="small muted">@${esc(p.displayName || p.user)}</span>` : ''}</span>
+          <span class="rank-val">${esc(c.val(p[c.key]))}</span></a></li>`).join('')}</ol>`
+      : '<p class="muted small" style="margin:0">Noch keine Werte.</p>';
+    return `<section class="card ch-sec"><h4>${esc(c.title)}</h4>${body}</section>`;
+  }).join('');
+  return `<div class="rank-grid">${cards}</div>`;
+}
+
 function colonyList() {
   const html = `<div class="live-page">
     <div class="kol-head"><h2 class="section-title" style="margin:0">Die Kolonie</h2><span class="small muted" id="kol-count"></span></div>
     <div id="kol-grid" class="kol-grid"><div class="empty" style="grid-column:1/-1">Lade …</div></div>
+    <div id="kol-ranks"></div>
     <section id="tiere-sec" hidden>
       <div class="kol-head" style="margin-top:22px"><h2 class="section-title" style="margin:0">Tiere</h2><span class="small muted" id="tiere-count"></span></div>
       <div id="tiere" class="an-grid"></div>
     </section></div>`;
   function bind(root) {
-    const grid = root.querySelector('#kol-grid'), count = root.querySelector('#kol-count');
+    const grid = root.querySelector('#kol-grid'), count = root.querySelector('#kol-count'), ranks = root.querySelector('#kol-ranks');
     let last = '';
     const draw = (data) => {
       const list = Array.isArray(data?.pawns) ? data.pawns : [];
@@ -1390,6 +1504,7 @@ function colonyList() {
       count.textContent = list.length ? `${fmt(list.length)} Kolonist${list.length === 1 ? '' : 'en'}` : '';
       morph(grid, list.length ? list.map((p) => colonyCard(p, me)).join('')
         : `<div class="empty" style="grid-column:1/-1">Noch keine Kolonisten zu sehen. Mit <code>${esc(live.prefix())}join</code> im Chat kannst du die Erste oder der Erste sein.</div>`);
+      morph(ranks, ranksHtml(list));
     };
     live.poll({
       path: '/api/colony', every: 2000, alive: () => grid.isConnected,
@@ -1518,6 +1633,61 @@ function stockHtml(s) {
     ${tiles ? `<div class="stock-grid">${tiles}</div>` : '<p class="muted small" style="margin:8px 0 0">Keine Vorräte erfasst.</p>'}`;
 }
 
+/** Koloniewert-Verlauf (wealthHistory: [Tag, Wert]). Die Linie ist ein SVG ohne Text; Beschriftung kommt als HTML, damit sie nicht skaliert. */
+function wealthHtml(hist) {
+  const pts = (Array.isArray(hist) ? hist : [])
+    .filter((x) => Array.isArray(x) && Number.isFinite(Number(x[0])) && Number.isFinite(Number(x[1])))
+    .map(([d, v]) => [Number(d), Number(v)])
+    .sort((a, b) => a[0] - b[0]);
+  if (pts.length < 2) return '<p class="muted small" style="margin:0">Noch zu wenig Tage für einen Verlauf.</p>';
+  const vals = pts.map((p) => p[1]);
+  const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const W = 300, H = 120, TOP = 6, BOT = 114;
+  const xy = pts.map(([, v], i) => [(i / (pts.length - 1)) * W, BOT - ((v - lo) / span) * (BOT - TOP)]);
+  const line = xy.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+  const area = `${line} L${W} ${H} L0 ${H} Z`;
+  const first = pts[0], last = pts[pts.length - 1];
+  const diff = last[1] - first[1];
+  const sign = diff > 0 ? '+' : diff < 0 ? '−' : '±';
+  const tn = diff > 0 ? 'good' : diff < 0 ? 'doom' : 'neutral';
+  return `<div class="wv-head"><b>${fmt(last[1])} Silber</b><span class="wv-diff ${tn}">${sign}${fmt(Math.abs(Math.round(diff)))} seit Tag ${fmt(first[0])}</span></div>
+    <div class="wv-plot">
+      <span class="wv-hi">${fmt(Math.round(hi))}</span><span class="wv-lo">${fmt(Math.round(lo))}</span>
+      <svg class="wv-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Koloniewert von Tag ${fmt(first[0])} bis Tag ${fmt(last[0])}">
+        <line class="wv-grid" x1="0" x2="${W}" y1="${TOP}" y2="${TOP}"/>
+        <line class="wv-grid" x1="0" x2="${W}" y1="${BOT}" y2="${BOT}"/>
+        <path class="wv-area" d="${area}"/>
+        <path class="wv-line" d="${line}"/>
+      </svg></div>
+    <div class="wv-axis small muted"><span>Tag ${fmt(first[0])}</span><span>Tag ${fmt(last[0])}</span></div>`;
+}
+
+/** Fraktionen: Verbündet vor Neutral vor Feindlich, dann nach Wohlwollen. Wohlwollen −100…+100 als Balken. */
+const FAC_REL = { ally: ['Verbündet', 'good', 'good', 0], neutral: ['Neutral', 'neutral', 'acc', 1], hostile: ['Feindlich', 'doom', 'doom', 2] };
+function factionsHtml(list) {
+  const arr = (Array.isArray(list) ? list : []).slice().sort((a, b) =>
+    ((FAC_REL[a.relation] || FAC_REL.neutral)[3] - (FAC_REL[b.relation] || FAC_REL.neutral)[3]) || (Number(b.goodwill) || 0) - (Number(a.goodwill) || 0));
+  if (!arr.length) return '<p class="muted small" style="margin:0">Keine Fraktionen bekannt.</p>';
+  return `<ul class="fac-list">${arr.map((f) => {
+    const [label, badgeTn, barTn] = FAC_REL[f.relation] || FAC_REL.neutral;
+    const gw = Number(f.goodwill) || 0;
+    const gwBar = f.hasGoodwill
+      ? `<div class="fac-bar">${bar((clamp(gw, -100, 100) + 100) / 2, barTn)}<span class="fac-num ${relTone(gw)}">${relSign(gw)}</span></div>`
+      : '<div class="small muted">Wohlwollen unbekannt</div>';
+    return `<li class="fac"><div class="fac-top"><div><b>${esc(f.name)}</b>${f.kind ? ` <span class="small muted">· ${esc(f.kind)}</span>` : ''}</div><span class="badge ${badgeTn}">${label}</span></div>${gwBar}</li>`;
+  }).join('')}</ul>`;
+}
+
+/** Besucher & Händler: Gruppen und Handelsschiffe. Ohne beides gar keine Karte (Abschnitt entfällt). */
+function visitorsHtml(v) {
+  const groups = Array.isArray(v?.groups) ? v.groups : [];
+  const ships = Array.isArray(v?.ships) ? v.ships : [];
+  if (!groups.length && !ships.length) return '';
+  const gl = groups.map((x) => `<li><b>${esc(x.faction)}</b>${x.count != null ? ` <span class="muted">×${fmt(x.count)}</span>` : ''}${x.trader ? ` <span class="tag">Händler: ${esc(x.trader)}</span>` : ''}</li>`).join('');
+  const sl = ships.map((s) => `<li><span class="tag">Schiff</span> ${esc(s)}</li>`).join('');
+  return `<section class="card ch-sec"><h4>Besucher & Händler</h4><ul class="plain vis-list">${gl}${sl}</ul></section>`;
+}
+
 function spielHtml(g, res) {
   const hh = String(Math.floor(Number(g.hour) || 0)).padStart(2, '0');
   const stat = (k, v, sub) => `<div class="gstat"><span class="gk">${esc(k)}</span><b class="gv">${esc(v)}</b><span class="gs">${esc(sub || '')}</span></div>`;
@@ -1539,7 +1709,10 @@ function spielHtml(g, res) {
       <section class="card ch-sec"><h4>Was zuletzt passiert ist</h4>${evs}</section>
       <section class="card ch-sec rs-card" style="grid-column:1/-1"><h4>Forschung</h4>${researchHtml(res, g)}</section>
       <section class="card ch-sec" style="grid-column:1/-1"><h4>Gemeinschaftsziele</h4>${goalsHtml(g.goals)}</section>
+      <section class="card ch-sec" style="grid-column:1/-1"><h4>Koloniewert-Verlauf</h4>${wealthHtml(g.wealthHistory)}</section>
       <section class="card ch-sec"><h4>Vorräte</h4>${stockHtml(g.stock)}</section>
+      <section class="card ch-sec"><h4>Fraktionen</h4>${factionsHtml(g.factions)}</section>
+      ${visitorsHtml(g.visitors)}
       <section class="card ch-sec"><h4>Erzähler</h4><p style="margin:0"><b>${esc(g.storyteller)}</b></p><p class="muted small" style="margin:4px 0 0">Schwierigkeit: ${esc(g.difficulty)}</p></section>
     </div>`;
 }
@@ -1609,7 +1782,7 @@ function eventsLiveHtml(list) {
       <button type="button" class="ev-main" data-evopen="${esc(key)}" aria-expanded="${open}">
         <span class="gdot" aria-hidden="true"></span>
         <span class="ev-label">${esc(e.label)}</span>
-        <span class="ev-meta small muted">Tag ${fmt(e.day)} · vor ${esc(e.ago)}</span>
+        <span class="ev-meta small muted">Tag ${fmt(e.day)} · vor ${esc(agoDe(e.ago))}</span>
         <span class="ev-chev" aria-hidden="true">${open ? '▾' : '▸'}</span>
       </button>
       ${open && e.text ? `<p class="ev-text">${esc(e.text)}</p>` : ''}
@@ -1643,6 +1816,56 @@ export function ereignisseView() {
       if (f) evFilter = f.dataset.evf;
       else { const k = o.dataset.evopen; if (evOpen.has(k)) evOpen.delete(k); else evOpen.add(k); }
       draw(true);
+    });
+  }
+  return { html, bind };
+}
+
+// =====================================================================
+// Ansicht „Gedenken“ (nur live): Gedenkwand aus /api/game (memorials), alle 5 s, nur solange offen
+// =====================================================================
+function memorialCard(m) {
+  const joined = m.joinedDay != null ? `Tag ${fmt(m.joinedDay)}` : null;
+  const died = m.diedDay != null ? `Tag ${fmt(m.diedDay)}` : null;
+  const facts = [
+    m.cause ? ['Ursache', m.cause] : null,
+    joined || died ? ['In der Kolonie', [joined, died].filter(Boolean).join(' – ')] : null,
+    m.age != null ? ['Alter', `${fmt(m.age)} Jahre`] : null,
+    m.kills != null ? ['Besiegte Gegner', fmt(m.kills)] : null,
+  ].filter(Boolean);
+  const full = m.fullName && m.fullName !== m.name ? `<div class="small muted">${esc(m.fullName)}</div>` : '';
+  const who = m.user ? `<div class="small muted">@${esc(m.user)}</div>` : '';
+  return `<article class="card memo">
+    <span class="memo-cross" aria-hidden="true">†</span>
+    <h3 class="memo-name">${esc(m.name || '?')}</h3>
+    ${full}${who}
+    <dl class="memo-facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+    ${m.ago ? `<p class="small muted memo-ago">Verstorben vor ${esc(agoDe(m.ago))}</p>` : ''}
+  </article>`;
+}
+
+function memorialsHtml(list) {
+  if (!list.length) return '<div class="empty">Noch niemand gestorben.</div>';
+  return `<div class="memo-grid">${list.map(memorialCard).join('')}</div>`;
+}
+
+export function gedenkenView() {
+  const html = `<div class="live-page"><h2 class="section-title" style="margin:0 0 6px">Gedenken</h2>
+    <p class="small muted" style="margin:0 0 14px">Die Kolonisten, die gefallen sind, bleiben hier in Erinnerung.</p>
+    <div id="memo-host"><div class="empty">Lade …</div></div></div>`;
+  function bind(root) {
+    const host = root.querySelector('#memo-host');
+    let last = null;
+    live.poll({
+      path: '/api/game', every: 5000, alive: () => host.isConnected,
+      onResult: (r) => {
+        if (r.unchanged || r.status !== 200 || !r.data) return;
+        const list = Array.isArray(r.data.memorials) ? r.data.memorials : [];
+        const key = JSON.stringify(list);
+        if (key === last) return;
+        last = key;
+        morph(host, memorialsHtml(list));
+      },
     });
   }
   return { html, bind };
