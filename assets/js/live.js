@@ -31,7 +31,9 @@ export const isLinked = () => S.live && !!S.token;
 export const getStatus = () => S.status;
 export const getMe = () => S.me;
 export const prefix = () => S.status?.prefix || '!';
-export const isAllowed = (cmd) => !!S.status?.allowed?.includes(String(cmd).toLowerCase());
+// Nie per Knopf – wer Kolonist wird, entscheidet der Streamer (gleiche Sperre steckt auch in der Mod)
+const NEVER = ['pawn', 'leave'];
+export const isAllowed = (cmd) => { const c = String(cmd).toLowerCase(); return !NEVER.includes(c) && !!S.status?.allowed?.includes(c); };
 export const portraitUrl = (user, v) => `${S.base}/api/portrait/${encodeURIComponent(user)}?v=${encodeURIComponent(v ?? 0)}`;
 
 // ---------- Netzwerk ----------
@@ -263,6 +265,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Löst einen Befehl aus. Liefert die Chat-Antworten (kann leer sein); wirft Error mit deutschem Text. */
 export async function act(command, args) {
+  if (NEVER.includes(String(command).toLowerCase())) throw new Error('Das geht nur über den Streamer.');
   let r;
   try { r = await api('/api/action', { method: 'POST', auth: true, body: { command, args } }); }
   catch { throw new Error('Keine Verbindung zum Spiel. Versuch es gleich noch einmal.'); }
