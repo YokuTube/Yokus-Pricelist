@@ -1,40 +1,41 @@
 /* Yokus Store – ruhiges Design. Standard: dunkles Blau. Helles Design über den Umschalter. */
 
 :root {
-  --bg: #1b1916;
-  --surface: #25221e;
-  --surface-2: #2f2b26;
-  --text: #ece4d6;
-  --muted: #b3a791;
-  --border: #3d372f;
-  --accent: #d99a4e;
-  --accent-soft: #3a2c1b;
-  --accent-text: #1b1409;
-  --good: #8fbf7a;
-  --neutral: #a7b4a8;
-  --bad: #e0a653;
-  --doom: #e07a6b;
-  --coin: #c9ced3;
+  /* Yoku-Stil: dunkles Stream-Blau mit hellblauem Akzent */
+  --bg: #0b1324;
+  --surface: #111d33;
+  --surface-2: #172742;
+  --text: #e6edf8;
+  --muted: #9aabc6;
+  --border: #24395c;
+  --accent: #4ea8ff;
+  --accent-soft: #12304f;
+  --accent-text: #04111f;
+  --good: #7fd18b;
+  --neutral: #a3b4c7;
+  --bad: #f0b45a;
+  --doom: #ef7b72;
+  --coin: #c9d4e3;
   --radius: 4px;
   --head-font: "Bahnschrift", "DIN Alternate", "Arial Narrow", system-ui, sans-serif;
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
-  --bg: #efe8d9;
-  --surface: #f8f3e8;
-  --surface-2: #ebe3d1;
-  --text: #2a241b;
-  --muted: #6b5f4c;
-  --border: #d3c7ae;
-  --accent: #a2571a;
-  --accent-soft: #f0dfc4;
+  --bg: #eef3fa;
+  --surface: #ffffff;
+  --surface-2: #e3ebf6;
+  --text: #0f1d33;
+  --muted: #52627a;
+  --border: #c8d5e8;
+  --accent: #1f6fd1;
+  --accent-soft: #dbe9fb;
   --accent-text: #ffffff;
-  --good: #3f7a2c;
-  --neutral: #5d6b5e;
-  --bad: #9a5d0c;
-  --doom: #b0392b;
-  --coin: #7c8590;
+  --good: #2f7a3a;
+  --neutral: #4f6175;
+  --bad: #a3650c;
+  --doom: #b8332a;
+  --coin: #6b7b90;
   color-scheme: light;
 }
 
@@ -563,7 +564,7 @@ body:has(dialog.live-dialog[open]) { overflow: hidden; }
   border: 0; cursor: pointer; font: inherit; padding: 16px; text-align: center;
 }
 .stream-start span:not(.stream-start-icon) { font-family: var(--head-font); font-size: 1.15rem; }
-.stream-start small { color: #d8d0c2; max-width: 32ch; }
+.stream-start small { color: #c8d4e6; max-width: 32ch; }
 .stream-start-icon {
   display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%;
   background: var(--accent); color: var(--accent-text); font-size: 1.6rem; padding-left: 4px;
