@@ -712,7 +712,8 @@ function nodeInfoHtml(p, tree, k, skilling) {
   return `<div class="isk-info">
     <div class="isk-info-h"><b>${esc(n.label)}</b><span class="tag">${esc(NODE_TYPE[n.type] || n.type)}</span><span class="isk-st st-${unl ? 'learned' : lrn ? 'learnable' : 'locked'}">${st}</span></div>
     <div class="small muted">Kosten: ${fmt(cost)} Skillpunkt${cost === 1 ? '' : 'e'}</div>
-    ${n.desc ? `<p class="isk-desc">${esc(n.desc)}</p>` : ''}${chainTxt}
+    ${(n.bonuses || []).length ? `<ul class="isk-bonus">${n.bonuses.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}
+    ${n.desc ? `<p class="isk-desc">${esc(n.desc)}</p>` : ''}${!n.desc && !(n.bonuses || []).length ? '<p class="small muted">Keine Beschreibung von der Mod.</p>' : ''}${chainTxt}
     ${can ? `<div class="isk-learn">${actBtn('isekai', `lernen ${n.id}`, 'Lernen', { cls: 'primary', title: 'Diesen Knoten lernen' })}</div>` : ''}
   </div>`;
 }

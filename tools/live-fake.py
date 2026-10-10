@@ -145,7 +145,7 @@ ALLOWED_USERS = {"yoku": "Yoku"}
 
 # ---------- Isekai-Baeume ----------
 def tree_nodes(spec):
-    return [{"id": i, "label": l, "desc": d, "type": t, "x": x, "y": y, "cost": c} for (i, l, d, t, x, y, c) in spec]
+    return [{"id": i, "label": l, "desc": d, "type": t, "x": x, "y": y, "cost": c, "bonuses": ["+3% Nahkampfschaden", "+2% Bewegungstempo"] if t != "start" else []} for (i, l, d, t, x, y, c) in spec]
 
 
 TREES = {
