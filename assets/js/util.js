@@ -72,13 +72,13 @@ export function debounce(fn, ms = 120) {
 }
 
 let toastTimer;
-export function toast(msg) {
+export function toast(msg, ms = 1800) {
   const el = document.getElementById('toast');
   if (!el) return;
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }
 
 export async function copyText(text) {

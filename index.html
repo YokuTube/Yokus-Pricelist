@@ -29,6 +29,10 @@
       <div class="header-actions">
         <div id="chat-slot"></div>
         <div id="updated" class="updated"></div>
+        <div class="stream-menu">
+          <button type="button" id="stream-toggle" class="icon-btn" aria-haspopup="true" aria-expanded="false" aria-controls="stream-panel" title="Stream und Chat auf der Seite ein-/ausblenden">Stream</button>
+          <div id="stream-panel" class="stream-panel" hidden></div>
+        </div>
         <button type="button" id="theme-toggle" class="icon-btn" aria-label="Zum hellen Design wechseln">Hell</button>
       </div>
     </div>
@@ -41,6 +45,7 @@
   </div>
 
   <main>
+    <div class="wrap stream-dock-wrap"><div id="stream-dock" class="stream-dock" hidden></div></div>
     <div class="wrap" id="view" aria-live="polite"><div class="empty">Lade …</div></div>
   </main>
 

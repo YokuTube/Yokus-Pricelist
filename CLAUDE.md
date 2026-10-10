@@ -27,5 +27,10 @@ Antworte auf Deutsch. Öffentliche Preislisten-/Befehlsseite für Andreas' RICS-
 - Erwartet: eine Mod übersetzt RICS bald ins Deutsche → nichts hart auf englische Befehle/Labels verdrahten; Aliase anzeigen (geschieht über `CommandSettings.json`).
 - Senden über Twitch ist freiwillig (Implicit Grant, Scope `user:write:chat`), standardmäßig aus; ohne Anmeldung nur Kopieren.
 
+## Live-Teil (Mod RICS Live) und Stream
+- `assets/js/live.js` + `live-views.js`: Reiter **Ich / Kolonie / Spiel**, Live-Leiste, Verbinden (`!link`), Kaufen per Knopf – nur sichtbar, wenn die Mod RICS Live läuft (Adresse aus Branch `live`, `live.json`, über GitHub-API). Ohne Mod verhält sich die Seite exakt wie vorher. Schnittstelle: `../RICS-Live/docs/API.md`. Test ohne Spiel: `tools/live-fake.py` + `?live=http://127.0.0.1:8790` (wirkt nur auf localhost).
+- `assets/js/stream.js`: Reiter **Stream** (Twitch-Kanal `dasyoku`, offizielle Einbettung, `parent=location.hostname`). Zuschauer schalten Stream/Chat einzeln über den Knopf „Stream“ im Kopf aus (localStorage `ys-stream`); beides aus = Reiter weg. Player lädt nie von selbst (Klick nötig, kein doppelter Ton).
+- Branch `live` wird von der Mod per force push beschrieben – **nicht** in `main` mergen, nicht löschen.
+
 ## Lokal ansehen
 `python -m http.server 8765` im Projektordner (oder `preview_start pricelist` aus `../.claude/launch.json`).

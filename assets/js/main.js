@@ -3,6 +3,9 @@ import { copyText, esc, fmt } from './util.js';
 import { startView, commandsView, itemsView, eventsView, weatherView, traitsView, racesView, modsView } from './views.js';
 import { icon } from './icons.js';
 import { initChat, renderSlot, offerSend, handleSlotClick } from './chat.js';
+import * as live from './live.js';
+import { initLiveUi, setLiveData, offerLive, ichView, kolonieView, spielView } from './live-views.js';
+import { streamView, streamTabVisible, initStreamSettings, syncStreamDock } from './stream.js';
 
 const TABS = [
   { id: 'start', label: 'Start', view: startView },
@@ -14,6 +17,21 @@ const TABS = [
   { id: 'rassen', label: 'Rassen', view: racesView, count: (d) => d.races.length },
   { id: 'mods', label: 'Mods', view: modsView, count: (d) => d.mods.length },
 ];
+
+// Zusätzliche Tabs, nur sichtbar, solange die Live-Schnittstelle (RICS Live) erreichbar ist.
+const LIVE_TABS = [
+  { id: 'ich', label: 'Ich', view: ichView },
+  { id: 'kolonie', label: 'Kolonie', view: kolonieView },
+  { id: 'spiel', label: 'Spiel', view: spielView },
+];
+const LIVE_IDS = LIVE_TABS.map((t) => t.id);
+// Reiter „Stream“ (Twitch-Player/-Chat) unabhängig von der Mod; jeder Zuschauer kann ihn ausblenden.
+const STREAM_TAB = { id: 'stream', label: 'Stream', view: streamView };
+const tabList = () => {
+  const base = live.isLive() ? [TABS[0], ...LIVE_TABS, ...TABS.slice(1)] : [...TABS];
+  if (streamTabVisible()) base.splice(1, 0, STREAM_TAB);
+  return base;
+};
 
 // ---------- Design (hell/dunkel) ----------
 const THEME_KEY = 'ys-theme';
@@ -41,10 +59,11 @@ function initTheme() {
 
 // ---------- Start ----------
 let DATA = null;
+let shownTab = 'start';
 
 function renderTabs() {
   const cur = currentTab();
-  document.getElementById('tabs').innerHTML = TABS.map((t) => {
+  document.getElementById('tabs').innerHTML = tabList().map((t) => {
     const n = DATA && t.count ? `<span class="count">${fmt(t.count(DATA))}</span>` : '';
     return `<a class="tab" role="tab" href="#/${t.id}" aria-selected="${t.id === cur}">${icon(t.id)}<span>${esc(t.label)}</span> ${n}</a>`;
   }).join('');
@@ -52,11 +71,20 @@ function renderTabs() {
 
 function currentTab() {
   const id = (location.hash.replace(/^#\/?/, '').split('/')[0] || 'start').toLowerCase();
-  return TABS.some((t) => t.id === id) ? id : 'start';
+  return tabList().some((t) => t.id === id) ? id : 'start';
 }
 
 function renderView() {
-  const tab = TABS.find((t) => t.id === currentTab());
+  const rawId = location.hash.replace(/^#\/?/, '').split('/')[0].toLowerCase();
+  if (LIVE_IDS.includes(rawId) && !live.isLive() && !live.isSettled()) {
+    // Live-Status noch unbekannt: gewünschte Ansicht abwarten statt auf Start umzubiegen.
+    renderTabs();
+    document.getElementById('view').innerHTML = '<div class="empty">Lade …</div>';
+    return;
+  }
+  const tab = tabList().find((t) => t.id === currentTab());
+  shownTab = tab.id;
+  syncStreamDock(tab.id);
   const main = document.getElementById('view');
   renderTabs();
   if (!DATA) { main.innerHTML = '<div class="empty">Lade Daten …</div>'; return; }
@@ -85,6 +113,7 @@ async function boot() {
     const b = e.target.closest('[data-copy]');
     if (!b) return;
     const text = b.dataset.copy;
+    if (offerLive(text)) return;          // verknüpft + live: Auslösen anbieten
     if (!offerSend(text)) copyText(text);
   });
 
@@ -102,6 +131,16 @@ async function boot() {
   renderView();
   window.addEventListener('hashchange', renderView);
 
+  // RICS Live: im Hintergrund suchen, die Seite wartet nicht darauf.
+  initLiveUi();
+  live.on('change', () => {
+    const wanted = location.hash.replace(/^#\/?/, '').split('/')[0].toLowerCase();
+    // Nur neu zeichnen, wenn eine Live-Ansicht betroffen ist - sonst gehen z. B. Sucheingaben nicht verloren.
+    if (LIVE_IDS.includes(wanted) || LIVE_IDS.includes(shownTab)) renderView(); else renderTabs();
+  });
+  live.initLive();
+  initStreamSettings(() => { if (shownTab === 'stream' || currentTab() === 'stream') renderView(); else { renderTabs(); syncStreamDock(shownTab); } });
+
   let config = null;
   try { const r = await fetch('data/site-config.json', { cache: 'no-cache' }); if (r.ok) config = await r.json(); } catch { /* optional */ }
   const slot = document.getElementById('chat-slot');
@@ -109,6 +148,7 @@ async function boot() {
   renderSlot(slot);
 
   DATA = await loadAll();
+  setLiveData(DATA);
   showUpdated();
   renderView();
 }
