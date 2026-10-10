@@ -136,7 +136,7 @@ async function boot() {
   live.on('change', () => {
     const wanted = location.hash.replace(/^#\/?/, '').split('/')[0].toLowerCase();
     // Nur neu zeichnen, wenn eine Live-Ansicht betroffen ist - sonst gehen z. B. Sucheingaben nicht verloren.
-    if (LIVE_IDS.includes(wanted) || LIVE_IDS.includes(shownTab)) renderView(); else renderTabs();
+    if (LIVE_IDS.includes(wanted) || LIVE_IDS.includes(shownTab) || shownTab === 'stream' || wanted === 'stream') renderView(); else renderTabs();
   });
   live.initLive();
   initStreamSettings(() => { if (shownTab === 'stream' || currentTab() === 'stream') renderView(); else { renderTabs(); syncStreamDock(shownTab); } });

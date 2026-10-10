@@ -25,6 +25,7 @@ try { S.token = localStorage.getItem(TOKEN_KEY) || null; } catch { /* egal */ }
 
 // ---------- Zustand lesen ----------
 export const isLive = () => S.live;
+export const streamAllowed = () => S.streamAllowed !== false;
 export const isSettled = () => settled;
 export const isLinked = () => S.live && !!S.token;
 export const getStatus = () => S.status;
@@ -137,6 +138,9 @@ async function findBase() {
   if (!res.ok) return { error: true };
   try {
     const info = JSON.parse(b64utf8((await res.json()).content));
+    // Stream-Reiter erlaubt? Gilt auch offline (Streamer kann ihn im Spiel abschalten).
+    const sa = info?.stream !== false;
+    if (sa !== S.streamAllowed) { S.streamAllowed = sa; emit('change'); }
     if (!info || info.online !== true || typeof info.url !== 'string' || !/^https:\/\//i.test(info.url)) return { absent: true };
     return { base: info.url.replace(/\/+$/, '') };
   } catch { return { error: true }; }

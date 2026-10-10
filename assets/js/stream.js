@@ -6,6 +6,7 @@
 // (verschobene iframes laden neu). Beim Reiterwechsel ändert sich nur die Darstellung: auf „Stream“ groß,
 // anderswo läuft der Player als kleines Fenster unten rechts weiter, der Chat bleibt unsichtbar geladen.
 import { esc } from './util.js';
+import { streamAllowed } from './live.js';
 
 export const CHANNEL = 'dasyoku';
 const KEY = 'ys-stream';
@@ -22,7 +23,7 @@ function setStreamPrefs(p) {
 }
 
 // Reiter nur zeigen, wenn mindestens eins von beidem eingeschaltet ist.
-export const streamTabVisible = () => { const p = getStreamPrefs(); return p.player || p.chat; };
+export const streamTabVisible = () => { const p = getStreamPrefs(); return streamAllowed() && (p.player || p.chat); };
 
 const parent = () => encodeURIComponent(location.hostname || 'localhost');
 const dark = () => document.documentElement.dataset.theme !== 'light';
@@ -48,6 +49,12 @@ export function streamView() {
 export function syncStreamDock(tabId) {
   const d = dock();
   if (!d) return;
+  if (!streamAllowed()) {
+    // Streamer hat den Stream-Reiter im Spiel abgeschaltet: Player und Chat ganz entfernen
+    playing = false; chatLoaded = false; onStreamTab = false;
+    d.innerHTML = ''; delete d.dataset.ready; d.hidden = true;
+    return;
+  }
   const p = getStreamPrefs();
   onStreamTab = tabId === 'stream';
   if (!p.player) playing = false;
@@ -91,6 +98,8 @@ function build(d) {
       <div class="stream-chat-frame"></div>
       <a class="stream-popout" href="${CHAT_POPOUT}" target="_blank" rel="noopener">Chat in eigenem Fenster öffnen ↗</a>
     </div>`;
+  if (d._bound) return; // Klick-Handler nur einmal, auch wenn der Inhalt neu aufgebaut wird
+  d._bound = true;
   d.addEventListener('click', (e) => {
     if (e.target.closest('[data-stream-start]')) {
       playing = true;
