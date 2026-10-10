@@ -422,20 +422,11 @@
       "notes": ["Tauschen kostet Coins und hat eine Pause pro Pawn.", "Braucht die Mod „Character Development“."],
       "requires": "Character Development"
     },
-    {
-      "cmd": "quirks", "group": "char", "src": "extras",
-      "summary": "Zeigt die freigeschalteten Quirks deines Pawns.",
-      "usage": [ { "syntax": "!quirks" }, { "syntax": "!quirks <Nr>", "note": "Details zu einem Quirk." } ],
-      "effect": "Reine Anzeige. Quirks schaltest du frei, indem dein Pawn Wünsche erfüllt.",
-      "requires": "Character Development"
-    },
-    {
-      "cmd": "aspirations", "group": "char", "src": "extras",
-      "summary": "Zeigt die Lebensziele deines Pawns und was schon erfüllt ist.",
-      "usage": [ { "syntax": "!aspirations" }, { "syntax": "!aspirations <Nr>", "note": "Details zu einem Ziel." } ],
-      "effect": "Reine Anzeige mit Haken bei erfüllten Zielen und der Erfüllung in Prozent. Sind alle Ziele erreicht, wird dein Pawn zufriedener.",
-      "requires": "Vanilla Aspirations Expanded"
-    },
+    {"cmd": "quirks", "group": "char", "src": "extras", "summary": "Zeigt die Quirks deines Pawns und lässt dich mit eigenen Punkten neue nehmen.", "usage": [{"syntax": "!quirks"}, {"syntax": "!quirks <Nr>", "note": "Details zu einem Quirk."}, {"syntax": "!quirks angebot", "note": "Die aktuellen Quirk-Angebote mit Nummern und deine Belohnungspunkte."}, {"syntax": "!quirks nehmen <Nr>", "note": "Nimmt Angebot <Nr> für deinen Pawn und kostet einen Belohnungspunkt."}], "examples": ["!quirks", "!quirks angebot", "!quirks nehmen 3"], "effect": "Jeder Kolonist sammelt eigene Belohnungspunkte, indem er Wünsche erfüllt, und gibt sie nur für sich aus. Geht auch per Knopf auf der Seite unter „Ich“ → „Ziele“.", "notes": ["Das Angebot ist für alle gleich; genommene Angebote werden ersetzt."], "requires": "Character Development"},
+    {"cmd": "aspirations", "group": "char", "src": "extras", "summary": "Zeigt die Lebensziele deines Pawns und lässt dich ein offenes tauschen.", "usage": [{"syntax": "!aspirations"}, {"syntax": "!aspirations <Nr>", "note": "Details zu einem Ziel."}, {"syntax": "!aspirations reroll <Nr>", "note": "Tauscht ein noch nicht erfülltes Lebensziel gegen ein neues. Deutlich teurer als ein Wunsch."}], "examples": ["!aspirations", "!aspirations reroll 2"], "effect": "Anzeige mit Haken bei erfüllten Zielen. Sind alle Ziele erreicht, wird dein Pawn zufriedener. Tauschen geht auch per Knopf auf der Seite.", "notes": ["Erfüllte Ziele lassen sich nicht tauschen.", "Tauschen kostet Coins und hat eine längere Pause pro Pawn."], "requires": "Vanilla Aspirations Expanded"},
+    {"cmd": "isekai", "group": "char", "src": "extras", "summary": "Isekai-Stufe, Punkte und Skilltree deines Pawns.", "usage": [{"syntax": "!isekai", "note": "Stufe, Erfahrung, Klasse und freie Punkte."}, {"syntax": "!isekai lernen <Knoten>", "note": "Lernt einen Skilltree-Knoten (Teil des Namens reicht). Nur wenn der Streamer Skillen erlaubt hat."}, {"syntax": "!isekai stat <str|dex|vit|int|wis|cha> [Anzahl]", "note": "Verteilt Stat-Punkte. Nur wenn erlaubt."}], "examples": ["!isekai", "!isekai stat str 2"], "effect": "Den ganzen Skilltree mit allen gelernten und möglichen Knoten siehst du auf der Seite unter „Ich“ → „Isekai“.", "requires": "ISEKAI RPG LEVELING"},
+    {"cmd": "link", "group": "start", "src": "live", "summary": "Verbindet die Webseite mit deinem Twitch-Namen.", "usage": [{"syntax": "!link <Code>", "note": "Den Code zeigt die Seite nach Klick auf „Verbinden“."}], "effect": "Danach siehst du auf der Seite deinen Charakter und deine Münzen live und kannst per Knopf kaufen.", "requires": "RICS Live (nur während des Streams)"},
+    {"cmd": "unlink", "group": "start", "src": "live", "summary": "Trennt alle Webseiten-Verbindungen deines Kontos.", "usage": [{"syntax": "!unlink"}], "requires": "RICS Live"},
     {
       "cmd": "expertise", "group": "char", "src": "addon",
       "summary": "Zeigt und wählt die Expertisen deines Pawns.",

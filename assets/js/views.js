@@ -195,7 +195,7 @@ export function startView(data) {
 // =====================================================================
 // BEFEHLE
 // =====================================================================
-const SRC = { rics: 'RICS', addon: 'RICS-Addon', extras: 'Extras', voting: 'Abstimmung' };
+const SRC = { rics: 'RICS', addon: 'RICS-Addon', extras: 'Extras', voting: 'Abstimmung', live: 'Live-Seite' };
 
 /** Mögliche Werte zu einem Befehl (aus den Daten oder fest) als antippbare Knöpfe. */
 function pickValues(p, data) {

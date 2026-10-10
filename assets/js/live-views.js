@@ -266,8 +266,8 @@ function startBarPolling() {
   if (barPolling || !live.isLive()) return;
   barPolling = true;
   const alive = () => { const ok = live.isLive(); if (!ok) barPolling = false; return ok; };
-  live.poll({ path: '/api/game', every: 10000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barGame = r.data; fillBar(); } } });
-  live.poll({ path: '/api/colony', every: 5000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barPawns = r.data?.pawns || []; fillBar(); } } });
+  live.poll({ path: '/api/game', every: 5000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barGame = r.data; fillBar(); } } });
+  live.poll({ path: '/api/colony', every: 2000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barPawns = r.data?.pawns || []; fillBar(); } } });
 }
 
 function renderStrip() {
@@ -377,6 +377,7 @@ const SUBS = [
   { id: 'health', label: 'Gesundheit' },
   { id: 'gear', label: 'Ausrüstung' },
   { id: 'goals', label: 'Ziele' },
+  { id: 'isekai', label: 'Isekai' },
   { id: 'log', label: 'Erlebnisse' },
   { id: 'origin', label: 'Herkunft' },
 ];
@@ -386,7 +387,7 @@ let openTrait = null;
 
 const STATE_BADGE = { ok: 'good', sleeping: 'neutral', away: 'neutral', downed: 'bad', mental: 'doom', dead: 'doom' };
 const hasGoals = (p) => p.wants != null || p.quirks != null || p.aspirations != null;
-const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)));
+const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null));
 
 function portraitHtml(p, cls) {
   const ini = esc((p.name || p.displayName || '?').trim().charAt(0).toUpperCase() || '?');
@@ -429,7 +430,8 @@ function panelOverview(p) {
       `<button type="button" class="trait" data-trait="${esc(t.label)}" aria-expanded="${t === open}" title="${esc(t.desc)}">${esc(t.label)}</button>`).join('')}</div>
       ${open ? `<p class="trait-desc"><b>${esc(open.label)}:</b> ${esc(open.desc)}</p>` : '<p class="small muted trait-hint">Tippe auf eine Eigenschaft, um sie zu lesen.</p>'}`);
   }
-  return needs + skills + traits || '<div class="empty">Keine Angaben.</div>';
+  const bonds = (p.bonds || []).length ? `<p class="bonds"><span class="heart" aria-hidden="true">♥</span> Gebunden an: <b>${p.bonds.map(esc).join(', ')}</b></p>` : '';
+  return bonds + needs + skills + traits || '<div class="empty">Keine Angaben.</div>';
 }
 
 // Gedanken wie im Stimmungs-Reiter des Spiels; Antippen zeigt die Beschreibung (gleicher Mechanismus wie Eigenschaften)
@@ -480,25 +482,248 @@ function panelGear(p) {
     + section('Kleidung', list(g.apparel)) + section('Inventar', list(g.inventory));
 }
 
+// ---------- Aktions-Knöpfe (nur für den eigenen Kolonisten) ----------
+const isMine = (p) => !!p?.user && live.isLinked() && p.user === live.getMe()?.user;
+let armedKey = null, armedTimer = null, busyKey = null;   // Bestätigung per zweitem Tippen / laufende Aktion
+
+/** Kleiner Knopf; bei confirm erst „Sicher?“, dann beim zweiten Tippen ausführen. Der Zustand kommt aus dem HTML (übersteht morph). */
+function actBtn(cmd, args, label, { confirm = false, title = '', cls = '', armedLabel = 'Sicher?' } = {}) {
+  const key = cmd + ' ' + args;
+  const busy = busyKey === key, armed = armedKey === key;
+  return `<button type="button" class="act-btn ${cls}${armed ? ' armed' : ''}" data-act="${esc(cmd)}" data-args="${esc(args)}"${confirm ? ' data-confirm="1"' : ''}${busy ? ' disabled' : ''} title="${esc(armed ? 'Zum Bestätigen noch einmal antippen' : title)}">${busy ? '…' : esc(armed ? armedLabel : label)}</button>`;
+}
+
+async function runAct(host, btn) {
+  const cmd = btn.dataset.act, args = btn.dataset.args, key = cmd + ' ' + args;
+  if (busyKey || btn.disabled) return;
+  if (btn.dataset.confirm && armedKey !== key) {
+    armedKey = key;
+    clearTimeout(armedTimer);
+    armedTimer = setTimeout(() => { if (armedKey === key) { armedKey = null; if (host.isConnected) repaint(host); } }, 4000);
+    repaint(host);
+    return;
+  }
+  clearTimeout(armedTimer);
+  armedKey = null; busyKey = key;
+  repaint(host);
+  try {
+    const msgs = await live.act(cmd, args);
+    toast(msgs.length ? msgs.join(' · ') : 'An RICS übergeben – Antwort im Chat', 7000);
+  } catch (e) {
+    toast(e.message, 5000);
+  } finally {
+    busyKey = null;
+    if (cmd === 'quirks') refreshOffers(host);
+    if (host.isConnected) repaint(host);
+  }
+}
+
+// ---------- Quirk-Angebote: eigene leichte Abfrage von /api/game, solange „Ziele“ offen ist ----------
+let quirkOffers = null, offersLoaded = false;
+
+function setOffers(host, g) {
+  const next = Array.isArray(g?.quirkOffers) ? g.quirkOffers : null;
+  const changed = !offersLoaded || JSON.stringify(next) !== JSON.stringify(quirkOffers);
+  quirkOffers = next; offersLoaded = true;
+  if (changed && host.isConnected) repaint(host);
+}
+
+function refreshOffers(host) {
+  live.getJson('/api/game').then((r) => { if (r.status === 200 && r.data) setOffers(host, r.data); }).catch(() => {});
+}
+
+function startGoalsPoll(host) {
+  const p = host._pawn;
+  if (host._goalsPoll || !p || activeSub(p) !== 'goals' || !isMine(p)) return;
+  host._goalsPoll = true;
+  live.poll({
+    path: '/api/game', every: 5000,
+    alive: () => {
+      const ok = host.isConnected && host._pawn && activeSub(host._pawn) === 'goals' && isMine(host._pawn);
+      if (!ok) host._goalsPoll = false;
+      return ok;
+    },
+    onResult: (r) => { if (r.status === 200 && r.data) setOffers(host, r.data); },
+  });
+}
+
+const RARITY = { common: 'Gewöhnlich', uncommon: 'Ungewöhnlich', rare: 'Selten', legendary: 'Legendär' };
+
+function offersHtml(p) {
+  const pts = Number(p.wants?.rewardPoints) || 0;
+  const list = quirkOffers.map((o, i) => {
+    const r = RARITY[o.rarity] ? o.rarity : 'common';
+    const key = 'q:' + o.label;
+    const open = openTrait === key;
+    const take = pts > 0 && live.isAllowed('quirks') ? actBtn('quirks', `nehmen ${i + 1}`, 'Nehmen', { confirm: true, title: 'Diese Eigenheit nehmen' }) : '';
+    return `<li class="offer"><div class="offer-row">
+        <button type="button" class="offer-main" data-trait="${esc(key)}" aria-expanded="${open}"><i class="rdot r-${r}" role="img" aria-label="${esc(RARITY[r])}" title="${esc(RARITY[r])}"></i><span>${esc(o.label)}</span></button>${take}</div>
+        ${open ? `<p class="trait-desc"><span class="muted">${esc(RARITY[r])}.</span> ${esc(o.desc || '')}</p>` : ''}</li>`;
+  }).join('');
+  return `<div class="qpts"><span>Belohnungspunkte</span> <b>${fmt(pts)}</b></div>
+    ${list ? `<ul class="goal-list offers">${list}</ul><p class="small muted trait-hint">Tippe auf ein Angebot für die Beschreibung.</p>` : '<p class="muted small" style="margin:8px 0 0">Gerade keine Angebote.</p>'}`;
+}
+
 function panelGoals(p) {
+  const mine = isMine(p);
   let html = '';
   if (p.wants) {
     const w = p.wants;
     const pct = w.needed > 0 ? (w.points / w.needed) * 100 : 0;
+    const canWant = mine && live.isAllowed('wants');
     html += section('Wünsche', `${barRow('Punkte', pct, `${fmt(w.points)} / ${fmt(w.needed)}`, 'acc', 'wide')}
-      ${(w.list || []).length ? `<ul class="goal-list">${w.list.map((x) => `<li><div><b>${esc(x.label)}</b>${x.desc ? `<div class="small muted">${esc(x.desc)}</div>` : ''}</div><span class="tag">+${esc(fmt(x.reward))}</span></li>`).join('')}</ul>` : '<p class="muted small" style="margin:8px 0 0">Gerade keine offenen Wünsche.</p>'}`);
+      ${(w.list || []).length ? `<ul class="goal-list">${w.list.map((x, i) => `<li><div><b>${esc(x.label)}</b>${x.desc ? `<div class="small muted">${esc(x.desc)}</div>` : ''}</div>
+        <span class="goal-side"><span class="tag">+${esc(fmt(x.reward))}</span>${canWant && x.rerollable ? actBtn('wants', `reroll ${i + 1}`, '↻ Tauschen', { confirm: true, title: 'Diesen Wunsch gegen einen neuen tauschen' }) : ''}</span></li>`).join('')}</ul>` : '<p class="muted small" style="margin:8px 0 0">Gerade keine offenen Wünsche.</p>'}`);
   }
-  if (p.quirks) {
-    html += section('Eigenheiten (Quirks)', p.quirks.length
-      ? `<ul class="goal-list">${p.quirks.map((x) => `<li><div><b>${esc(x.label)}</b>${x.desc ? `<div class="small muted">${esc(x.desc)}</div>` : ''}</div></li>`).join('')}</ul>`
-      : '<p class="muted small" style="margin:0">Keine.</p>');
+  const showOffers = mine && offersLoaded && quirkOffers != null;
+  if (p.quirks || showOffers) {
+    const have = p.quirks
+      ? (p.quirks.length ? `<ul class="goal-list">${p.quirks.map((x) => `<li><div><b>${esc(x.label)}</b>${x.desc ? `<div class="small muted">${esc(x.desc)}</div>` : ''}</div></li>`).join('')}</ul>` : '<p class="muted small" style="margin:0">Keine.</p>')
+      : '';
+    html += section('Eigenheiten (Quirks)', have + (showOffers ? `<h5 class="sub-h">Angebote</h5>${offersHtml(p)}` : ''));
   }
   if (p.aspirations) {
     const a = p.aspirations;
+    const canAsp = mine && live.isAllowed('aspirations');
     html += section('Lebensziele', `${barRow('Fortschritt', a.pct, `${Math.round(clamp(a.pct))} %`, 'acc', 'wide')}
-      ${(a.list || []).length ? `<ul class="goal-list">${a.list.map((x) => `<li class="${x.done ? 'done' : ''}"><div>${x.done ? '✓' : '○'} ${esc(x.label)}</div></li>`).join('')}</ul>` : ''}`);
+      ${(a.list || []).length ? `<ul class="goal-list">${a.list.map((x, i) => `<li class="${x.done ? 'done' : ''}"><div>${x.done ? '✓' : '○'} ${esc(x.label)}</div>
+        ${!x.done && canAsp ? `<span class="goal-side">${actBtn('aspirations', `reroll ${i + 1}`, '↻ Tauschen', { confirm: true, armedLabel: 'Teuer – sicher?', title: 'Lebensziel tauschen (kostet viel)' })}</span>` : ''}</li>`).join('')}</ul>` : ''}`);
   }
   return html || '<div class="empty">Keine Ziele.</div>';
+}
+
+// ---------- Isekai: Stufe, Stats, Skilltree ----------
+let trees;                                  // undefined = noch nicht geladen, null = nicht vorhanden, sonst Antwort von /api/isekai
+let treesLoading = false, treesRetryAt = 0;
+let selTree = null, selNode = null, showAllTrees = false;
+const NODE_TYPE = { start: 'Start', minor: 'Klein', notable: 'Bemerkenswert', keystone: 'Schlüsselknoten' };
+const NODE_R = { start: 15, minor: 9, notable: 13, keystone: 17 };
+const STATS = [['str', 'STR', 'Stärke'], ['dex', 'DEX', 'Geschicklichkeit'], ['vit', 'VIT', 'Vitalität'], ['int', 'INT', 'Intelligenz'], ['wis', 'WIS', 'Weisheit'], ['cha', 'CHA', 'Charisma']];
+
+function ensureTrees(host) {
+  if (trees !== undefined || treesLoading || Date.now() < treesRetryAt) return;
+  treesLoading = true;
+  live.getJson('/api/isekai').then((r) => {
+    if (r.status === 200 && Array.isArray(r.data?.trees)) trees = r.data;
+    else if (r.status === 404) trees = null;
+    else treesRetryAt = Date.now() + 15000;
+  }).catch(() => { treesRetryAt = Date.now() + 15000; })
+    .finally(() => { treesLoading = false; if (host.isConnected) repaint(host); });
+}
+
+const findTree = (s) => (trees?.trees || []).find((t) => t.id === s || t.className === s) || null;
+
+/** Wie weit ist ein Knoten per Kette erreichbar? Liefert { n, cost } (Knoten bis dahin, Gesamtkosten) oder null. */
+function chainTo(tree, k, node) {
+  const unl = new Set(k.unlocked || []), lrn = new Set(k.learnable || []);
+  const byId = new Map(tree.nodes.map((n) => [n.id, n]));
+  const adj = new Map();
+  const link = (a, b) => { if (!adj.has(a)) adj.set(a, []); adj.get(a).push(b); };
+  for (const [a, b] of tree.links || []) {
+    if (!byId.has(a) || !byId.has(b)) continue;
+    link(a, b); link(b, a);
+  }
+  const dist = new Map();
+  const q = [];
+  for (const id of byId.keys()) if (unl.has(id)) { dist.set(id, { n: 0, cost: 0 }); q.push(id); }
+  for (const id of byId.keys()) if (!unl.has(id) && lrn.has(id)) { dist.set(id, { n: 1, cost: Number(byId.get(id).cost) || 0 }); q.push(id); }
+  while (q.length) {
+    const id = q.shift(), d = dist.get(id);
+    for (const nb of adj.get(id) || []) {
+      if (dist.has(nb)) continue;
+      dist.set(nb, { n: d.n + 1, cost: d.cost + (Number(byId.get(nb).cost) || 0) });
+      q.push(nb);
+    }
+  }
+  return dist.get(node.id) || null;
+}
+
+function treeSvg(tree, k) {
+  const U = 54, PAD = 28, PADX = 44;
+  const ns = tree.nodes || [];
+  if (!ns.length) return '<div class="empty">Dieser Baum hat keine Knoten.</div>';
+  const xs = ns.map((n) => Number(n.x) || 0), ys = ns.map((n) => Number(n.y) || 0);
+  const minx = Math.min(...xs), maxx = Math.max(...xs), maxy = Math.max(...ys), miny = Math.min(...ys);
+  const innerW = (maxx - minx) * U + PADX * 2;
+  const W = Math.max(150, innerW), H = Math.max(110, (maxy - miny) * U + PAD * 2 + 10);
+  const pos = new Map(ns.map((n) => [n.id, [Math.round(((Number(n.x) || 0) - minx) * U + PADX + (W - innerW) / 2), Math.round((maxy - (Number(n.y) || 0)) * U + PAD)]]));
+  const unl = new Set(k.unlocked || []), lrn = new Set(k.learnable || []);
+  const stOf = (id) => (unl.has(id) ? 'learned' : lrn.has(id) ? 'learnable' : 'locked');
+  const lines = (tree.links || []).filter(([a, b]) => pos.has(a) && pos.has(b)).map(([a, b]) => {
+    const [x1, y1] = pos.get(a), [x2, y2] = pos.get(b);
+    const on = unl.has(a) && unl.has(b);
+    const half = !on && ((unl.has(a) && lrn.has(b)) || (unl.has(b) && lrn.has(a)));
+    return `<line class="it-link${on ? ' on' : half ? ' half' : ''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  }).join('');
+  const nodes = ns.map((n) => {
+    const [x, y] = pos.get(n.id);
+    const r = NODE_R[n.type] || 9;
+    const st = stOf(n.id);
+    const shape = n.type === 'keystone'
+      ? `<polygon class="it-shape" points="${x},${y - r} ${x + r},${y} ${x},${y + r} ${x - r},${y}"/>`
+      : `<circle class="it-shape" cx="${x}" cy="${y}" r="${r}"/>`;
+    const inner = n.type === 'start' ? `<circle class="it-core" cx="${x}" cy="${y}" r="${r - 6}"/>` : '';
+    const ring = st === 'learnable' ? `<circle class="it-ring" cx="${x}" cy="${y}" r="${r + 5}"/>` : '';
+    const sel = selNode === n.id ? `<circle class="it-sel" cx="${x}" cy="${y}" r="${r + 8}"/>` : '';
+    const lbl = n.type !== 'minor' ? `<text class="it-lbl" x="${x}" y="${y + r + 12}" text-anchor="middle">${esc(String(n.label || '').slice(0, 16))}</text>` : '';
+    const stLabel = st === 'learned' ? 'gelernt' : st === 'learnable' ? 'lernbar' : 'gesperrt';
+    return `<g class="it-node s-${st} t-${esc(n.type)}" data-node="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(`${n.label} (${NODE_TYPE[n.type] || n.type}, ${stLabel})`)}">
+      <circle class="it-hit" cx="${x}" cy="${y}" r="${Math.max(r + 6, 20)}"/>${sel}${ring}${shape}${inner}${lbl}</g>`;
+  }).join('');
+  return `<div class="isk-scroll"><svg class="it-svg" data-key="${esc(tree.id)}" viewBox="0 0 ${W} ${H}" style="--w:${W}px" role="group" aria-label="Skilltree ${esc(tree.className)}">${lines}${nodes}</svg></div>`;
+}
+
+function nodeInfoHtml(p, tree, k, skilling) {
+  const n = (tree.nodes || []).find((x) => x.id === selNode);
+  if (!n) return '<p class="small muted trait-hint">Tippe auf einen Knoten, um ihn zu lesen.</p>';
+  const unl = (k.unlocked || []).includes(n.id), lrn = (k.learnable || []).includes(n.id);
+  const st = unl ? 'Gelernt' : lrn ? 'Lernbar' : 'Gesperrt';
+  const chain = !unl && !lrn ? chainTo(tree, k, n) : null;
+  const can = isMine(p) && skilling && live.isAllowed('isekai') && !unl && (lrn || chain);
+  const cost = Number(n.cost) || 0;
+  const chainTxt = chain ? `<div class="small muted">Über ${chain.n} Knoten erreichbar (zusammen ${fmt(chain.cost)} Punkte).</div>` : '';
+  return `<div class="isk-info">
+    <div class="isk-info-h"><b>${esc(n.label)}</b><span class="tag">${esc(NODE_TYPE[n.type] || n.type)}</span><span class="isk-st st-${unl ? 'learned' : lrn ? 'learnable' : 'locked'}">${st}</span></div>
+    <div class="small muted">Kosten: ${fmt(cost)} Skillpunkt${cost === 1 ? '' : 'e'}</div>
+    ${n.desc ? `<p class="isk-desc">${esc(n.desc)}</p>` : ''}${chainTxt}
+    ${can ? `<div class="isk-learn">${actBtn('isekai', `lernen ${n.id}`, 'Lernen', { cls: 'primary', title: 'Diesen Knoten lernen' })}</div>` : ''}
+  </div>`;
+}
+
+function panelIsekai(p) {
+  const k = p.isekai;
+  if (!k) return '<div class="empty">Kein Isekai-Charakter.</div>';
+  const mine = isMine(p);
+  const skilling = k.canSkill ?? !!trees?.skilling; // je Kolonist freigegeben (Haken im Spiel) oder global
+  const xpPct = k.xpNext > 0 ? (k.xp / k.xpNext) * 100 : 100;
+  const tiles = STATS.map(([id, ab, name]) => {
+    const plus = mine && k.statPoints > 0 && skilling && live.isAllowed('isekai') ? actBtn('isekai', `stat ${id} 1`, '+', { cls: 'plus', title: `${name} um 1 erhöhen` }) : '';
+    return `<div class="isk-stat" title="${esc(name)}"><span class="k">${ab}</span><b>${fmt(k.stats?.[id])}</b>${plus}</div>`;
+  }).join('');
+  const head = `<div class="isk-head">
+      <span class="isk-lv">Stufe <b>${fmt(k.level)}</b></span>
+      ${k.rank ? `<span class="chip">${esc(k.rank)}</span>` : ''}${k.className ? `<span class="chip accent">${esc(k.className)}</span>` : ''}
+    </div>
+    ${barRow('EP', xpPct, `${fmt(k.xp)} / ${fmt(k.xpNext)}`, 'acc', 'wide')}
+    <div class="isk-pts"><span>Skillpunkte <b>${fmt(k.points)}</b></span><span>Stat-Punkte <b>${fmt(k.statPoints)}</b></span></div>
+    <div class="isk-stats">${tiles}</div>`;
+  let tree = '';
+  if (trees === undefined) tree = '<p class="muted small">Skilltree wird geladen …</p>';
+  else if (trees === null) tree = '<p class="muted small">Der Skilltree ist gerade nicht verfügbar.</p>';
+  else {
+    const all = trees.trees || [];
+    const own = [...new Set([k.tree, ...(k.entered || [])].filter(Boolean))].map(findTree).filter(Boolean);
+    const list = showAllTrees || !own.length ? all : own;
+    const cur = list.find((t) => t.id === selTree) || (own.length ? own[0] : null);
+    const chips = list.map((t) => `<button type="button" class="chip-btn" data-tree="${esc(t.id)}" aria-pressed="${cur?.id === t.id}">${esc(t.className)}</button>`).join('')
+      + (own.length ? `<button type="button" class="chip-btn ghost" data-alltrees="1" aria-pressed="${showAllTrees}">${showAllTrees ? 'Nur meine' : 'Alle Klassen'}</button>` : '');
+    tree = `<div class="isk-chips">${chips}</div>`
+      + (cur
+        ? `${cur.desc ? `<p class="small muted isk-tdesc">${esc(cur.desc)}${cur.gimmick ? ` <b>${esc(cur.gimmick)}</b>${cur.gimmickDesc ? ': ' + esc(cur.gimmickDesc) : ''}` : ''}</p>` : ''}${treeSvg(cur, k)}
+          <p class="small muted isk-legend"><i class="lg learned"></i>gelernt <i class="lg learnable"></i>lernbar <i class="lg locked"></i>gesperrt</p>${nodeInfoHtml(p, cur, k, skilling)}`
+        : '<p class="small muted trait-hint">Wähle eine Klasse, um ihren Baum anzusehen.</p>');
+  }
+  return section('Isekai', head) + section('Skilltree', tree);
 }
 
 function panelOrigin(p) {
@@ -550,7 +775,7 @@ function startLogPoll(host) {
   });
 }
 
-const PANELS = { overview: panelOverview, mood: panelMood, log: panelLog, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+const PANELS = { overview: panelOverview, mood: panelMood, log: panelLog, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 function subsHtml(p) {
   const vis = visibleSubs(p);
@@ -565,10 +790,26 @@ function characterHtml(p) {
   return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${PANELS[activeSub(p)](p)}</div></div>`;
 }
 
+/** Hintergrundabfragen, die nur zum gerade offenen Unterreiter gehören. */
+function afterPaint(host) {
+  startLogPoll(host);
+  startGoalsPoll(host);
+  if (host._pawn && activeSub(host._pawn) === 'isekai') ensureTrees(host);
+}
+
+/** Inhalt des offenen Unterreiters per morph neu zeichnen (kein Flackern, Zustand der Knöpfe bleibt). */
+function repaint(host) {
+  const p = host._pawn;
+  const panel = host.querySelector('.ch-panel');
+  if (!p || !panel) return;
+  morph(panel, PANELS[activeSub(p)](p));
+  afterPaint(host);
+}
+
 function mountCharacter(host, p) {
   host._pawn = p;
   morph(host, characterHtml(p));
-  startLogPoll(host);
+  afterPaint(host);
   if (host._bound) return;
   host._bound = true;
   host.addEventListener('click', (e) => {
@@ -576,21 +817,41 @@ function mountCharacter(host, p) {
     const sub = e.target.closest('[data-sub]');
     const tr = e.target.closest('[data-trait]');
     const lk = e.target.closest('[data-logkind]');
+    const ab = e.target.closest('[data-act]');
+    const tc = e.target.closest('[data-tree]');
+    const at = e.target.closest('[data-alltrees]');
+    const nd = e.target.closest('[data-node]');
+    if (pawn && ab) { runAct(host, ab); return; }
+    if (pawn && (tc || at || nd)) {
+      if (tc) { selTree = tc.dataset.tree; selNode = null; }
+      else if (at) showAllTrees = !showAllTrees;
+      else selNode = selNode === nd.dataset.node ? null : nd.dataset.node;
+      repaint(host);
+      return;
+    }
     if (pawn && lk) {
       logKind = lk.dataset.logkind; lsSet('ys-live-log', logKind);
       host.querySelector('.ch-panel').innerHTML = PANELS.log(pawn);
-      startLogPoll(host);
+      afterPaint(host);
       return;
     }
     if (!pawn || !(sub || tr)) return;
     if (sub) {
       curSub = sub.dataset.sub; lsSet(SUB_KEY, curSub);
       host.querySelectorAll('.ch-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.sub === curSub)));
+      host.querySelector('.ch-panel').innerHTML = PANELS[activeSub(pawn)](pawn);
+      afterPaint(host);
     } else {
       openTrait = openTrait === tr.dataset.trait ? null : tr.dataset.trait;
+      repaint(host);
     }
-    host.querySelector('.ch-panel').innerHTML = PANELS[activeSub(pawn)](pawn);
-    startLogPoll(host);
+  });
+  host.addEventListener('keydown', (e) => {
+    const nd = e.target.closest?.('[data-node]');
+    if (!nd || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
+    selNode = selNode === nd.dataset.node ? null : nd.dataset.node;
+    repaint(host);
   });
 }
 
@@ -670,10 +931,51 @@ export function kolonieView() {
   return user ? pawnDetail(user) : colonyList();
 }
 
+// Tiere: Gebundene immer einzeln, die übrigen bei vielen Tieren nach Art gruppiert
+const openKinds = new Set();
+const genderSym = (g) => (/^(w|f)/i.test(g || '') ? '♀' : /^m/i.test(g || '') ? '♂' : '');
+
+function animalRow(a) {
+  const name = a.name ? esc(a.name) : esc(a.kind);
+  const age = a.age != null ? `${fmt(Math.round(Number(a.age) * 10) / 10)} J.` : '';
+  const meta = [genderSym(a.gender), age].filter(Boolean).join(' ');
+  return `<div class="an${a.bond ? ' bonded' : ''}">
+    <div class="an-top"><b class="an-name">${name}</b>${a.name ? `<span class="small muted">${esc(a.kind)}</span>` : ''}<span class="small muted an-meta">${esc(meta)}</span></div>
+    ${bar(a.healthPct)}
+    ${a.bond ? `<div class="an-bond"><span class="heart" aria-hidden="true">♥</span> gebunden an <b>${esc(a.bond)}</b></div>` : ''}
+    ${a.master ? `<div class="small muted">Meister: ${esc(a.master)}</div>` : ''}
+  </div>`;
+}
+
+function animalsHtml(list) {
+  if (!Array.isArray(list)) return '';
+  if (!list.length) return '<p class="muted small" style="margin:0">Keine Tiere in der Kolonie.</p>';
+  const bonded = list.filter((a) => a.bond);
+  const rest = list.filter((a) => !a.bond);
+  let out = bonded.map(animalRow).join('');
+  if (list.length <= 8) return out + rest.map(animalRow).join('');
+  const groups = new Map();
+  rest.forEach((a) => { if (!groups.has(a.kind)) groups.set(a.kind, []); groups.get(a.kind).push(a); });
+  for (const [kind, arr] of [...groups].sort((x, y) => x[0].localeCompare(y[0], 'de'))) {
+    if (arr.length === 1) { out += animalRow(arr[0]); continue; }
+    const open = openKinds.has(kind);
+    const worst = Math.min(...arr.map((a) => Number(a.healthPct) || 0));
+    out += `<button type="button" class="an an-group" data-kind="${esc(kind)}" aria-expanded="${open}">
+      <div class="an-top"><b class="an-name">${esc(kind)} ×${arr.length}</b><span class="small muted an-meta">${open ? '▾' : '▸'}</span></div>
+      ${bar(worst)}<div class="small muted">schwächstes Tier: ${Math.round(worst)} %</div></button>`;
+    if (open) out += `<div class="an-sub">${arr.map(animalRow).join('')}</div>`;
+  }
+  return out;
+}
+
 function colonyList() {
   const html = `<div class="live-page">
     <div class="kol-head"><h2 class="section-title" style="margin:0">Die Kolonie</h2><span class="small muted" id="kol-count"></span></div>
-    <div id="kol-grid" class="kol-grid"><div class="empty" style="grid-column:1/-1">Lade …</div></div></div>`;
+    <div id="kol-grid" class="kol-grid"><div class="empty" style="grid-column:1/-1">Lade …</div></div>
+    <section id="tiere-sec" hidden>
+      <div class="kol-head" style="margin-top:22px"><h2 class="section-title" style="margin:0">Tiere</h2><span class="small muted" id="tiere-count"></span></div>
+      <div id="tiere" class="an-grid"></div>
+    </section></div>`;
   function bind(root) {
     const grid = root.querySelector('#kol-grid'), count = root.querySelector('#kol-count');
     let last = '';
@@ -688,10 +990,34 @@ function colonyList() {
         : `<div class="empty" style="grid-column:1/-1">Noch keine Kolonisten zu sehen. Mit <code>${esc(live.prefix())}join</code> im Chat kannst du die Erste oder der Erste sein.</div>`);
     };
     live.poll({
-      path: '/api/colony', every: 5000, alive: () => grid.isConnected,
+      path: '/api/colony', every: 2000, alive: () => grid.isConnected,
       onResult: (r) => { if (r.status === 200 && !r.unchanged) draw(r.data); },
     });
     whileMounted(grid, [['me', () => { last = ''; }]]);
+
+    // Tiere: eigene 5-s-Abfrage von /api/game, solange diese Ansicht sichtbar ist
+    const sec = root.querySelector('#tiere-sec'), box = root.querySelector('#tiere'), tcount = root.querySelector('#tiere-count');
+    let animals = null, alast = '';
+    const drawAnimals = (force) => {
+      if (!Array.isArray(animals)) return;
+      const key = JSON.stringify(animals);
+      if (!force && key === alast) return;
+      alast = key;
+      sec.hidden = false;
+      tcount.textContent = animals.length ? `${fmt(animals.length)} Tier${animals.length === 1 ? '' : 'e'}` : '';
+      morph(box, animalsHtml(animals));
+    };
+    live.poll({
+      path: '/api/game', every: 5000, alive: () => grid.isConnected,
+      onResult: (r) => { if (r.status === 200 && r.data && !r.unchanged) { animals = r.data.animalList; drawAnimals(false); } },
+    });
+    box.addEventListener('click', (e) => {
+      const g = e.target.closest('[data-kind]');
+      if (!g) return;
+      const k = g.dataset.kind;
+      if (openKinds.has(k)) openKinds.delete(k); else openKinds.add(k);
+      drawAnimals(true);
+    });
   }
   return { html, bind };
 }
@@ -703,7 +1029,7 @@ function pawnDetail(user) {
     const host = root.querySelector('#pd-host');
     let last = '';
     live.poll({
-      path: '/api/pawn/' + encodeURIComponent(user), every: 5000, alive: () => host.isConnected,
+      path: '/api/pawn/' + encodeURIComponent(user), every: 2000, alive: () => host.isConnected,
       onResult: (r) => {
         if (r.unchanged) return;
         const key = r.status + JSON.stringify(r.data);
@@ -722,7 +1048,43 @@ function pawnDetail(user) {
 // =====================================================================
 const KIND_LABEL = { threat: 'Gefahr', bad: 'Schlecht', good: 'Gut', neutral: 'Neutral' };
 
-function spielHtml(g) {
+// Forschung: aktuelles Projekt, je Reiter eine aufklappbare Zeile mit Projektliste
+const openRTabs = new Set(), shownLocked = new Set();
+let openProj = null;
+const PROJ = { 0: ['🔒', 'gesperrt'], 1: ['○', 'erforschbar'], 2: ['▶', 'läuft'], 3: ['✓', 'fertig'] };
+const PROJ_ORDER = { 2: 0, 1: 1, 3: 2, 0: 3 };
+
+function researchHtml(res, g) {
+  const cur = res ? res.current : g.research;
+  let html = cur
+    ? `<div class="rs-cur"><b>${esc(cur.label)}</b></div>${barRow('Stand', cur.pct, `${Math.round(clamp(cur.pct))} %`, 'acc', 'wide')}`
+    : '<p class="muted small" style="margin:0">Keine laufende Forschung.</p>';
+  if (!res?.tabs?.length) return html;
+  html += '<div class="rs-tabs">' + res.tabs.map((t) => {
+    const open = openRTabs.has(t.label);
+    const pct = t.total > 0 ? (t.done / t.total) * 100 : 0;
+    let body = '';
+    if (open) {
+      const all = [...(t.projects || [])].sort((a, b) => PROJ_ORDER[a.state] - PROJ_ORDER[b.state]);
+      const locked = all.filter((x) => x.state === 0);
+      const showL = shownLocked.has(t.label);
+      const vis = showL ? all : all.filter((x) => x.state !== 0);
+      body = `<ul class="rs-list">${vis.map((x) => {
+        const key = t.label + '|' + x.label;
+        const [ico, name] = PROJ[x.state] || PROJ[0];
+        const o = openProj === key;
+        return `<li><button type="button" class="rs-proj st-${x.state in PROJ ? x.state : 0}" data-rproj="${esc(key)}" aria-expanded="${o}" title="${esc(name)}">
+          <span class="rs-ico" aria-hidden="true">${ico}</span><span class="rs-pl">${esc(x.label)}</span>${x.state === 2 ? `<span class="rs-pct">${Math.round(clamp(x.pct))} %</span>` : ''}<span class="sr-only">${esc(name)}</span></button>
+          ${o && x.desc ? `<p class="trait-desc">${esc(x.desc)}</p>` : ''}</li>`;
+      }).join('')}</ul>${locked.length ? `<button type="button" class="linklike rs-locked" data-rlocked="${esc(t.label)}">${showL ? 'Gesperrte ausblenden' : `+${locked.length} gesperrt`}</button>` : ''}`;
+    }
+    return `<div class="rs-tab-wrap"><button type="button" class="rs-tab" data-rtab="${esc(t.label)}" aria-expanded="${open}">
+      <span class="rs-name">${esc(t.label)}</span><span class="rs-count">${fmt(t.done)}/${fmt(t.total)}</span>${bar(pct, 'acc')}<span class="rs-chev" aria-hidden="true">${open ? '▾' : '▸'}</span></button>${body}</div>`;
+  }).join('') + '</div>';
+  return html;
+}
+
+function spielHtml(g, res) {
   const hh = String(Math.floor(Number(g.hour) || 0)).padStart(2, '0');
   const stat = (k, v, sub) => `<div class="gstat"><span class="gk">${esc(k)}</span><b class="gv">${esc(v)}</b><span class="gs">${esc(sub || '')}</span></div>`;
   const stats = [
@@ -737,12 +1099,11 @@ function spielHtml(g) {
   const evs = (g.events || []).length
     ? `<ul class="gevents">${g.events.map((e) => `<li class="k-${KIND_LABEL[e.kind] ? esc(e.kind) : 'neutral'}"><span class="gdot" title="${esc(KIND_LABEL[e.kind] || 'Neutral')}"></span><span class="gl">${esc(e.label)}</span><span class="small muted ga">${esc(e.ago)}</span></li>`).join('')}</ul>`
     : '<p class="muted small" style="margin:0">Noch nichts passiert.</p>';
-  const res = g.research ? barRow('Aktuell', g.research.pct, `${Math.round(clamp(g.research.pct))} %`, 'acc', 'wide') + `<p style="margin:6px 0 0">${esc(g.research.label)}</p>` : '<p class="muted small" style="margin:0">Keine laufende Forschung.</p>';
   return `<div class="gstats">${stats}</div>
     <div class="grid cols-2" style="margin-top:12px">
       <section class="card ch-sec"><h4>Gerade los</h4>${conds}</section>
       <section class="card ch-sec"><h4>Was zuletzt passiert ist</h4>${evs}</section>
-      <section class="card ch-sec"><h4>Forschung</h4>${res}</section>
+      <section class="card ch-sec rs-card" style="grid-column:1/-1"><h4>Forschung</h4>${researchHtml(res, g)}</section>
       <section class="card ch-sec"><h4>Erzähler</h4><p style="margin:0"><b>${esc(g.storyteller)}</b></p><p class="muted small" style="margin:4px 0 0">Schwierigkeit: ${esc(g.difficulty)}</p></section>
     </div>`;
 }
@@ -751,16 +1112,41 @@ export function spielView() {
   const html = `<div class="live-page"><div id="spiel-host"><div class="empty">Lade …</div></div></div>`;
   function bind(root) {
     const host = root.querySelector('#spiel-host');
-    let last = '';
+    let game = null, research = null, last = '';
+    const draw = (force) => {
+      if (!game) return;
+      const key = JSON.stringify([game, research]);
+      if (!force && key === last) return;
+      last = key;
+      morph(host, spielHtml(game, research));
+    };
     live.poll({
-      path: '/api/game', every: 10000, alive: () => host.isConnected,
+      path: '/api/game', every: 5000, alive: () => host.isConnected,
       onResult: (r) => {
         if (r.unchanged || r.status !== 200 || !r.data) return;
-        const key = JSON.stringify(r.data);
-        if (key === last) return;
-        last = key;
-        morph(host, spielHtml(r.data));
+        game = r.data;
+        draw(false);
       },
+    });
+    // Forschung: eigene Abfrage alle 30 s, nur solange „Spiel“ offen ist
+    live.poll({
+      path: '/api/research', every: 30000, alive: () => host.isConnected,
+      onResult: (r) => {
+        if (r.unchanged) return;
+        if (r.status === 200 && r.data) research = r.data;
+        else if (r.status === 404) research = null;
+        else return;
+        draw(false);
+      },
+    });
+    host.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-rtab]'), pj = e.target.closest('[data-rproj]'), lk = e.target.closest('[data-rlocked]');
+      if (!t && !pj && !lk) return;
+      const flip = (set, k) => { if (set.has(k)) set.delete(k); else set.add(k); };
+      if (t) flip(openRTabs, t.dataset.rtab);
+      else if (lk) flip(shownLocked, lk.dataset.rlocked);
+      else openProj = openProj === pj.dataset.rproj ? null : pj.dataset.rproj;
+      draw(true);
     });
   }
   return { html, bind };

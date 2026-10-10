@@ -177,13 +177,20 @@ function startMe() {
   if (meStop) { meStop(); meStop = null; }
   if (!S.live || !S.token) return;
   meStop = poll({
-    path: '/api/me', every: 2000, auth: true,
+    path: '/api/me', every: 1000, auth: true,
     onResult: (r) => {
       if (r.status !== 200 || !r.data || r.unchanged) return;
       S.me = r.data;
       emit('me', r.data);
     },
   });
+}
+
+/** Einmaliger Abruf (ohne Wiederholung), z. B. für statische Daten wie /api/isekai. Gibt { status, data } zurück; wirft bei Netzfehler. */
+export async function getJson(path) {
+  if (!S.live) throw Object.assign(new Error('offline'), { net: true });
+  const r = await api(path, { auth: false });
+  return { status: r.status, data: r.data };
 }
 
 /** Sofort neu laden (z. B. nach einem Kauf). */

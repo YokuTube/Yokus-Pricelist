@@ -9,9 +9,14 @@ Verhalten:
 - Muenzen steigen alle 10 s um 50.
 - Aktionen liefern nach 1 s eine Beispiel-Antwort. Zum Testen der Fehlerfaelle:
   Argument "zuschnell" -> 429, "nospiel" -> 409, Befehl ausserhalb von "allowed" -> 400.
+- Neu: /api/research (3 Reiter), /api/isekai (2 Baeume), GameInfo.animalList/quirkOffers/isekaiSkilling, bonds,
+  wants.rewardPoints, Isekai-Daten bei "yoku" (Klingenmeister) und "luna_88" (noch ohne Klasse). Aktionen wants/aspirations/
+  quirks/isekai antworten mit Beispieltext; bei "yoku" aendern "isekai lernen/stat" und "quirks nehmen" die Daten wirklich.
+  Mehr Tiere (Gruppierung testen): Umgebungsvariable FAKE_MANY=1.
 - Pawn "mira_spielt" ist niedergestreckt und blutet, "eddi_tv" schlaeft und hat keine Wuensche/Quirks (null).
 """
 import hashlib
+import os
 import json
 import re
 import secrets
@@ -25,7 +30,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 ORIGINS = {"https://yokutube.github.io", "http://localhost:8765", "http://127.0.0.1:8765"}
-ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat"]
+ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai"]
 ARGS_RE = re.compile(r"^[\w \-.'#]{0,80}$", re.UNICODE)
 
 LOCK = threading.Lock()
@@ -138,6 +143,138 @@ PAWNS = {
 ALLOWED_USERS = {"yoku": "Yoku"}
 
 
+# ---------- Isekai-Baeume ----------
+def tree_nodes(spec):
+    return [{"id": i, "label": l, "desc": d, "type": t, "x": x, "y": y, "cost": c} for (i, l, d, t, x, y, c) in spec]
+
+
+TREES = {
+    "krieger": {
+        "id": "krieger", "className": "Klingenmeister",
+        "desc": "Nahkampf-Klasse: wer zuerst zuschlägt, gewinnt.", "gimmick": "Klingentanz",
+        "gimmickDesc": "Jeder Treffer im Nahkampf erhöht kurz das Angriffstempo.",
+        "nodes": tree_nodes([
+            ("kr_start", "Kämpferblut", "Der Anfang jedes Klingenmeisters: +5 % Nahkampfschaden.", "start", 0, 0, 0),
+            ("kr_a1", "Stahlhaut", "+4 % Schadensreduktion.", "minor", -1, 1, 1),
+            ("kr_a2", "Harte Hiebe", "+6 % Nahkampfschaden.", "minor", 1, 1, 1),
+            ("kr_a3", "Eiserne Haut", "Wunden heilen 20 % schneller, Rüstung wirkt besser.", "notable", -2, 2, 2),
+            ("kr_a4", "Kampfrausch", "Nach jedem Treffer: +10 % Tempo für 5 Sekunden.", "notable", 0, 2, 2),
+            ("kr_a5", "Schneller Schritt", "+8 % Bewegungstempo.", "minor", 2, 2, 1),
+            ("kr_a6", "Zähigkeit", "+10 Lebenspunkte.", "minor", -1, 3, 1),
+            ("kr_a7", "Wirbelschlag", "Chance auf einen Rundumschlag gegen mehrere Gegner.", "minor", 1, 3, 1),
+            ("kr_a8", "Bollwerk", "Blockt Fernkampfschaden zu 15 %.", "notable", -2, 4, 2),
+            ("kr_a9", "Unbesiegbar", "Fällt dein Leben unter 20 %, wirst du einmal pro Tag vollständig geheilt.", "keystone", 0, 4, 4),
+            ("kr_a10", "Klingenorkan", "Nahkampfangriffe treffen alle Gegner im Umkreis.", "notable", 2, 4, 3),
+            ("kr_a11", "Letzter Atemzug", "Im Niedergestreckt-Zustand: kurz unverwundbar.", "minor", 0, 5, 1),
+        ]),
+        "links": [["kr_start", "kr_a1"], ["kr_start", "kr_a2"], ["kr_a1", "kr_a3"], ["kr_a1", "kr_a4"], ["kr_a2", "kr_a4"],
+                  ["kr_a2", "kr_a5"], ["kr_a3", "kr_a6"], ["kr_a4", "kr_a6"], ["kr_a4", "kr_a7"], ["kr_a5", "kr_a7"],
+                  ["kr_a6", "kr_a8"], ["kr_a6", "kr_a9"], ["kr_a7", "kr_a9"], ["kr_a7", "kr_a10"], ["kr_a9", "kr_a11"]],
+    },
+    "magier": {
+        "id": "magier", "className": "Äthermagier",
+        "desc": "Fernkampf und Zauber aus sicherer Entfernung.", "gimmick": None, "gimmickDesc": None,
+        "nodes": tree_nodes([
+            ("mg_start", "Funke des Äthers", "Du spürst den Äther: +5 % Zauberkraft.", "start", 0, 0, 0),
+            ("mg_b1", "Konzentration", "+8 % Zauberkraft.", "minor", -2, 1, 1),
+            ("mg_b2", "Schneller Zauber", "-10 % Zauberdauer.", "minor", 0, 1, 1),
+            ("mg_b3", "Flüsternde Winde", "+6 % Reichweite.", "minor", 2, 1, 1),
+            ("mg_b4", "Feuerball", "Schaltet den Feuerball frei.", "notable", -3, 2, 2),
+            ("mg_b5", "Blitzschlag", "Schaltet den Blitzschlag frei.", "notable", -1, 2, 2),
+            ("mg_b6", "Eisnadel", "Schaltet die Eisnadel frei.", "notable", 1, 2, 2),
+            ("mg_b7", "Manafluss", "Mana regeneriert 25 % schneller.", "minor", 3, 2, 1),
+            ("mg_b8", "Sturmruf", "Mehrere Blitze auf einmal.", "minor", -2, 3, 1),
+            ("mg_b9", "Frostpanzer", "Eis schützt dich vor Schaden.", "minor", 2, 3, 1),
+            ("mg_b10", "Erzmagier", "Alle Zauber kosten 30 % weniger Mana.", "keystone", 0, 4, 5),
+            ("mg_b11", "Ätherriss", "Teleportiert dich kurz.", "notable", 0, 3, 3),
+        ]),
+        "links": [["mg_start", "mg_b1"], ["mg_start", "mg_b2"], ["mg_start", "mg_b3"], ["mg_b1", "mg_b4"], ["mg_b1", "mg_b5"],
+                  ["mg_b2", "mg_b5"], ["mg_b2", "mg_b6"], ["mg_b3", "mg_b6"], ["mg_b3", "mg_b7"], ["mg_b5", "mg_b8"],
+                  ["mg_b6", "mg_b9"], ["mg_b2", "mg_b11"], ["mg_b11", "mg_b10"], ["mg_b8", "mg_b10"], ["mg_b9", "mg_b10"]],
+    },
+}
+
+
+def isekai_data(tree, level, xp, xp_next, rank, points, stat_points, stats, unlocked):
+    d = {"level": level, "xp": xp, "xpNext": xp_next, "rank": rank, "tree": tree,
+         "className": TREES[tree]["className"] if tree else None, "entered": [tree] if tree else [],
+         "points": points, "statPoints": stat_points, "stats": stats, "unlocked": unlocked, "learnable": []}
+    recompute_learnable(d)
+    return d
+
+
+def recompute_learnable(d):
+    """Lernbar = direkter Nachbar eines gelernten Knotens (mit genug Punkten); ohne Klasse die Startknoten."""
+    if not d["tree"]:
+        d["learnable"] = [t["nodes"][0]["id"] for t in TREES.values()]
+        return
+    t = TREES[d["tree"]]
+    cost = {n["id"]: n["cost"] for n in t["nodes"]}
+    out = set()
+    for a, b in t["links"]:
+        for x, y in ((a, b), (b, a)):
+            if x in d["unlocked"] and y not in d["unlocked"]:
+                out.add(y)
+    d["learnable"] = [n["id"] for n in t["nodes"] if n["id"] in out and cost[n["id"]] <= d["points"]]
+
+
+PAWNS["yoku"]["isekai"] = isekai_data("krieger", 7, 340, 500, "D-Rang", 3, 2,
+                                      {"str": 12, "dex": 9, "vit": 11, "int": 6, "wis": 7, "cha": 8},
+                                      ["kr_start", "kr_a1", "kr_a2", "kr_a4"])
+PAWNS["luna_88"]["isekai"] = isekai_data(None, 2, 40, 120, None, 1, 0,
+                                         {"str": 5, "dex": 6, "vit": 6, "int": 9, "wis": 8, "cha": 7}, [])
+for _p in PAWNS.values():
+    _p.setdefault("isekai", None)
+    _p["bonds"] = {"yoku": ["Rex (Husky)"], "luna_88": ["Mieze (Katze)"]}.get(_p["user"], [])
+    if _p["wants"]:
+        _p["wants"]["rewardPoints"] = 3 if _p["user"] == "yoku" else 0
+        for _i, _w in enumerate(_p["wants"]["list"]):
+            _w["rerollable"] = _i % 2 == 0
+
+# ---------- Tiere, Quirk-Angebote, Forschung ----------
+ANIMALS = [
+    {"name": "Rex", "kind": "Husky", "gender": "Männlich", "age": 4.2, "healthPct": 96, "bond": "Kira", "master": "Kira"},
+    {"name": "Mieze", "kind": "Katze", "gender": "Weiblich", "age": 2.1, "healthPct": 88, "bond": "Luna", "master": None},
+    {"name": "Bruno", "kind": "Alpaka", "gender": "Männlich", "age": 5.0, "healthPct": 100, "bond": None, "master": "Luna"},
+    {"name": None, "kind": "Huhn", "gender": "Weiblich", "age": 1.3, "healthPct": 74, "bond": None, "master": None},
+    {"name": None, "kind": "Huhn", "gender": "Weiblich", "age": 0.8, "healthPct": 100, "bond": None, "master": None},
+    {"name": "Schnauzi", "kind": "Wildschwein", "gender": "Männlich", "age": 3.4, "healthPct": 35, "bond": None, "master": None},
+]
+if os.environ.get("FAKE_MANY"):
+    ANIMALS += [{"name": None, "kind": "Huhn", "gender": "Weiblich", "age": 1.0 + i / 10, "healthPct": 60 + i * 5, "bond": None, "master": None} for i in range(5)]
+    ANIMALS += [{"name": None, "kind": "Alpaka", "gender": "Männlich", "age": 2.0 + i, "healthPct": 90, "bond": None, "master": "Luna" if i == 0 else None} for i in range(3)]
+
+QUIRK_OFFERS = [
+    {"label": "Frühaufsteher", "desc": "Braucht weniger Schlaf und ist morgens besonders fit.", "rarity": "common"},
+    {"label": "Glückskind", "desc": "Hin und wieder fällt ein kleines Geschenk vom Himmel.", "rarity": "uncommon"},
+    {"label": "Drachenblut", "desc": "Feuer kann dir deutlich weniger anhaben.", "rarity": "rare"},
+    {"label": "Unsterblicher Funke", "desc": "Einmal pro Jahr kehrst du aus dem Tod zurück.", "rarity": "legendary"},
+]
+
+
+def research_info():
+    def pr(label, state, pct=0, desc=""):
+        return {"label": label, "state": state, "pct": pct, "desc": desc or "Beschreibung zu " + label + "."}
+    return {
+        "current": {"label": "Elektrizität", "pct": 62},
+        "tabs": [
+            {"label": "Grundlagen", "done": 6, "total": 9, "projects": [
+                pr("Steinmetzkunst", 3), pr("Töpferei", 3), pr("Kochen", 3), pr("Pflanzenanbau", 3), pr("Schmiedekunst", 3), pr("Holzverarbeitung", 3),
+                pr("Elektrizität", 2, 62, "Strom für Lampen, Kühlschrank und mehr."), pr("Batterien", 1), pr("Solarenergie", 0)]},
+            {"label": "Waffen", "done": 2, "total": 8, "projects": [
+                pr("Bögen", 3), pr("Einfache Gewehre", 3), pr("Granaten", 1, 0, "Wurfwaffe mit großem Schaden."), pr("Mörser", 1),
+                pr("Sturmgewehre", 0), pr("Raketenwerfer", 0), pr("Plasmawaffen", 0), pr("Monoschwerter", 0)]},
+            {"label": "Medizin", "done": 3, "total": 7, "projects": [
+                pr("Kräutermedizin", 3), pr("Verbandszeug", 3), pr("Prothesen", 3), pr("Medizinische Maschinen", 1),
+                pr("Bionik", 0), pr("Organtransplantation", 0), pr("Neuroimplantate", 0)]},
+        ],
+    }
+
+
+def isekai_info():
+    return {"skilling": True, "trees": list(TREES.values())}
+
+
 def png(seed):
     """Kleines generiertes PNG (64x64) - Verlauf mit einer Figur aus Kreisen."""
     w = h = 64
@@ -191,6 +328,9 @@ def game_info():
             {"label": "Pawn ist krank: Grippe", "kind": "bad", "ago": "vor 1 Tag", "day": 36},
             {"label": "Wanderer schließt sich an", "kind": "good", "ago": "vor 2 Tagen", "day": 35},
             {"label": "Wetterwechsel", "kind": "neutral", "ago": "vor 3 Tagen", "day": 34}],
+        "animalList": ANIMALS,
+        "quirkOffers": QUIRK_OFFERS,
+        "isekaiSkilling": True,
     }
 
 
@@ -199,6 +339,40 @@ def ticker():
         time.sleep(10)
         with LOCK:
             STATE["coins"] += 50
+
+
+def fake_effect(user, cmd, args):
+    """Beispielantworten der neuen Knoepfe; fuer "yoku" aendern Lernen/Stat/Quirk die Daten wirklich."""
+    pw = PAWNS.get(user)
+    a = args.split()
+    if cmd == "wants" and a[:1] == ["reroll"]:
+        return "@%s Wunsch %s getauscht: Neuer Wunsch – Bau ein Beet (+20)." % (user, a[1] if len(a) > 1 else "?")
+    if cmd == "aspirations" and a[:1] == ["reroll"]:
+        return "@%s Lebensziel %s getauscht (−250 Coins)." % (user, a[1] if len(a) > 1 else "?")
+    if cmd == "quirks" and a[:1] == ["nehmen"] and len(a) > 1 and a[1].isdigit() and pw and pw["wants"]:
+        i = int(a[1]) - 1
+        if 0 <= i < len(QUIRK_OFFERS) and pw["wants"]["rewardPoints"] > 0:
+            q = QUIRK_OFFERS.pop(i)
+            pw["wants"]["rewardPoints"] -= 1
+            if pw["quirks"] is not None:
+                pw["quirks"].append({"label": q["label"], "desc": q["desc"]})
+            return "@%s Eigenheit genommen: %s." % (user, q["label"])
+        return "@%s Das Angebot gibt es nicht (mehr) oder keine Punkte." % user
+    if cmd == "isekai" and pw and pw["isekai"]:
+        d = pw["isekai"]
+        if a[:1] == ["lernen"] and len(a) > 1:
+            node = next((n for t in TREES.values() for n in t["nodes"] if n["id"] == a[1]), None)
+            if node and a[1] in d["learnable"] and d["points"] >= node["cost"]:
+                d["unlocked"].append(a[1])
+                d["points"] -= node["cost"]
+                recompute_learnable(d)
+                return "@%s Gelernt: %s (−%d Skillpunkte)." % (user, node["label"], node["cost"])
+            return "@%s %s lässt sich gerade nicht lernen." % (user, a[1])
+        if a[:1] == ["stat"] and len(a) > 1 and a[1] in d["stats"] and d["statPoints"] > 0:
+            d["stats"][a[1]] += 1
+            d["statPoints"] -= 1
+            return "@%s %s steigt auf %d." % (user, a[1].upper(), d["stats"][a[1]])
+    return None
 
 
 class H(BaseHTTPRequestHandler):
@@ -263,6 +437,10 @@ class H(BaseHTTPRequestHandler):
             return self.js(200, {"live": True, "colony": "Neu-Yoku", "prefix": "!", "allowed": ALLOWED})
         if p == "/api/game":
             return self.js(200, game_info())
+        if p == "/api/research":
+            return self.js(200, research_info())
+        if p == "/api/isekai":
+            return self.js(200, isekai_info())
         if p == "/api/colony":
             return self.js(200, {"pawns": [summary(x) for x in PAWNS.values()]})
         if p.startswith("/api/log/"):
@@ -349,6 +527,7 @@ class H(BaseHTTPRequestHandler):
             with LOCK:
                 STATE["coins"] -= 15
                 msg = "@%s Erledigt: !%s %s (−15 Coins)" % (user, cmd, args)
+                msg = fake_effect(user, cmd, args) or msg
             ACTIONS[aid] = {"created": time.time(), "messages": [msg.replace("  ", " ")] if cmd != "event" else []}
             return self.js(202, {"id": aid}, cache=False)
         self.js(404, {"error": "Nicht gefunden."}, cache=False)
