@@ -1,41 +1,40 @@
 /* Yokus Store – ruhiges Design. Standard: dunkles Blau. Helles Design über den Umschalter. */
 
 :root {
-  /* Yoku-Stil: ruhiges Dunkelblau, gebrochenes Weiß (reines Weiß auf sattem Blau wirkt unscharf) */
-  --bg: #10151f;
-  --surface: #171e2a;
-  --surface-2: #1f2836;
-  --text: #e8edf4;
-  --muted: #b4bfcf;
-  --border: #2e3a4d;
-  --accent: #5aa6f0;
-  --accent-soft: #1b3350;
-  --accent-text: #04111f;
-  --good: #7fd18b;
-  --neutral: #a3b4c7;
-  --bad: #f0b45a;
-  --doom: #ef7b72;
-  --coin: #c9d4e3;
+  --bg: #1b1916;
+  --surface: #25221e;
+  --surface-2: #2f2b26;
+  --text: #ece4d6;
+  --muted: #b3a791;
+  --border: #3d372f;
+  --accent: #d99a4e;
+  --accent-soft: #3a2c1b;
+  --accent-text: #1b1409;
+  --good: #8fbf7a;
+  --neutral: #a7b4a8;
+  --bad: #e0a653;
+  --doom: #e07a6b;
+  --coin: #c9ced3;
   --radius: 4px;
   --head-font: "Bahnschrift", "DIN Alternate", "Arial Narrow", system-ui, sans-serif;
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
-  --bg: #eef3fa;
-  --surface: #ffffff;
-  --surface-2: #e3ebf6;
-  --text: #0f1d33;
-  --muted: #52627a;
-  --border: #c8d5e8;
-  --accent: #1f6fd1;
-  --accent-soft: #dbe9fb;
+  --bg: #efe8d9;
+  --surface: #f8f3e8;
+  --surface-2: #ebe3d1;
+  --text: #2a241b;
+  --muted: #6b5f4c;
+  --border: #d3c7ae;
+  --accent: #a2571a;
+  --accent-soft: #f0dfc4;
   --accent-text: #ffffff;
-  --good: #2f7a3a;
-  --neutral: #4f6175;
-  --bad: #a3650c;
-  --doom: #b8332a;
-  --coin: #6b7b90;
+  --good: #3f7a2c;
+  --neutral: #5d6b5e;
+  --bad: #9a5d0c;
+  --doom: #b0392b;
+  --coin: #7c8590;
   color-scheme: light;
 }
 
@@ -564,7 +563,7 @@ body:has(dialog.live-dialog[open]) { overflow: hidden; }
   border: 0; cursor: pointer; font: inherit; padding: 16px; text-align: center;
 }
 .stream-start span:not(.stream-start-icon) { font-family: var(--head-font); font-size: 1.15rem; }
-.stream-start small { color: #c8d4e6; max-width: 32ch; }
+.stream-start small { color: #d8d0c2; max-width: 32ch; }
 .stream-start-icon {
   display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%;
   background: var(--accent); color: var(--accent-text); font-size: 1.6rem; padding-left: 4px;
@@ -1031,3 +1030,12 @@ button.sty-chip:hover { border-color: var(--accent); }
 .ideo-pre.imp-high .trait { border-color: var(--bad); }
 .ideo-pre.imp-medium .trait { border-color: var(--accent); }
 .ideo-item { text-align: left; }
+
+/* Abstimmung einklappbar */
+.vote-card { position: fixed; }
+.vote-card .vote-min { position: absolute; top: 6px; right: 6px; width: 36px; height: 32px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); cursor: pointer; }
+.vote-card.min { width: auto; max-height: none; padding: 0; border-top: 0; background: transparent; box-shadow: none; overflow: visible; }
+.vote-pill { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border: 1px solid var(--accent); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }
+@media (max-width: 640px) {
+  .vote-card.min { left: 10px; right: auto; bottom: 10px; border-radius: 999px; }
+}

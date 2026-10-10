@@ -392,6 +392,19 @@ function startVoteTick() {
 }
 function stopVoteTick() { clearInterval(voteTick); voteTick = null; }
 
+// Einklappen: pro Abstimmung gemerkt; am Handy startet sie eingeklappt, nach eigener Stimme klappt sie ein.
+const voteSig = () => (voteState?.options || []).map((o) => o.label).join('|');
+function voteMinimized() {
+  let st = null;
+  try { st = JSON.parse(sessionStorage.getItem('ys-vote-min') || 'null'); } catch { /* egal */ }
+  if (st && st.sig === voteSig()) return st.min;
+  return window.matchMedia?.('(max-width: 640px)').matches ?? false;
+}
+function setVoteMin(min) {
+  try { sessionStorage.setItem('ys-vote-min', JSON.stringify({ sig: voteSig(), min })); } catch { /* egal */ }
+  renderVote();
+}
+
 function renderVote() {
   if (!voteEl) return;
   if (!voteState?.open || !live.isLive()) {
@@ -399,7 +412,15 @@ function renderVote() {
     return;
   }
   voteEl.hidden = false;
-  morph(voteEl, voteHtml(voteState));
+  const min = voteMinimized();
+  voteEl.classList.toggle('min', min);
+  if (min) {
+    stopVoteTick();
+    const left = Math.max(0, Math.round((voteState.secondsLeft || 0) - (Date.now() - voteAt) / 1000));
+    morph(voteEl, `<button type="button" class="vote-pill" data-vote-toggle aria-label="Abstimmung aufklappen">🗳 Abstimmung · noch ${left} s <span aria-hidden="true">▴</span></button>`);
+    return;
+  }
+  morph(voteEl, `<button type="button" class="vote-min" data-vote-toggle aria-label="Abstimmung einklappen" title="Einklappen">▾</button>${voteHtml(voteState)}`);
   startVoteTick();
 }
 
@@ -411,6 +432,7 @@ async function castVote(n) {
     const msgs = await live.act('vote', String(n));
     rememberVote(opts, n);
     toast(msgs.length ? msgs.join(' · ') : `Stimme ${n} abgegeben`, 4000);
+    setVoteMin(true); // nach der eigenen Stimme Platz machen
   } catch (e) {
     toast(e.message, 5000);
   } finally {
@@ -589,6 +611,7 @@ export function initLiveUi() {
   voteEl.setAttribute('aria-label', 'Laufende Abstimmung');
   document.body.appendChild(voteEl);
   voteEl.addEventListener('click', (e) => {
+    if (e.target.closest('[data-vote-toggle]')) { setVoteMin(!voteMinimized()); return; }
     const b = e.target.closest('[data-vote]');
     if (b && !b.disabled) castVote(Number(b.dataset.vote));
   });
