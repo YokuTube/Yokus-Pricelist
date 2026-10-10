@@ -25,9 +25,9 @@ export function cap(s) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
-/** Name → Schreibweise für Befehle (klein, Unterstriche). */
+/** Name → Schreibweise für Befehle (klein, zusammengeschrieben – RICS findet Namen mit Unterstrich nicht). */
 export function slug(s) {
-  return plain(s).toLowerCase().replace(/[^a-z0-9äöüß]+/g, '_').replace(/^_+|_+$/g, '');
+  return plain(s).toLowerCase().replace(/[^a-z0-9äöüß]+/g, '');
 }
 
 // Alltagsbegriffe der Zuschauer -> was in den (teils englischen) Daten steht

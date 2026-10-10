@@ -47,7 +47,9 @@ export async function loadAll() {
 // Spieler tippen einfach "!buy beer 5". Wir nehmen deshalb den lesbaren Namen (klein, Leerzeichen -> _),
 // solange er eindeutig und unkompliziert ist. Sonst den technischen DefName (der geht immer).
 function assignCmdNames(list, labelOf) {
-  const simple = (s) => (/^[A-Za-z0-9 ]+$/.test(s.trim()) ? s.trim().toLowerCase().replace(/ +/g, '_') : '');
+  // RICS sucht Items per Name OHNE Leerzeichen (graniteblocks) oder exaktem DefName. Leerzeichen raus, Satzzeichen bleiben;
+  // bei ungewöhnlichen Zeichen oder doppelten Namen den DefName nehmen (der passt immer, auch mit Unterstrich).
+  const simple = (s) => (/^[A-Za-z0-9 '\-.]+$/.test(s.trim()) ? s.trim().toLowerCase().replace(/ +/g, '') : '');
   const counts = new Map();
   list.forEach((x) => { const t = simple(plain(labelOf(x))); if (t) counts.set(t, (counts.get(t) || 0) + 1); });
   list.forEach((x) => {

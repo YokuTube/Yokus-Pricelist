@@ -146,7 +146,7 @@ export function openLinkDialog() {
 // Kaufen per Knopf
 // =====================================================================
 const ARGS_OK = /^[\p{L}\p{N} _\-.'#]*$/u;
-const normName = (s) => s.toLowerCase().trim().replace(/\s+/g, '_');
+const normName = (s) => s.toLowerCase().trim().replace(/\s+/g, ''); // RICS-Schreibweise: ohne Leerzeichen
 
 /** Befehlstext → { cmd, args } – nur wenn per Knopf erlaubt und vollständig. */
 function parseCommand(text) {
@@ -169,13 +169,13 @@ function priceOf({ cmd, args }) {
     let qty = 1;
     if (tok.length > 1 && /^\d{1,6}$/.test(tok[tok.length - 1])) qty = Number(tok.pop());
     const name = normName(tok.join(' '));
-    const hit = DATA.items.filter((i) => i.cmdName === name || i.defName.toLowerCase() === name);
+    const hit = DATA.items.filter((i) => i.cmdName === name || normName(i.defName) === name);
     return hit.length === 1 ? { price: hit[0].price * qty, label: qty > 1 ? `${hit[0].name} ×${fmt(qty)}` : hit[0].name } : null;
   }
   if (cmd === 'event' || cmd === 'weather') {
     const list = cmd === 'event' ? DATA.events : DATA.weather;
     const name = normName(args);
-    const hit = list.filter((x) => x.cmdName === name || x.defName.toLowerCase() === name);
+    const hit = list.filter((x) => x.cmdName === name || normName(x.defName) === name);
     return hit.length === 1 ? { price: hit[0].cost, label: hit[0].de || hit[0].label } : null;
   }
   return null;
@@ -198,7 +198,7 @@ function isDoom({ cmd, args }) {
   if (!DATA || (cmd !== 'event' && cmd !== 'weather')) return false;
   const list = cmd === 'event' ? DATA.events : DATA.weather;
   const name = normName(args);
-  const hit = list.find((x) => x.cmdName === name || x.defName.toLowerCase() === name);
+  const hit = list.find((x) => x.cmdName === name || normName(x.defName) === name);
   return hit?.karma === 'Doom';
 }
 
@@ -1030,14 +1030,30 @@ function startLogPoll(host) {
 const relSign = (v) => (v > 0 ? '+' : v < 0 ? '−' : '±') + fmt(Math.abs(Math.round(Number(v) || 0)));
 const relTone = (v) => (v > 0 ? 'good' : v < 0 ? 'doom' : 'neutral');
 
+// Wie im Spiel: ab +20 Freund, ab −20 Rivale. In Worten statt Pfeilen, damit sofort klar ist, wer was über wen denkt.
+const relSentence = (subj, obj, v, du) => (v >= 20 ? `${subj} ${du ? 'magst' : 'mag'} ${obj}`
+  : v <= -20 ? `${subj} ${du ? 'kannst' : 'kann'} ${obj} nicht leiden` : `${subj} ${du ? 'bist' : 'ist'} ${obj === 'dich' ? 'dir' : obj} gegenüber neutral`);
+function relStatus(r) {
+  const a = Number(r.opinion) || 0, b = Number(r.theirs) || 0;
+  if (a >= 20 && b >= 20) return ['Freunde', 'good'];
+  if (a <= -20 && b <= -20) return ['Rivalen', 'doom'];
+  if (a >= 20 || b >= 20) return [a <= -20 || b <= -20 ? 'Kompliziert' : 'Einseitig befreundet', 'neutral'];
+  if (a <= -20 || b <= -20) return ['Einseitige Abneigung', 'bad'];
+  return ['Bekannt', 'neutral'];
+}
+
 function relRow(p, r) {
-  const who = r.user ? ` <span class="chip accent" title="Zuschauer">@${esc(r.user)}</span>` : '';
-  const dead = r.dead ? ' <span class="tag">tot</span>' : '';
-  const label = (r.relations || []).length ? `<div class="small muted">${esc(r.relations.join(' · '))}</div>` : '';
-  const ops = r.dead ? '' : `<div class="rel-ops">
-      <span class="rel-op ${relTone(r.opinion)}" title="Meinung von ${esc(p.name)} über ${esc(r.name)}">${esc(p.name)} → ${relSign(r.opinion)}</span>
-      <span class="rel-op ${relTone(r.theirs)}" title="Meinung von ${esc(r.name)} über ${esc(p.name)}">${esc(r.name)} → ${relSign(r.theirs)}</span></div>`;
-  return `<li class="rel-row"><div class="rel-main"><b class="rel-name">${esc(r.name)}</b>${who}${dead}</div>${label}${ops}</li>`;
+  const mine = isMine(p);
+  const me = mine ? 'Du' : p.name;
+  const who = r.user ? ` <span class="small muted">@${esc(r.user)}</span>` : '';
+  const fam = (r.relations || []).map((x) => `<span class="badge accent">${esc(x)}</span>`).join('');
+  const [st, tn] = relStatus(r);
+  const status = r.dead ? '<span class="badge neutral">tot</span>' : `<span class="badge ${tn}">${st}</span>`;
+  const a = Number(r.opinion) || 0, b = Number(r.theirs) || 0;
+  const lines = r.dead ? '' : `<div class="rel-lines small">
+      <div><span class="rel-op ${relTone(a)}">${relSign(a)}</span> ${esc(relSentence(me, r.name, a, mine))}</div>
+      <div><span class="rel-op ${relTone(b)}">${relSign(b)}</span> ${esc(relSentence(r.name, mine ? 'dich' : p.name, b, false))}</div></div>`;
+  return `<li class="rel-row"><div class="rel-main"><b class="rel-name">${esc(r.name)}</b>${who}<span class="rel-badges">${fam}${status}</span></div>${lines}</li>`;
 }
 
 function relHtml(p, data) {
@@ -1047,7 +1063,7 @@ function relHtml(p, data) {
   const others = list.filter((r) => !(r.relations || []).length && !r.dead).sort((a, b) => (Number(b.opinion) || 0) - (Number(a.opinion) || 0));
   const famHtml = fam.length ? section('Partner & Familie', `<ul class="rel-list">${fam.map((r) => relRow(p, r)).join('')}</ul>`) : '';
   const othHtml = others.length ? section('Freunde & Rivalen', `<ul class="rel-list">${others.map((r) => relRow(p, r)).join('')}</ul>
-    <p class="small muted" style="margin:8px 0 0">Zahlen: Meinung des einen über den anderen. Grün = mag, rot = mag nicht.</p>`) : '';
+    <p class="small muted" style="margin:8px 0 0">Die Zahl ist die Meinung wie im Spiel: ab +20 befreundet, ab −20 Rivalen.</p>`) : '';
   return famHtml + othHtml || '<div class="empty">Noch keine Beziehungen erfasst.</div>';
 }
 
@@ -1073,30 +1089,68 @@ function startRelPoll(host) {
   });
 }
 
-// Arbeit: Prioritäten je Tätigkeit. Setzen nur für den eigenen Kolonisten, wenn der Streamer es erlaubt (workEditable).
-const WORK_PRIOS = [[0, 'aus'], [1, '1'], [2, '2'], [3, '3'], [4, '4']];
+// Arbeit: kompaktes Raster wie im Spiel. Zahl mit ▲ (wichtiger) / ▼ (unwichtiger); Änderungen werden gesammelt und
+// mit EINEM Knopf übernommen (RICS nimmt nur alle 2 s einen Befehl an; mehrere Arbeiten passen in einen Befehl).
+const workDraft = new Map(); // Pawn-Schlüssel -> Map(workId -> prio)
+const prioUp = (n) => (n === 0 ? 4 : Math.max(1, n - 1));      // wichtiger
+const prioDown = (n) => (n === 0 ? 0 : n >= 4 ? 0 : n + 1);     // unwichtiger, nach 4 kommt „aus“
 
 function panelWork(p) {
   const list = Array.isArray(p.work) ? p.work : [];
   if (!list.length) return '<div class="empty">Keine Arbeiten bekannt.</div>';
+  const key = p.id || p.user;
   const mine = isMine(p);
   const can = mine && p.workEditable === true && live.isAllowed('mypawn');
-  const hint = can
-    ? '<p class="small muted" style="margin:0 0 8px">Tippe eine Priorität an: 1 ist die höchste, „aus“ schaltet die Arbeit ab.</p>'
-    : `<p class="small muted" style="margin:0 0 8px">${mine ? 'Der Streamer erlaubt das Ändern der Arbeiten gerade nicht.' : 'Nur ansehen.'}</p>`;
-  const rows = list.map((w) => {
-    const pr = Number(w.prio) || 0;
-    let right;
-    if (can && !w.disabled) {
-      right = `<span class="wk-prios">${WORK_PRIOS.map(([n, l]) => actBtn('mypawn', `work ${w.id} ${n}`, l, {
-        cls: pr === n ? 'on' : '', title: `${w.label}: Priorität ${n === 0 ? 'aus' : n}`,
-      })).join('')}</span>`;
-    } else {
-      right = `<span class="tag">${w.disabled ? 'gesperrt' : pr === 0 ? 'aus' : `Priorität ${esc(pr)}`}</span>`;
-    }
-    return `<li class="wk${w.disabled ? ' off' : pr === 0 ? ' idle' : ''}"><span class="wk-label">${esc(w.label)}</span>${right}</li>`;
+  const draft = workDraft.get(key) || new Map();
+  const cells = list.map((w) => {
+    const cur = Number(w.prio) || 0;
+    const val = draft.has(w.id) ? draft.get(w.id) : cur;
+    const changed = draft.has(w.id) && draft.get(w.id) !== cur;
+    const num = w.disabled ? '✕' : val === 0 ? '–' : String(val);
+    const ctl = can && !w.disabled
+      ? `<button type="button" class="wk-arrow" data-wk="${esc(w.id)}" data-d="up" aria-label="${esc(w.label)} wichtiger">▲</button>
+         <span class="wk-num p${val}">${num}</span>
+         <button type="button" class="wk-arrow" data-wk="${esc(w.id)}" data-d="down" aria-label="${esc(w.label)} unwichtiger">▼</button>`
+      : `<span class="wk-num p${w.disabled ? 'x' : val}">${num}</span>`;
+    return `<div class="wk-cell${w.disabled ? ' off' : ''}${changed ? ' changed' : ''}" title="${esc(w.label)}${w.disabled ? ' – kann dieser Kolonist nicht' : ''}">
+      <span class="wk-name">${esc(w.label)}</span><span class="wk-ctl">${ctl}</span></div>`;
   }).join('');
-  return `${hint}<ul class="wk-list">${rows}</ul>`;
+  const n = [...draft.entries()].filter(([id, v]) => (list.find((w) => w.id === id)?.prio ?? -1) !== v).length;
+  const bar = can
+    ? `<div class="wk-bar"><span class="small muted">1 = am wichtigsten, – = aus.</span>${n ? `<button type="button" class="btn primary" data-wk-apply>Übernehmen (${n})</button><button type="button" class="btn" data-wk-reset>Verwerfen</button>` : ''}</div>`
+    : `<p class="small muted" style="margin:0 0 8px">${mine ? 'Ändern erlaubt der Streamer gerade nicht – nur ansehen.' : 'Nur ansehen.'}</p>`;
+  return `${bar}<div class="wk-grid">${cells}</div>`;
+}
+
+async function applyWork(host) {
+  const p = host._pawn;
+  if (!p) return;
+  const key = p.id || p.user;
+  const draft = workDraft.get(key);
+  if (!draft) return;
+  const changes = [...draft.entries()].filter(([id, v]) => (p.work || []).find((w) => w.id === id && w.prio !== v));
+  // in Befehle aufteilen (max. 80 Zeichen Argumente)
+  const chunks = [];
+  let cur = 'work';
+  for (const [id, v] of changes) {
+    const part = ` ${id} ${v}`;
+    if ((cur + part).length > 78 && cur !== 'work') { chunks.push(cur); cur = 'work'; }
+    cur += part;
+  }
+  if (cur !== 'work') chunks.push(cur);
+  const btn = host.querySelector('[data-wk-apply]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Wird übernommen …'; }
+  try {
+    for (let k = 0; k < chunks.length; k++) {
+      if (k > 0) await new Promise((r) => setTimeout(r, 2200));
+      const msgs = await live.act('mypawn', chunks[k]);
+      toast(msgs.length ? msgs.join(' · ') : 'Arbeiten übernommen', 6000);
+    }
+    workDraft.delete(key);
+  } catch (e) {
+    toast(e.message, 5000);
+  }
+  repaint(host);
 }
 
 const PANELS = { overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
@@ -1155,6 +1209,19 @@ function mountCharacter(host, p) {
     const at = e.target.closest('[data-alltrees]');
     const nd = e.target.closest('[data-node]');
     if (pawn && ab) { runAct(host, ab); return; }
+    const wk = e.target.closest('[data-wk]');
+    if (pawn && wk) {
+      const key = pawn.id || pawn.user;
+      const d = workDraft.get(key) || new Map();
+      const w = (pawn.work || []).find((x) => x.id === wk.dataset.wk);
+      const curV = d.has(w.id) ? d.get(w.id) : Number(w.prio) || 0;
+      d.set(w.id, wk.dataset.d === 'up' ? prioUp(curV) : prioDown(curV));
+      workDraft.set(key, d);
+      repaint(host);
+      return;
+    }
+    if (pawn && e.target.closest('[data-wk-apply]')) { applyWork(host); return; }
+    if (pawn && e.target.closest('[data-wk-reset]')) { workDraft.delete(pawn.id || pawn.user); repaint(host); return; }
     if (pawn && (tc || at || nd)) {
       if (tc) { selTree = tc.dataset.tree; selNode = null; }
       else if (at) showAllTrees = !showAllTrees;

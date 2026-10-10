@@ -22,7 +22,7 @@ Antworte auf Deutsch. Öffentliche Preislisten-/Befehlsseite für Andreas' RICS-
 
 ## Wichtige Entscheidungen
 - **Spiegelt exakt RICS:** Item „kaufbar“ nur bei `Enabled`; `!use/!equip/!wear` nur bei jeweiligem Schalter. Ausgeschaltete Items sind ausgeblendet, werden aber bei der Suche erklärt („gibt es, wird gerade nicht verkauft“). Befehle: live aus `CommandSettings.json` (an/aus, Berechtigung, Alias).
-- **Befehlsnamen für Zuschauer:** lesbarer Name (`!buy beer 5`, Leerzeichen → `_`), nur wenn eindeutig und nur Buchstaben/Ziffern/Leerzeichen; sonst technischer DefName (`assignCmdNames` in `data.js`).
+- **Befehlsnamen für Zuschauer:** lesbarer Name **zusammengeschrieben ohne Unterstrich** (`!buy graniteblocks`; RICS findet Namen mit `_` nicht – vom Nutzer bestätigt), nur wenn eindeutig und nur Buchstaben/Ziffern/Leerzeichen; sonst technischer DefName (`assignCmdNames` in `data.js`).
 - Einstieg in die Kolonie ist `!join` (= `!joinqueue`), dann `!acceptpawn`. `!pawn` je nach Streamer-Einstellung Kauf oder Liste.
 - Erwartet: eine Mod übersetzt RICS bald ins Deutsche → nichts hart auf englische Befehle/Labels verdrahten; Aliase anzeigen (geschieht über `CommandSettings.json`).
 - Senden über Twitch ist freiwillig (Implicit Grant, Scope `user:write:chat`), standardmäßig aus; ohne Anmeldung nur Kopieren.

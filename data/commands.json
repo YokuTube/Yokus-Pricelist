@@ -191,10 +191,10 @@
       "cmd": "buy", "group": "shop", "src": "rics",
       "summary": "Kauft Items. Sie kommen per Landekapsel in die Kolonie.",
       "usage": [
-        { "syntax": "!buy <Item> [Qualität] [Material] [Menge]", "note": "Alles in eckigen Klammern ist optional. Namen schreibst du in einem Wort; Leerzeichen werden zu Unterstrichen (herbal_medicine). Den Namen siehst du im Tab „Items“." },
+        { "syntax": "!buy <Item> [Qualität] [Material] [Menge]", "note": "Alles in eckigen Klammern ist optional. Namen schreibst du zusammen in einem Wort, ohne Leerzeichen und ohne Unterstrich (herbalmedicine). Den Namen siehst du im Tab „Items“." },
         { "syntax": "!buy wager <Item> <Einsatz>", "note": "Falls vom Streamer erlaubt: Du setzt Coins ein und Qualität/Material werden ausgewürfelt." }
       ],
-      "examples": ["!buy medicine 5", "!buy steel 100", "!buy herbal_medicine 10"],
+      "examples": ["!buy medicine 5", "!buy steel 100", "!buy herbalmedicine 10"],
       "effect": "Coins werden abgezogen, die Ware fällt in der Kolonie ab. Der Preis ist Grundpreis × Qualität × Material × Menge.",
       "notes": ["Qualitäten: awful, poor, normal, good, excellent, masterwork, legendary. Ohne Material (oder mit random) wird eins ausgewürfelt.", "Pro Kauf gibt es eine Mengengrenze (steht im Tab „Items“).", "Manches braucht eine bestimmte Forschung."]
     },
@@ -202,7 +202,7 @@
       "cmd": "use", "group": "shop", "src": "rics",
       "summary": "Kauft ein Item und benutzt es sofort an deinem Pawn.",
       "usage": [ { "syntax": "!use <Item> [Menge]", "note": "Qualität und Material gibt es hier nicht." } ],
-      "examples": ["!use medicine", "!use herbal_medicine 2"],
+      "examples": ["!use medicine", "!use herbalmedicine 2"],
       "effect": "Medizin wird angewendet, Essen und Trinken wird verzehrt. Ein Resurrector-Serum kann einen toten Pawn wiederbeleben."
     },
     {
@@ -242,7 +242,7 @@
     {
       "cmd": "event", "group": "events", "src": "rics",
       "summary": "Löst ein Ereignis in der Kolonie aus – gute wie schlechte.",
-      "usage": [ { "syntax": "!event <Name>", "note": "Namen findest du im Tab „Events“ oder mit !lookup event. Leerzeichen als Unterstrich oder zusammengeschrieben." }, { "syntax": "!event list", "note": "Zeigt die möglichen Events." } ],
+      "usage": [ { "syntax": "!event <Name>", "note": "Namen findest du im Tab „Events“ oder mit !lookup event. Zusammengeschrieben, ohne Leerzeichen." }, { "syntax": "!event list", "note": "Zeigt die möglichen Events." } ],
       "examples": ["!event aurora", "!event heat_wave", "!event psychic_soothe"],
       "effect": "Die Coins werden abgezogen und das Event passiert sofort. Gute Events bringen Karma, schlechte kosten Karma.",
       "notes": ["Jedes Event hat eine Pause: Es kann nur alle paar Spieltage ausgelöst werden.", "Der Streamer kann Events einzeln ausschalten."]

@@ -398,7 +398,7 @@ export function itemsView(data) {
       <summary>So kaufst du ein Item</summary>
       <ul>
         <li>Wähle die <strong>Menge</strong>, tippe auf den Befehl-Knopf (z. B. <code>!buy steel 100</code>) und füge ihn im Chat ein. Du kannst auch einfach selbst tippen: <code>!buy medicine 5</code>.</li>
-        <li>Bei Waffen und Kleidung sind Qualität und Material optional, z. B. <code>!buy &lt;Item&gt; excellent</code>. Qualitäten: awful, poor, normal, good, excellent, masterwork, legendary. Namen mit mehreren Wörtern schreibst du mit Unterstrich.</li>
+        <li>Bei Waffen und Kleidung sind Qualität und Material optional, z. B. <code>!buy &lt;Item&gt; excellent</code>. Qualitäten: awful, poor, normal, good, excellent, masterwork, legendary. Namen mit mehreren Wörtern schreibst du zusammen, ohne Leerzeichen.</li>
         <li><code>!use</code> benutzt es sofort, <code>!equip</code> rüstet es aus, <code>!wear</code> zieht es an. Das geht nur bei Items mit der passenden Markierung.</li>
         <li>Den genauen Preis für deine Wunschkombination zeigt <code>!pricecheck Steel</code>.</li>
       </ul>

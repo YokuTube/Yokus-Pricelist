@@ -910,3 +910,28 @@ button.an-group:hover { border-color: var(--accent); }
   .tabs.more-left.more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 85%, transparent); mask-image: linear-gradient(to right, transparent, #000 12%, #000 85%, transparent); }
   .tabs.more-left:not(.more-right) { -webkit-mask-image: linear-gradient(to right, transparent, #000 15%); mask-image: linear-gradient(to right, transparent, #000 15%); }
 }
+
+/* Beziehungen: eindeutige Zeilen */
+.rel-main { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rel-badges { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.rel-lines { margin-top: 4px; display: grid; gap: 2px; }
+.rel-lines .rel-op { display: inline-block; min-width: 3.2em; font-weight: 700; font-variant-numeric: tabular-nums; }
+.badge.accent { color: var(--accent); }
+
+/* Arbeit: Raster wie im Spiel */
+.wk-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.wk-bar .btn:first-of-type { margin-left: auto; }
+.wk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+.wk-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2, var(--surface)); min-width: 0; }
+.wk-cell.changed { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.wk-cell.off { opacity: .45; }
+.wk-name { font-size: .8rem; text-align: center; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.wk-ctl { display: flex; align-items: center; gap: 4px; }
+.wk-arrow { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: .8rem; cursor: pointer; }
+.wk-arrow:hover { border-color: var(--accent); }
+.wk-num { min-width: 1.6em; text-align: center; font-weight: 800; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.wk-num.p1 { color: var(--doom); }
+.wk-num.p2 { color: var(--bad); }
+.wk-num.p3 { color: var(--text); }
+.wk-num.p4 { color: var(--muted); }
+.wk-num.p0, .wk-num.px { color: var(--muted); font-weight: 400; }
