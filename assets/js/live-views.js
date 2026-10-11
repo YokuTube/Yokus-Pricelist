@@ -663,6 +663,7 @@ const SUBS = [
   { id: 'gear', label: 'Ausrüstung' },
   { id: 'style', label: 'Aussehen' },
   { id: 'psyche', label: 'Psyche' },
+  { id: 'stats', label: 'Alle Werte' },
   { id: 'ideo', label: 'Glaube' },
   { id: 'psy', label: 'Psycasts' },
   { id: 'work', label: 'Arbeit' },
@@ -678,7 +679,7 @@ const TABS = [
   { id: 'overview', label: 'Überblick', areas: ['overview', 'mood'] },
   { id: 'body', label: 'Körper', areas: ['health', 'gear'] },
   { id: 'char', label: 'Charakter', areas: ['psyche', 'ideo', 'origin'] },
-  { id: 'skills', label: 'Können', areas: ['skills', 'psy', 'isekai'] },
+  { id: 'skills', label: 'Können', areas: ['skills', 'psy', 'isekai', 'stats'] },
   { id: 'goals', label: 'Ziele', areas: ['goals'] },
   { id: 'life', label: 'Leben', areas: ['relations', 'log', 'story'] },
   { id: 'style', label: 'Aussehen & Arbeit', areas: ['style', 'work'] },
@@ -820,6 +821,55 @@ function panelMood(p) {
     <p class="small muted th-sum">Zusammen: <b class="${sum >= 0 ? 'th-pos' : 'th-neg'}">${sign(sum)}</b> · Tippe auf einen Eintrag für Details.</p>`);
 }
 
+// Alle Werte wie in der Infokarte des Spiels (/api/stats, nur solange offen; die Mod rechnet nur auf Anfrage)
+const statsCache = new Map();
+let statsOpenCat = null, statsFilter = '';
+
+function statsBody(key) {
+  const d = statsCache.get(key);
+  if (!d) return '<div class="empty">Werte werden berechnet …</div>';
+  const q = statsFilter.trim().toLowerCase();
+  const cats = (d.categories || []).map((c) => {
+    const rows = (c.stats || []).filter((x) => !q || x.label.toLowerCase().includes(q));
+    if (!rows.length) return '';
+    const open = q || statsOpenCat === c.label;
+    return `<div class="st-cat"><button type="button" class="st-head" data-statcat="${esc(c.label)}" aria-expanded="${!!open}"><b>${esc(c.label)}</b><span class="small muted">${rows.length}</span><span aria-hidden="true">${open ? '▾' : '▸'}</span></button>
+      ${open ? `<dl class="st-list">${rows.map((x) => `<div class="st-row" title="${esc(x.desc)}"><dt>${esc(x.label)}</dt><dd>${esc(x.value)}</dd></div>`).join('')}</dl>` : ''}</div>`;
+  }).join('');
+  return cats || '<div class="empty">Nichts gefunden.</div>';
+}
+
+function panelStats(p) {
+  const key = p.id || p.user;
+  return `<div class="st-host" data-key="${esc(key)}" data-morph-keep data-statsfor="${esc(key)}">
+    <input type="search" class="input st-search" placeholder="Wert suchen, z. B. Fruchtbarkeit" value="${esc(statsFilter)}" aria-label="Wert suchen">
+    <div class="st-body">${statsBody(key)}</div>
+    <p class="small muted trait-hint">Alle Werte wie in der Infokarte im Spiel. Antippen/Hover zeigt die Erklärung.</p></div>`;
+}
+
+function startStatsPoll(host) {
+  const el = host.querySelector('.st-host');
+  if (!el || el._polling) return;
+  el._polling = true;
+  const key = el.dataset.statsfor;
+  const body = el.querySelector('.st-body');
+  const draw = () => morph(body, statsBody(key));
+  el.addEventListener('click', (e) => {
+    const h = e.target.closest('[data-statcat]');
+    if (!h) return;
+    statsOpenCat = statsOpenCat === h.dataset.statcat ? null : h.dataset.statcat;
+    draw();
+  });
+  el.querySelector('.st-search').addEventListener('input', (e) => { statsFilter = e.target.value; draw(); });
+  // erster Abruf liefert 202 (Mod rechnet erst), dann alle 10 s – nur solange der Bereich offen ist
+  live.poll({
+    path: '/api/stats/' + encodeURIComponent(key), every: 3000, alive: () => el.isConnected,
+    onResult: (r) => {
+      if (r.status === 200 && r.data && !r.unchanged) { statsCache.set(key, r.data); draw(); }
+    },
+  });
+}
+
 function panelSkills(p) {
   const list = p.skills || [];
   if (!list.length) return '<div class="empty">Keine Fähigkeiten bekannt.</div>';
@@ -957,6 +1007,39 @@ function duelCardHtml(g) {
     <div class="duel-sums"><span class="a">${fmt(ba)} 🪙</span><span class="pot">Topf ${fmt(pot)} 🪙</span><span class="b">${fmt(bb)} 🪙</span></div>
     ${ctl}
   </section>`;
+}
+
+// Spielautomat (RICS Extras !slots): nur, wenn im Spiel einer mit Strom steht (GameInfo.slots)
+let slotBet = 0;
+const SLOT_PAY = [['🍒', '×6'], ['🍋', '×8'], ['🔔', '×20'], ['💎', '×50'], ['7️⃣', null]];
+
+function slotsCardHtml(g) {
+  const sl = g?.slots;
+  if (!sl || !live.isAllowed('slots')) return '';
+  const amounts = [...new Set([sl.minBet, 25, 50, 100, sl.maxBet].filter((v) => v >= sl.minBet && v <= sl.maxBet))].sort((a, b) => a - b);
+  if (!amounts.includes(slotBet)) slotBet = amounts[0];
+  const pay = SLOT_PAY.map(([e, m]) => `<span class="slot-pay"><b>${e}${e}${e}</b>${m || `×${fmt(sl.jackpot)}`}</span>`).join('');
+  let ctl;
+  if (!live.isLinked()) ctl = `<p class="small muted" style="margin:0">Verbinde dich oben, um per Knopf zu spielen – oder schreib <code>${esc(live.prefix())}slots Einsatz</code> in den Chat.</p>`;
+  else {
+    const chips = amounts.map((v) => `<button type="button" class="chip-btn" data-slotbet="${v}" aria-pressed="${v === slotBet}">${fmt(v)} 🪙</button>`).join('');
+    ctl = `<div class="duel-amts" role="group" aria-label="Einsatz">${chips}</div>
+      ${actBtn('slots', String(slotBet), `🎰 Drehen · ${fmt(slotBet)} 🪙`, { confirm: true, armedLabel: `${fmt(slotBet)} 🪙 – los?`, cls: 'slot-go', title: `Für ${fmt(slotBet)} Münzen drehen` })}`;
+  }
+  return `<section class="card slot-card" aria-label="Spielautomat">
+    <img class="slot-img" src="assets/img/slot-machine.png" alt="" width="96" height="96">
+    <div class="slot-body"><div class="slot-head"><b>Spielautomat</b><span class="small muted">Pause: ${fmt(sl.cooldownHours)} Spielstunden</span></div>
+      <div class="slot-pays">${pay}<span class="slot-pay"><b>2× 🔔💎7️⃣</b>Einsatz zurück</span></div>
+      ${ctl}</div>
+  </section>`;
+}
+
+function slotPick(e, redraw) {
+  const b = e.target.closest('[data-slotbet]');
+  if (!b) return false;
+  slotBet = Number(b.dataset.slotbet) || 0;
+  redraw();
+  return true;
 }
 
 /** Klick auf einen Einsatz-Knopf; true = behandelt. */
@@ -1496,7 +1579,7 @@ async function applyWork(host) {
   repaint(host);
 }
 
-const PANELS = { psyche: panelPsyche, psy: panelPsy, ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+const PANELS = { stats: panelStats, psyche: panelPsyche, psy: panelPsy, ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 const visibleTabs = (p) => { const v = new Set(visibleSubs(p).map((s) => s.id)); return TABS.filter((t) => t.areas.some((a) => v.has(a))); };
 const activeTab = (p) => (visibleTabs(p).some((t) => t.id === curSub) ? curSub : 'overview');
@@ -1878,6 +1961,7 @@ function afterPaint(host) {
   startStoryPoll(host);
   startStylePoll(host);
   startGoalsPoll(host);
+  startStatsPoll(host);
   ensureBadgeLog(host);
   startInterPoll(host);
   refreshBadges(host);
@@ -2487,7 +2571,7 @@ function spielHtml(g, res) {
   else if (spielSub === 'stock') body = `<section class="card ch-sec"><h4>Vorräte</h4>${stockHtml(g.stock)}</section>`;
   else if (spielSub === 'factions') body = `<div class="grid cols-2"><section class="card ch-sec"><h4>Fraktionen</h4>${factionsHtml(g.factions)}</section>${visitorsHtml(g.visitors)}</div>`;
   else if (spielSub === 'history') body = `<section class="card ch-sec"><h4>Koloniewert-Verlauf</h4>${wealthHtml(g.wealthHistory)}</section>`;
-  else body = `${duelCardHtml(g)}<div class="gstats">${stats}</div>
+  else body = `${duelCardHtml(g)}${slotsCardHtml(g)}<div class="gstats">${stats}</div>
     <div class="grid cols-2" style="margin-top:12px">
       <section class="card ch-sec"><h4>Gerade los</h4>${conds}</section>
       <section class="card ch-sec"><h4>Was zuletzt passiert ist</h4>${evs}</section>
@@ -2534,6 +2618,7 @@ export function spielView() {
     whileMounted(host, [['me', () => { const k = `${live.isLinked()}|${live.getMe()?.researchWaitHours}|${live.getMe()?.pawn?.id}`; if (k !== boostKey) { boostKey = k; draw(true); } }], ['change', () => draw(true)]]);
     host.addEventListener('click', (e) => {
       if (betPick(e, () => draw(true))) return;
+      if (slotPick(e, () => draw(true))) return;
       const ab = e.target.closest('[data-act]');
       if (ab) { runAct(host, ab, () => draw(true)); return; }
       const sb = e.target.closest('[data-spsub]');

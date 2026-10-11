@@ -41,7 +41,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 ORIGINS = {"https://yokutube.github.io", "http://localhost:8765", "http://127.0.0.1:8765"}
 RB_WAIT = [0]  # Spielstunden bis !forschung wieder geht (Test)
-ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "wette", "lob", "nachhilfe", "pate", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult"]
+ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "slots", "wette", "lob", "nachhilfe", "pate", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult"]
 ARGS_RE = re.compile(r"^[\w \-.'#@]{0,80}$", re.UNICODE)
 
 LOCK = threading.Lock()
@@ -485,6 +485,7 @@ def game_info():
     t = int(time.time())
     return {
         "giftPrice": 150,
+        "slots": {"minBet": 10, "maxBet": 200, "jackpot": 250, "cooldownHours": 6},
         "duel": duel_fight(t),
         "praise": {"yoku": 12, "mira_spielt": 7, "luna_88": 3, "eddi_tv": 0},
         "tutor": {"price": 100, "minLevel": 6, "gap": 2},
@@ -552,6 +553,8 @@ def fake_effect(user, cmd, args):
         if len(a) > 1:
             an_["name"] = " ".join(a[1:])
         return "@%s Du bist jetzt Pate von %s (−300 Münzen)." % (user, an_["name"] or an_["kind"])
+    if cmd == "slots":
+        return "@%s 🎰 🍒 🍒 🍋 – Leider nichts." % user
     if cmd == "forschung":
         RB_WAIT[0] = 24
         return "@%s Danke! „Mikroelektronik“ ist jetzt bei 68 %% (+25 %%)." % user
@@ -676,6 +679,11 @@ class H(BaseHTTPRequestHandler):
             return self.js(200, isekai_info())
         if p == "/api/vote":
             return self.js(200, vote_state())
+        if p.startswith("/api/stats/"):
+            cats = [{"label": "Allgemein", "stats": [{"label": "Bewegungstempo", "value": "4,6 Felder/s", "desc": "Wie schnell man läuft."}, {"label": "Fruchtbarkeit", "value": "85 %", "desc": "Wie fruchtbar jemand ist."}]},
+                    {"label": "Nahkampf", "stats": [{"label": "Nahkampf-Trefferchance", "value": "78 %", "desc": ""}, {"label": "Nahkampfschaden", "value": "112 %", "desc": ""}]},
+                    {"label": "Soziales", "stats": [{"label": "Verhandlungsgeschick", "value": "64 %", "desc": ""}]}]
+            return self.js(200, {"name": "Test", "categories": cats})
         if p == "/api/psyche":
             pers = [("Rimpsyche_Sociability", "Geselligkeit", "verschlossen", "gesellig"), ("Rimpsyche_Tension", "Anspannung", "gelassen", "angespannt"),
                     ("Rimpsyche_Diligence", "Fleiß", "nachlässig", "fleißig"), ("Rimpsyche_Openness", "Offenheit", "traditionell", "offen"),

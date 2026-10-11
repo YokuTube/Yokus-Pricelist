@@ -1187,3 +1187,21 @@ button.sty-chip:hover { border-color: var(--accent); }
 .pate-hint { margin: 0; color: var(--doom); }
 .pate-go { min-height: 44px; }
 @media (max-width: 420px) { .an-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Spielautomat */
+.slot-card { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; align-items: start; margin-bottom: 12px; border-color: var(--accent); }
+.slot-img { width: 96px; height: 96px; image-rendering: auto; }
+.slot-body { display: grid; gap: 8px; min-width: 0; }
+.slot-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.slot-pays { display: flex; flex-wrap: wrap; gap: 6px; }
+.slot-pay { display: inline-flex; gap: 4px; align-items: center; padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); font-size: .8rem; }
+.slot-go { justify-self: start; }
+@media (max-width: 640px) { .slot-card { grid-template-columns: 64px minmax(0, 1fr); } .slot-img { width: 64px; height: 64px; } }
+/* Alle Werte */
+.st-search { width: 100%; max-width: 360px; margin-bottom: 10px; }
+.st-cat { border-bottom: 1px solid var(--border); }
+.st-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; width: 100%; min-height: 44px; padding: 6px 4px; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.st-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 24px; margin: 0 0 10px; }
+.st-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 4px; border-bottom: 1px dashed var(--border); font-size: .88rem; }
+.st-row dt { color: var(--muted); }
+.st-row dd { margin: 0; font-weight: 600; text-align: right; }
