@@ -46,7 +46,12 @@ function moodRow(p, text, legend = false) {
   const title = `Stimmung ${Math.round(v)} % · ` + cuts.map(([, l, x]) => `${l} unter ${Math.round(x)} %`).join(' · ');
   const leg = legend ? `<div class="mood-leg small muted" aria-hidden="true">${cuts.slice().reverse().map(([k, l, x]) => `<span><i class="t-${k}"></i>${esc(l)} &lt; ${Math.round(x)} %</span>`).join('')}</div>` : '';
   const label = text && String(text).trim() && String(text).trim() !== `${Math.round(v)} %` ? esc(text) : '';
-  return `<div class="brow mood-row m-${st}"><span class="bl">Stimmung</span>`
+  // Farbe = Stimmung selbst (schlecht/mittel nie grün); ein Zusammenbruch-Risiko kann sie nur verschlechtern
+  // (manche Kolonisten haben durch Mods/Eigenschaften fast keine Grenzen mehr – dann zählt allein der Wert)
+  const byValue = v < 20 ? 0 : v < 35 ? 1 : v < 50 ? 2 : v < 65 ? 3 : 4;
+  const byRisk = { extreme: 0, major: 1, minor: 2, ok: 4 }[st];
+  const col = ['ext', 'maj', 'min', 'mid', 'good'][Math.min(byValue, byRisk)];
+  return `<div class="brow mood-row m-${st} c-${col}"><span class="bl">Stimmung</span>`
     + `<span class="mood-scale" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(v)}" aria-label="${esc(title)}" title="${esc(title)}">`
     + `<i class="mood-zone" style="width:${top}%"></i><i class="mood-fill" style="width:${v}%"></i>${ticks}</span>`
     + `<span class="bv mood-pct">${Math.round(v)} %</span>`

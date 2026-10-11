@@ -1223,7 +1223,8 @@ button.sty-chip:hover { border-color: var(--accent); }
 
 /* ---- Stimmung als Skala (feste 0-100 %, Farbe = Zustand) ---- */
 .mood-row { --mc: var(--good); --c-ext: #d9362b; --c-maj: #ec7a1c; --c-min: #e3b412; row-gap: 3px; }
-.mood-row.m-extreme { --mc: var(--c-ext); } .mood-row.m-major { --mc: var(--c-maj); } .mood-row.m-minor { --mc: var(--c-min); }
+.mood-row.c-ext { --mc: var(--c-ext); } .mood-row.c-maj { --mc: var(--c-maj); } .mood-row.c-min { --mc: var(--c-min); }
+.mood-row.c-mid { --mc: #9cbf3b; } .mood-row.c-good { --mc: var(--good); }
 .mood-scale { position: relative; display: block; height: 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); min-width: 0; overflow: hidden; }
 .mood-zone { position: absolute; left: 0; top: 0; bottom: 0; background: color-mix(in srgb, var(--c-ext) 14%, transparent); }
 .mood-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--mc); border-radius: 0 7px 7px 0; transition: width .5s; min-width: 3px; }
