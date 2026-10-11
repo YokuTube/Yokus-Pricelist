@@ -665,8 +665,27 @@ const SUBS = [
   { id: 'story', label: 'Geschichte' },
   { id: 'origin', label: 'Herkunft' },
 ];
+// 7 Reiter, darin je ein Umschalter zwischen den Bereichen (Bereichs-ids = frühere Unterreiter-ids aus SUBS)
+const TABS = [
+  { id: 'overview', label: 'Überblick', areas: ['overview', 'mood'] },
+  { id: 'body', label: 'Körper', areas: ['health', 'gear'] },
+  { id: 'char', label: 'Charakter', areas: ['psyche', 'ideo', 'origin'] },
+  { id: 'skills', label: 'Können', areas: ['skills', 'psy', 'isekai'] },
+  { id: 'goals', label: 'Ziele', areas: ['goals'] },
+  { id: 'life', label: 'Leben', areas: ['relations', 'log', 'story'] },
+  { id: 'style', label: 'Aussehen & Arbeit', areas: ['style', 'work'] },
+];
 const SUB_KEY = 'ys-live-sub';
+const AREA_KEY = 'ys-live-area';
+const tabOfArea = (a) => TABS.find((t) => t.areas.includes(a));
 let curSub = lsGet(SUB_KEY) || 'overview';
+let areaPref = {};
+try { areaPref = JSON.parse(lsGet(AREA_KEY) || '{}') || {}; } catch { areaPref = {}; }
+// Alter gespeicherter Wert (frühere Unterreiter-id, z. B. 'mood') -> neuer Reiter + Bereich
+if (!TABS.some((t) => t.id === curSub)) {
+  const t = tabOfArea(curSub);
+  if (t) { areaPref[t.id] = curSub; curSub = t.id; } else curSub = 'overview';
+}
 let openTrait = null;
 
 const STATE_BADGE = { ok: 'good', sleeping: 'neutral', away: 'neutral', downed: 'bad', mental: 'doom', dead: 'doom' };
@@ -868,12 +887,12 @@ function refreshOffers(host) {
 
 function startGoalsPoll(host) {
   const p = host._pawn;
-  if (host._goalsPoll || !p || activeSub(p) !== 'goals' || !isMine(p)) return;
+  if (host._goalsPoll || !p || activeArea(p) !== 'goals' || !isMine(p)) return;
   host._goalsPoll = true;
   live.poll({
     path: '/api/game', every: 5000,
     alive: () => {
-      const ok = host.isConnected && host._pawn && activeSub(host._pawn) === 'goals' && isMine(host._pawn);
+      const ok = host.isConnected && host._pawn && activeArea(host._pawn) === 'goals' && isMine(host._pawn);
       if (!ok) host._goalsPoll = false;
       return ok;
     },
@@ -1276,13 +1295,24 @@ async function applyWork(host) {
 
 const PANELS = { psyche: panelPsyche, psy: panelPsy, ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
+const visibleTabs = (p) => { const v = new Set(visibleSubs(p).map((s) => s.id)); return TABS.filter((t) => t.areas.some((a) => v.has(a))); };
+const activeTab = (p) => (visibleTabs(p).some((t) => t.id === curSub) ? curSub : 'overview');
+const tabAreas = (p, tab) => { const v = new Set(visibleSubs(p).map((s) => s.id)); return TABS.find((t) => t.id === tab).areas.filter((a) => v.has(a)); };
+/** Alte Bereichs-id des gerade offenen Bereichs (z. B. 'relations', 'goals') - fuer alle Pruefungen "laeuft nur, wenn offen". */
+const activeArea = (p) => { const tab = activeTab(p); const as = tabAreas(p, tab); return as.includes(areaPref[tab]) ? areaPref[tab] : as[0]; };
+const AREA_LABEL = Object.fromEntries(SUBS.map((s) => [s.id, s.label]));
+
 function subsHtml(p) {
-  const vis = visibleSubs(p);
-  const cur = vis.some((s) => s.id === curSub) ? curSub : 'overview';
-  return `<div class="ch-tabs" role="tablist" aria-label="Bereiche des Charakters">${vis.map((s) =>
-    `<button type="button" role="tab" class="ch-tab" data-sub="${s.id}" aria-selected="${s.id === cur}">${esc(s.label)}</button>`).join('')}</div>`;
+  const cur = activeTab(p);
+  return `<div class="ch-tabs" role="tablist" aria-label="Bereiche des Charakters">${visibleTabs(p).map((t) =>
+    `<button type="button" role="tab" class="ch-tab" data-sub="${t.id}" aria-selected="${t.id === cur}">${esc(t.label)}</button>`).join('')}</div>`;
 }
-const activeSub = (p) => (visibleSubs(p).some((s) => s.id === curSub) ? curSub : 'overview');
+/** Inhalt des offenen Reiters: Bereichs-Umschalter (nur bei mehr als einem sichtbaren Bereich) + Panel des Bereichs. */
+function tabPanelHtml(p) {
+  const as = tabAreas(p, activeTab(p)), cur = activeArea(p);
+  const sw = as.length > 1 ? `<div class="log-switch page-subs">${as.map((a) => `<button type="button" class="seg${cur === a ? ' on' : ''}" data-area="${a}" aria-pressed="${cur === a}">${esc(AREA_LABEL[a])}</button>`).join('')}</div>` : '';
+  return sw + PANELS[cur](p);
+}
 
 /** Zeichnet Hero + Unterreiter + Inhalt in `host`. Der gewählte Reiter bleibt beim Aktualisieren erhalten. */
 /** Herausfordern: nur bei fremden Kolonisten und nur, wenn ich selbst einen Kolonisten habe. Ziel = Twitch-Name bzw. Rufname. */
@@ -1307,7 +1337,7 @@ function socialActsHtml(p) {
 }
 
 function characterHtml(p) {
-  return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${duelHtml(p)}${socialActsHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${PANELS[activeSub(p)](p)}</div></div>`;
+  return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${duelHtml(p)}${socialActsHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${tabPanelHtml(p)}</div></div>`;
 }
 
 /** Hintergrundabfragen, die nur zum gerade offenen Unterreiter gehören. */
@@ -1647,12 +1677,12 @@ function afterPaint(host) {
   startGoalsPoll(host);
   ensureBadgeLog(host);
   refreshBadges(host);
-  if (host._pawn && activeSub(host._pawn) === 'isekai') ensureTrees(host);
-  if (host._pawn && activeSub(host._pawn) === 'ideo') ensureIdeos(host);
-  if (host._pawn && activeSub(host._pawn) === 'psy') ensurePsy(host);
+  if (host._pawn && activeArea(host._pawn) === 'isekai') ensureTrees(host);
+  if (host._pawn && activeArea(host._pawn) === 'ideo') ensureIdeos(host);
+  if (host._pawn && activeArea(host._pawn) === 'psy') ensurePsy(host);
   expHost = host;
   pchHost = host;
-  if (host._pawn && activeSub(host._pawn) === 'skills' && host._pawn.expertise) ensureExp(host);
+  if (host._pawn && activeArea(host._pawn) === 'skills' && host._pawn.expertise) ensureExp(host);
 }
 
 /** Inhalt des offenen Unterreiters per morph neu zeichnen (kein Flackern, Zustand der Knöpfe bleibt). */
@@ -1661,7 +1691,7 @@ function repaint(host) {
   const p = host._pawn;
   const panel = host.querySelector('.ch-panel');
   if (!p || !panel) return;
-  morph(panel, PANELS[activeSub(p)](p));
+  morph(panel, tabPanelHtml(p));
   afterPaint(host);
 }
 
@@ -1680,6 +1710,7 @@ function mountCharacter(host, p) {
       return;
     }
     const sub = e.target.closest('[data-sub]');
+    const ar = e.target.closest('[data-area]');
     const tr = e.target.closest('[data-trait]');
     const lk = e.target.closest('[data-logkind]');
     const ab = e.target.closest('[data-act]');
@@ -1717,7 +1748,13 @@ function mountCharacter(host, p) {
     }
     if (pawn && lk) {
       logKind = lk.dataset.logkind; lsSet('ys-live-log', logKind);
-      host.querySelector('.ch-panel').innerHTML = PANELS.log(pawn);
+      host.querySelector(".ch-panel").innerHTML = tabPanelHtml(pawn);
+      afterPaint(host);
+      return;
+    }
+    if (pawn && ar) {
+      areaPref[activeTab(pawn)] = ar.dataset.area; lsSet(AREA_KEY, JSON.stringify(areaPref)); openTrait = null;
+      host.querySelector('.ch-panel').innerHTML = tabPanelHtml(pawn);
       afterPaint(host);
       return;
     }
@@ -1725,7 +1762,7 @@ function mountCharacter(host, p) {
     if (sub) {
       curSub = sub.dataset.sub; lsSet(SUB_KEY, curSub);
       host.querySelectorAll('.ch-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.sub === curSub)));
-      host.querySelector('.ch-panel').innerHTML = PANELS[activeSub(pawn)](pawn);
+      host.querySelector('.ch-panel').innerHTML = tabPanelHtml(pawn);
       afterPaint(host);
     } else {
       openTrait = openTrait === tr.dataset.trait ? null : tr.dataset.trait;
