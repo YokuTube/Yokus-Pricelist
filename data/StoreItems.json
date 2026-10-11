@@ -57201,13 +57201,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 10,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Vanilla Genetics Expanded",
       "BasePrice": 100,
       "Category": "Genomexkavatoren",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "GR_GenomeExcavator": {
@@ -57216,13 +57216,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Vanilla Genetics Expanded",
       "BasePrice": 100,
       "Category": "Genomexkavatoren",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "GR_ArchotechGenomeExcavator": {
@@ -57231,13 +57231,13 @@
       "HasQuantityLimit": true,
       "QuantityLimit": 1,
       "LimitMode": "OneStack",
-      "IsUsable": true,
+      "IsUsable": false,
       "IsEquippable": false,
       "IsWearable": false,
       "Mod": "Vanilla Genetics Expanded",
       "BasePrice": 100,
       "Category": "Genomexkavatoren",
-      "Enabled": true,
+      "Enabled": false,
       "modactive": true
     },
     "IsekaiDungeons_SnowFlake": {
