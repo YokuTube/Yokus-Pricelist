@@ -1,10 +1,10 @@
-// Reiter „Stream“: Twitch-Player und -Chat eingebettet (offizielle Twitch-Einbettung, keine App nötig).
-// Jeder Zuschauer schaltet Stream und Chat getrennt ein/aus (z. B. Stream läuft schon am Fernseher) – gemerkt im Browser.
+// Stream-Leiste oben: Twitch-Player und -Chat eingebettet (offizielle Twitch-Einbettung, keine App nötig).
+// Die Leiste steht unter den Reitern auf ALLEN Seiten gleich; Reiterwechsel lässt Player und Chat unberührt.
+// Zuschauer können Chat und/oder Stream schließen oder die Leiste einklappen (dann läuft der Player klein unten rechts weiter).
 // Der Player lädt nie von selbst, erst nach Klick auf „Stream hier ansehen“ (kein doppelter Ton).
 //
-// Player und Chat liegen in einem festen Behälter (#stream-dock) außerhalb der Ansichten und werden NIE im DOM verschoben
-// (verschobene iframes laden neu). Beim Reiterwechsel ändert sich nur die Darstellung: auf „Stream“ groß,
-// anderswo läuft der Player als kleines Fenster unten rechts weiter, der Chat bleibt unsichtbar geladen.
+// Player und Chat liegen in einem festen Behälter (#stream-dock) und werden NIE im DOM verschoben oder neu aufgebaut
+// (verschobene iframes laden neu). Alles Weitere geschieht nur über CSS-Klassen.
 import { esc } from './util.js';
 import { streamAllowed } from './live.js';
 
@@ -15,65 +15,78 @@ export const CHAT_POPOUT = `https://www.twitch.tv/popout/${CHANNEL}/chat`;
 export function getStreamPrefs() {
   let p = null;
   try { p = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { /* egal */ }
-  return { player: p?.player !== false, chat: p?.chat !== false };
+  return { player: p?.player !== false, chat: p?.chat !== false, collapsed: p?.collapsed === true };
 }
 
 function setStreamPrefs(p) {
   try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* egal */ }
 }
 
-// Reiter nur zeigen, wenn mindestens eins von beidem eingeschaltet ist.
-export const streamTabVisible = () => { const p = getStreamPrefs(); return streamAllowed() && (p.player || p.chat); };
-
 const parent = () => encodeURIComponent(location.hostname || 'localhost');
 const dark = () => document.documentElement.dataset.theme !== 'light';
 const playerSrc = () => `https://player.twitch.tv/?channel=${CHANNEL}&parent=${parent()}&autoplay=true`;
 const chatSrc = () => `https://www.twitch.tv/embed/${CHANNEL}/chat?parent=${parent()}${dark() ? '&darkpopout' : ''}`;
 
-const dock = () => document.getElementById('stream-dock');
-let playing = false;   // Player läuft (bis „✕“ oder Stream ausgeschaltet)
+const $ = (id) => document.getElementById(id);
+let playing = false;   // Player läuft (bis „Stream ✕“ oder Stream ausgeschaltet)
 let chatLoaded = false;
-let onStreamTab = false;
+let bound = false;
 
-// Ansicht des Reiters selbst: nur Hinweistext – Player/Chat zeigt der Dock-Behälter darüber.
-export function streamView() {
-  return {
-    html: `<p class="stream-hint">Zum Mitschreiben musst du bei Twitch angemeldet sein. Klappt das hier nicht (manche Browser blockieren das),
-      nimm „Chat in eigenem Fenster öffnen“. Wechselst du den Reiter, läuft der Stream klein unten rechts weiter.
-      Stream oder Chat ausblenden: Knopf <b>Stream</b> oben rechts.</p>`,
-    bind() {},
-  };
+// Alte Adresse #/stream: Leiste aufklappen (und wenn alles zu war, beides wieder einschalten).
+export function openStreamBar() {
+  const p = getStreamPrefs();
+  if (!p.player && !p.chat) { p.player = true; p.chat = true; }
+  p.collapsed = false;
+  setStreamPrefs(p);
+  syncStreamDock();
 }
 
-// Nach jedem Reiterwechsel aufrufen.
-export function syncStreamDock(tabId) {
-  const d = dock();
-  if (!d) return;
+// Nach jeder Änderung (Einstellung, Live-Status) aufrufen. Ändert nur Klassen/hidden, lädt nichts neu.
+export function syncStreamDock() {
+  const wrap = $('stream-wrap'), d = $('stream-dock');
+  if (!wrap || !d) return;
   if (!streamAllowed()) {
-    // Streamer hat den Stream-Reiter im Spiel abgeschaltet: Player und Chat ganz entfernen
-    playing = false; chatLoaded = false; onStreamTab = false;
-    d.innerHTML = ''; delete d.dataset.ready; d.hidden = true;
+    // Streamer hat den Stream im Spiel abgeschaltet: Player und Chat ganz entfernen
+    playing = false; chatLoaded = false;
+    d.innerHTML = ''; delete d.dataset.ready; d.hidden = true; wrap.hidden = true;
     return;
   }
   const p = getStreamPrefs();
-  onStreamTab = tabId === 'stream';
   if (!p.player) playing = false;
+  wrap.hidden = !(p.player || p.chat);
+  if (wrap.hidden) {
+    if (d.dataset.ready) { d.innerHTML = ''; delete d.dataset.ready; }
+    chatLoaded = false; d.hidden = true;
+    return;
+  }
   if (!d.dataset.ready) build(d);
+  bind(wrap, d);
 
+  const open = !p.collapsed;
   const player = d.querySelector('.stream-player');
   const chat = d.querySelector('.stream-chat');
-  player.hidden = !p.player || (!onStreamTab && !playing);
-  chat.hidden = !p.chat || !onStreamTab;
-  if (onStreamTab && p.chat && !chatLoaded) {
+  player.hidden = !p.player || (!open && !playing);
+  chat.hidden = !p.chat || !open;
+  if (p.chat && !chatLoaded) {
     chatLoaded = true;
     chat.querySelector('.stream-chat-frame').innerHTML = `<iframe src="${esc(chatSrc())}" title="Twitch-Chat von ${CHANNEL}"></iframe>`;
   }
   if (!p.chat && chatLoaded) { chatLoaded = false; chat.querySelector('.stream-chat-frame').innerHTML = ''; }
-  if (!playing) player.querySelector('.stream-frame').innerHTML = startButton();
+  if (!playing && !player.querySelector('.stream-start')) player.querySelector('.stream-frame').innerHTML = startButton();
 
-  d.classList.toggle('mini', !onStreamTab && playing);
-  d.classList.toggle('both', onStreamTab && p.player && p.chat);
-  d.hidden = onStreamTab ? !(p.player || p.chat) : !playing;
+  d.classList.toggle('mini', !open && playing);
+  d.classList.toggle('has-player', p.player);
+  d.classList.toggle('has-chat', p.chat);
+  d.hidden = open ? false : !playing;
+  wrap.classList.toggle('collapsed', !open);
+
+  $('stream-toolbar').hidden = !open;
+  $('stream-strip').hidden = open;
+  $('stream-strip').querySelector('.stream-strip-text').innerHTML =
+    playing ? '<i class="stream-dot" aria-hidden="true"></i>Stream läuft – aufklappen' : 'Stream – aufklappen';
+  wrap.querySelector('[data-stream-chat-close]').hidden = !p.chat;
+  wrap.querySelector('[data-stream-player-close]').hidden = !p.player;
+  wrap.querySelector('.stream-popout').hidden = !p.chat;
 }
 
 function startButton() {
@@ -90,30 +103,41 @@ function build(d) {
     <div class="stream-player">
       <div class="stream-frame"></div>
       <div class="stream-mini-bar">
-        <a href="#/stream" class="stream-mini-btn" title="Groß anzeigen">Groß</a>
+        <button type="button" class="stream-mini-btn" data-stream-expand title="Leiste aufklappen" aria-label="Leiste aufklappen">Groß</button>
         <button type="button" class="stream-mini-btn" data-stream-stop title="Stream beenden" aria-label="Stream beenden">✕</button>
       </div>
     </div>
     <div class="stream-chat">
       <div class="stream-chat-frame"></div>
-      <a class="stream-popout" href="${CHAT_POPOUT}" target="_blank" rel="noopener">Chat in eigenem Fenster öffnen ↗</a>
     </div>`;
-  if (d._bound) return; // Klick-Handler nur einmal, auch wenn der Inhalt neu aufgebaut wird
-  d._bound = true;
-  d.addEventListener('click', (e) => {
-    if (e.target.closest('[data-stream-start]')) {
+}
+
+function bind(wrap, d) {
+  if (bound) return; // Klick-Handler nur einmal, auch wenn der Inhalt neu aufgebaut wird
+  bound = true;
+  const update = (fn) => { const p = getStreamPrefs(); fn(p); setStreamPrefs(p); syncStreamDock(); };
+  wrap.addEventListener('click', (e) => {
+    const t = (sel) => e.target.closest(sel);
+    if (t('[data-stream-start]')) {
       playing = true;
       d.querySelector('.stream-frame').innerHTML =
         `<iframe src="${esc(playerSrc())}" title="Stream von ${CHANNEL}" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
-      syncStreamDock(onStreamTab ? 'stream' : '');
-    } else if (e.target.closest('[data-stream-stop]')) {
-      playing = false;
-      syncStreamDock(onStreamTab ? 'stream' : '');
+      syncStreamDock();
+    } else if (t('[data-stream-stop]')) {
+      playing = false; syncStreamDock();
+    } else if (t('[data-stream-player-close]')) {
+      update((p) => { p.player = false; });
+    } else if (t('[data-stream-chat-close]')) {
+      update((p) => { p.chat = false; });
+    } else if (t('[data-stream-collapse]')) {
+      update((p) => { p.collapsed = true; });
+    } else if (t('[data-stream-expand]') || t('#stream-strip')) {
+      update((p) => { p.collapsed = false; });
     }
   });
 }
 
-// Kleines Einstellungsfeld am Knopf „Stream“ im Kopf. onChange zeichnet Reiter/Ansicht neu.
+// Kleines Einstellungsfeld am Knopf „Stream“ im Kopf. onChange zeichnet die Leiste neu.
 export function initStreamSettings(onChange) {
   const btn = document.getElementById('stream-toggle');
   const panel = document.getElementById('stream-panel');
@@ -137,6 +161,7 @@ export function initStreamSettings(onChange) {
     if (!key) return;
     const p = getStreamPrefs();
     p[key] = e.target.checked;
+    if (e.target.checked) p.collapsed = false;
     setStreamPrefs(p);
     onChange();
   });

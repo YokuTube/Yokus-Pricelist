@@ -85,6 +85,7 @@ def make_pawn(user, display, name, full, gender, age, race, xeno, state, state_l
             {"label": "Schöne Umgebung", "value": 3, "count": 1, "desc": "Hier ist es hübsch."},
             {"label": "Hat im Regen geschlafen", "value": -4, "count": 2, "desc": "Nass und kalt."},
             {"label": "Schmerz", "value": -6.5, "count": 1, "desc": "Es tut weh."},
+            {"label": "Gutes Gespräch mit Kira", "value": 4, "count": 1, "desc": "Das Gespräch mit Kira und Luna Mertens tat gut."},
         ],
         "needs": needs or [need("Nahrung", 72), need("Erholung", 55), need("Schlaf", 81), need("Komfort", 64), need("Schönheit", 40), need("Freude", 33)],
         "capacities": [need("Bewusstsein", 100 if state != "downed" else 28), need("Bewegung", 100 if state != "downed" else 0),
@@ -245,6 +246,33 @@ for _kv in filter(None, os.environ.get("FAKE_MOODS", "").split(",")):
     _u, _, _v = _kv.partition("=")
     if _u in PAWNS:
         PAWNS[_u]["moodPct"] = float(_v)
+def _gene(label, cat, mod, met, arc, cpx, desc, active=True, icon=None):
+    return {"label": label, "desc": desc, "cat": cat, "mod": mod, "icon": icon or ("g_" + label.replace(" ", "")),
+            "active": active, "met": met, "arc": arc, "cpx": cpx}
+
+
+PAWNS["yoku"]["genes"] = {
+    "xenotype": {"label": "Hochmensch", "icon": "x_Highmate",
+                 "desc": "Ein Mensch mit stark verbesserten Genen: hohe Intelligenz, Schönheit und Lebenserwartung. Die Einzigartigkeit hat ihren Preis im Stoffwechsel."},
+    "endo": [
+        _gene("Schönheit, stark", "Kosmetisch", "Biotech", 0, 0, 1, "Pawns mit diesem Gen sind außergewöhnlich schön.\n\nSchönheit: +2"),
+        _gene("Haarfarbe: Kupfer", "Kosmetisch", "Biotech", 0, 0, 1, "Bestimmt die Haarfarbe.", icon="0"),
+        _gene("Flinke Finger", "Fähigkeit", "Biotech", -1, 0, 1, "Hände von Natur aus flink.\n\nManipulation: +10 %"),
+        _gene("Robust", "Verschiedenes", "Biotech", 1, 0, 1, "Hohe Widerstandskraft gegen Krankheit.\n\nKrankheitsresistenz +20 %"),
+        _gene("Dunkle Haut", "Kosmetisch", "Biotech", 0, 0, 1, "Haut dunkel getönt. (Wird von einem anderen Gen überschrieben.)", active=False),
+    ],
+    "xeno": [
+        _gene("Scharfer Verstand", "Fähigkeit", "Biotech", -2, 0, 2, "Der Verstand arbeitet überdurchschnittlich schnell.\n\nBewusstsein: +15 %\nLernen: +25 %"),
+        _gene("Langlebig", "Verschiedenes", "Biotech", -1, 0, 1, "Alter wird langsamer. Lebenserwartung +40 %."),
+        _gene("Schnelle Wundheilung", "Verschiedenes", "Biotech", -2, 0, 2, "Wunden heilen mehrfach schneller."),
+        _gene("Archit: Eisenhaut", "Archit", "Biotech", -3, 1, 3, "Haut so zäh wie Eisen.\n\nRüstung gegen Hieb: +30 %"),
+        _gene("Blutspender", "Verschiedenes", "Vanilla Genetics Expanded", 1, 0, 1, "Das Blut ist mit Nährstoffen angereichert. Kann ohne Schaden öfter Blut spenden."),
+        _gene("Mondlicht-Seher", "Fähigkeit", "Alpha Genes", 0, 0, 2, "Sieht auch bei Nacht gut.\n\nNachtsicht: keine Lichtstrafe"),
+    ],
+}
+for _g in PAWNS["yoku"]["genes"]["endo"] + PAWNS["yoku"]["genes"]["xeno"]:
+    if _g["icon"] == "0":
+        _g["icon"] = None   # Gen ohne Symbol testen
 PAWNS["yoku"]["traits"].append({"label": "<color=#66B3FF>Rang b</color>", "desc": "<b>Abenteurerrang</b>: <color=#66B3FF>Rang b</color> der Gilde."})
 PAWNS["yoku"]["isekai"] = isekai_data("krieger", 7, 340, 500, "D-Rang", 3, 2,
                                       {"str": 12, "dex": 9, "vit": 11, "int": 6, "wis": 7, "cha": 8},
@@ -739,11 +767,11 @@ class H(BaseHTTPRequestHandler):
                 "precepts": [{"issue": "Kannibalismus", "label": "Verabscheut", "desc": "Menschenfleisch zu essen ist ein schweres Vergehen.", "impact": "high"},
                              {"issue": "Drogen", "label": "Nur medizinisch", "desc": "Drogen nur zur Heilung.", "impact": "medium"},
                              {"issue": "Bäume fällen", "label": "Missbilligt", "desc": "Bäume sind lebendig.", "impact": "low"}],
-                "roles": [{"label": "Moralführer", "desc": "Leitet Rituale und Gespräche über den Glauben.", "holders": ["Kira"]},
+                "roles": [{"label": "Moralführer", "desc": "Leitet Rituale und Gespräche über den Glauben.", "holders": ["Kira", "Fremder"], "holderIds": ["yoku", None]},
                           {"label": "Erntemeister", "desc": "Spezialist für die Ernte.", "holders": []}],
                 "rituals": [{"label": "Sonnenfest", "desc": "Ein Fest zur Sommersonnenwende."}]}]})
         if p == "/api/events":
-            return self.js(200, {"events": EVENTS, "social": [{"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "1 Stunde"}, {"text": "Luna hat Eddi ein Geschenk gemacht.", "ago": "3 Stunden"}, {"text": "Eddi hat Kira beleidigt.", "ago": "2 Tage"}]})
+            return self.js(200, {"events": EVENTS, "social": [{"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "1 Stunde", "pawns": [{"id": "yoku", "name": "Kira"}, {"id": "mira_spielt", "name": "Mira"}]}, {"text": "Luna hat Eddi ein Geschenk gemacht.", "ago": "3 Stunden"}, {"text": "Eddi hat Kira beleidigt.", "ago": "2 Tage"}]})
         if p == "/api/colony":
             return self.js(200, {"pawns": [summary(x) for x in PAWNS.values()]})
         if p.startswith("/api/log/"):

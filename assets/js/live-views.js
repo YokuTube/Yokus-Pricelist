@@ -5,6 +5,7 @@ import * as live from './live.js';
 // Alle Anzeigetexte aus der Mod laufen durch esc(): erst Unity-Rich-Text (<color=..>, <b> …) entfernen, dann entschärfen.
 const esc = (s) => escRaw(live.stripTags(s));
 import { CHAT_POPOUT as CHAT_URL } from './stream.js';
+import { panelGenes, hasGenes } from './live-genes.js';
 
 let DATA = null;
 /** Preislisten-Daten (für die Preisanzeige im Kauf-Dialog). */
@@ -329,7 +330,7 @@ function startBarPolling() {
   barPolling = true;
   const alive = () => { const ok = live.isLive(); if (!ok) barPolling = false; return ok; };
   live.poll({ path: '/api/game', every: 5000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barGame = r.data; giftPrice = Number(r.data?.giftPrice) || 0; fillBar(); } } });
-  live.poll({ path: '/api/colony', every: 2000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barPawns = r.data?.pawns || []; fillBar(); } } });
+  live.poll({ path: '/api/colony', every: 2000, alive, onResult: (r) => { if (r.status === 200 && !r.unchanged) { barPawns = r.data?.pawns || []; noteColony(barPawns); fillBar(); } } });
 }
 
 function renderStrip() {
@@ -584,6 +585,7 @@ function checkNotices() {
 }
 
 export function initLiveUi() {
+  document.addEventListener('click', xrefClick, true);
   const header = document.querySelector('.site-header');
   if (!header) return;
   strip = document.createElement('div');
@@ -694,6 +696,7 @@ const SUBS = [
   { id: 'mood', label: 'Stimmung' },
   { id: 'skills', label: 'Fähigkeiten' },
   { id: 'health', label: 'Gesundheit' },
+  { id: 'genes', label: 'Gene' },
   { id: 'gear', label: 'Ausrüstung' },
   { id: 'style', label: 'Aussehen' },
   { id: 'psyche', label: 'Psyche' },
@@ -711,7 +714,7 @@ const SUBS = [
 // 7 Reiter, darin je ein Umschalter zwischen den Bereichen (Bereichs-ids = frühere Unterreiter-ids aus SUBS)
 const TABS = [
   { id: 'overview', label: 'Überblick', areas: ['overview', 'mood'] },
-  { id: 'body', label: 'Körper', areas: ['health', 'gear'] },
+  { id: 'body', label: 'Körper', areas: ['health', 'genes', 'gear'] },
   { id: 'char', label: 'Charakter', areas: ['psyche', 'ideo', 'origin'] },
   { id: 'skills', label: 'Können', areas: ['skills', 'psy', 'isekai', 'stats'] },
   { id: 'goals', label: 'Ziele', areas: ['goals'] },
@@ -733,7 +736,7 @@ let openTrait = null;
 
 const STATE_BADGE = { ok: 'good', sleeping: 'neutral', away: 'neutral', downed: 'bad', mental: 'doom', dead: 'doom' };
 const hasGoals = (p) => p.wants != null || p.quirks != null || p.aspirations != null;
-const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'ideo' || !!p.ideo) && (s.id !== 'psy' || !!p.psycasts) && (s.id !== 'psyche' || !!(p.psyche && (p.psyche.personality || p.psyche.interests || p.psyche.sexuality))) && (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null) && (s.id !== 'work' || Array.isArray(p.work)));
+const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'ideo' || !!p.ideo) && (s.id !== 'psy' || !!p.psycasts) && (s.id !== 'psyche' || !!(p.psyche && (p.psyche.personality || p.psyche.interests || p.psyche.sexuality))) && (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null) && (s.id !== 'work' || Array.isArray(p.work)) && (s.id !== 'genes' || hasGenes(p)));
 
 function portraitHtml(p, cls) {
   const ini = esc((p.name || p.displayName || '?').trim().charAt(0).toUpperCase() || '?');
@@ -820,6 +823,9 @@ function skillRow(s) {
   return `<div class="brow"><span class="bl">${esc(s.label)}</span>${bar(s.level * 5, 'acc')}<span class="bv">${esc(s.level)}<span class="flames" title="${s.passion >= 2 ? 'Brennende Leidenschaft' : s.passion === 1 ? 'Leidenschaft' : ''}">${flames(s.passion)}</span></span></div>`;
 }
 
+// „Rex (Husky)“ -> Name verlinkt auf Kolonie > Tiere
+const bondLink = (b) => { const m = /^(.+?)(\s*\(.*\))?$/.exec(String(b)); return m ? animalXref(m[1]) + esc(m[2] || '') : esc(b); };
+
 function panelOverview(p) {
   const needs = (p.needs || []).length ? section('Bedürfnisse', `<div class="bgrid">${p.needs.map((n) => barRow(n.label, n.pct)).join('')}</div>`) : '';
   const top = (p.skills || []).filter((s) => !s.disabled).sort((a, b) => b.level - a.level || b.passion - a.passion).slice(0, 3);
@@ -831,7 +837,7 @@ function panelOverview(p) {
       `<button type="button" class="trait" data-trait="${esc(t.label)}" aria-expanded="${t === open}" title="${esc(t.desc)}">${esc(t.label)}</button>`).join('')}</div>
       ${open ? `<p class="trait-desc"><b>${esc(open.label)}:</b> ${esc(open.desc)}</p>` : '<p class="small muted trait-hint">Tippe auf eine Eigenschaft, um sie zu lesen.</p>'}`);
   }
-  const bonds = (p.bonds || []).length ? `<p class="bonds"><span class="heart" aria-hidden="true">♥</span> Gebunden an: <b>${p.bonds.map(esc).join(', ')}</b></p>` : '';
+  const bonds = (p.bonds || []).length ? `<p class="bonds"><span class="heart" aria-hidden="true">♥</span> Gebunden an: <b>${p.bonds.map((b) => bondLink(b)).join(', ')}</b></p>` : '';
   return bonds + needs + skills + traits || '<div class="empty">Keine Angaben.</div>';
 }
 
@@ -847,9 +853,9 @@ function panelMood(p) {
     const open = openTrait === key;
     const tn = t.value > 0 ? 'good' : t.value < 0 ? 'doom' : 'neutral';
     return `<button type="button" class="thought" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(t.desc)}">
-        <span class="th-label">${esc(t.label)}${t.count > 1 ? ` <span class="muted">×${t.count}</span>` : ''}</span>
+        <span class="th-label">${linkText(t.label, { span: true, skip: p.id || p.user })}${t.count > 1 ? ` <span class="muted">×${t.count}</span>` : ''}</span>
         <span class="th-val ${tn}">${sign(t.value)}</span>
-      </button>${open && t.desc ? `<p class="trait-desc th-desc">${esc(t.desc)}</p>` : ''}`;
+      </button>${open && t.desc ? `<p class="trait-desc th-desc">${linkText(t.desc, { skip: p.id || p.user })}</p>` : ''}`;
   }).join('');
   return head + section('Was gerade auf die Stimmung wirkt', `<div class="thoughts">${rows}</div>
     <p class="small muted th-sum">Zusammen: <b class="${sum >= 0 ? 'th-pos' : 'th-neg'}">${sign(sum)}</b> · Tippe auf einen Eintrag für Details.</p>`);
@@ -992,7 +998,7 @@ async function runAct(host, btn, redraw = () => repaint(host)) {
 
 // ---------- Zuschauer-Interaktionen (RICS Extras): Duell-Wetten, Lob, Nachhilfe, Tier-Paten ----------
 let gameInfo = null;                       // zuletzt gesehene GameInfo (Lob-Zähler, Nachhilfe-Preis, Patenpreis)
-const noteGame = (g) => { if (g && typeof g === 'object') gameInfo = g; };
+const noteGame = (g) => { if (g && typeof g === 'object') { gameInfo = g; px.animals = (Array.isArray(g.animalList) ? g.animalList : []).map((a) => a?.name).filter(Boolean); } };
 const interKey = (g) => JSON.stringify([g?.praise ?? null, g?.tutor ?? null, g?.sponsorPrice ?? null]);
 
 // Duell-Wetten: Karte „Duell läuft“ (Spiel → Übersicht und Kolonie)
@@ -1025,7 +1031,7 @@ function betAmounts(d) {
 function duelSide(s, cls) {
   return `<div class="duel-side ${cls}">
     ${portraitHtml({ name: s.name, id: s.id || s.user, portrait: 1 }, 'duel-portrait')}
-    <b class="duel-name">${esc(s.name)}</b>
+    <b class="duel-name">${(s.id || s.user) ? xrefHtml(s.name, s.id || s.user) : esc(s.name)}</b>
     ${s.user ? `<span class="small muted duel-user">@${esc(s.user)}</span>` : '<span class="small muted duel-user">&nbsp;</span>'}
     ${barRow('Gesundheit', s.healthPct, null, null, 'mini')}
   </div>`;
@@ -1197,7 +1203,7 @@ function canSponsor(a) {
 function sponsorHtml(a) {
   if (a.sponsor) {
     const mine = normUser(a.sponsor) === normUser(live.getMe()?.user) && live.isLinked();
-    return `<div class="an-sponsor${mine ? ' mine' : ''}"><span class="ach" title="Pate dieses Tiers">Pate: @${esc(normUser(a.sponsor))}${mine ? ' (du)' : ''}</span></div>`;
+    return `<div class="an-sponsor${mine ? ' mine' : ''}"><span class="ach" title="Pate dieses Tiers">Pate: @${(() => { const id = userPawnId(a.sponsor); return id ? xrefHtml(normUser(a.sponsor), id, true) : esc(normUser(a.sponsor)); })()}${mine ? ' (du)' : ''}</span></div>`;
   }
   if (!canSponsor(a)) return '';
   const price = Number(gameInfo?.sponsorPrice) || 0;
@@ -1467,17 +1473,17 @@ function panelOrigin(p) {
 let logKind = lsGet('ys-live-log') || 'social';
 const logCache = new Map(); // Pawn-Schlüssel -> letzte Antwort (damit beim Umschalten nichts flackert)
 
-function logListHtml(data) {
+function logListHtml(data, skip) {
   const list = data?.[logKind] || [];
   if (!list.length) return `<div class="empty">${logKind === 'social' ? 'Noch keine Unterhaltungen aufgezeichnet.' : 'Noch keine Kämpfe aufgezeichnet.'}</div>`;
-  return `<ol class="logl">${list.map((e) => `<li><span class="log-text">${esc(e.text)}</span><span class="log-ago">vor ${esc(agoDe(e.ago))}</span></li>`).join('')}</ol>`;
+  return `<ol class="logl">${list.map((e) => `<li><span class="log-text">${linkText(e.text, { pawns: e.pawns, skip })}</span><span class="log-ago">vor ${esc(agoDe(e.ago))}</span></li>`).join('')}</ol>`;
 }
 
 function panelLog(p) {
   const key = p.id || p.user;
   const btn = (k, label) => `<button type="button" class="seg${logKind === k ? ' on' : ''}" data-logkind="${k}" aria-pressed="${logKind === k}">${label}</button>`;
   return `<div class="log-switch">${btn('social', 'Unterhaltungen')}${btn('combat', 'Kämpfe')}</div>
-    <div class="log-host" data-key="${esc(key)}:${logKind}" data-morph-keep data-logfor="${esc(key)}">${logCache.has(key) ? logListHtml(logCache.get(key)) : '<div class="empty">Lade …</div>'}</div>
+    <div class="log-host" data-key="${esc(key)}:${logKind}" data-morph-keep data-logfor="${esc(key)}">${logCache.has(key) ? logListHtml(logCache.get(key), key) : '<div class="empty">Lade …</div>'}</div>
     <p class="small muted">Die letzten Einträge aus dem Spiel-Log, neueste zuerst.</p>`;
 }
 
@@ -1492,7 +1498,7 @@ function startLogPoll(host) {
       if (r.status === 404) { el.innerHTML = '<div class="empty">Noch keine Einträge – kommt gleich.</div>'; return; }
       if (r.status !== 200 || !r.data) return;
       logCache.set(key, r.data);
-      if (!r.unchanged || !el.dataset.filled) { morph(el, logListHtml(r.data)); el.dataset.filled = '1'; }
+      if (!r.unchanged || !el.dataset.filled) { morph(el, logListHtml(r.data, key)); el.dataset.filled = '1'; }
     },
   });
 }
@@ -1567,6 +1573,7 @@ function relGraphHtml(p, list) {
 
 function relHtml(p, data) {
   const list = (data?.relations || []).filter((r) => r && !r.animal);
+  for (const r of list) if (r.colonist && r.id && !r.dead) noteFullName(r.id, r.name);
   if (!list.length) return '<div class="empty">Noch keine Beziehungen erfasst.</div>';
   const graph = relGraphHtml(p, list);
   const fam = list.filter((r) => (r.relations || []).length);
@@ -1601,18 +1608,18 @@ function startRelPoll(host) {
 }
 
 // Lebensgeschichte: Erinnerungen (story) aus demselben /api/log, eigene Abfrage nur solange dieser Unterreiter offen ist
-function storyHtml(list) {
+function storyHtml(list, skip) {
   if (!Array.isArray(list) || !list.length) return '<div class="empty">Noch keine Erinnerungen erfasst.</div>';
   return `<ol class="story">${list.map((e) => `<li class="st-item">
       <span class="st-day">Tag ${fmt(e.day)}</span>
-      <span class="st-text">${esc(e.text)}</span>
+      <span class="st-text">${linkText(e.text, { skip })}</span>
       ${e.ago ? `<span class="small muted st-ago">vor ${esc(agoDe(e.ago))}</span>` : ''}</li>`).join('')}</ol>`;
 }
 
 function panelStory(p) {
   const key = p.id || p.user;
   const cached = logCache.get(key);
-  return `<div class="story-host" data-key="${esc(key)}" data-morph-keep data-logfor="${esc(key)}">${cached ? storyHtml(cached.story) : '<div class="empty">Lade …</div>'}</div>
+  return `<div class="story-host" data-key="${esc(key)}" data-morph-keep data-logfor="${esc(key)}">${cached ? storyHtml(cached.story, key) : '<div class="empty">Lade …</div>'}</div>
     <p class="small muted">Die Erinnerungen dieses Kolonisten, neueste zuerst.</p>`;
 }
 
@@ -1627,7 +1634,7 @@ function startStoryPoll(host) {
       if (r.status === 404) { morph(el, '<div class="empty">Noch keine Einträge – kommt gleich.</div>'); return; }
       if (r.status !== 200 || !r.data) return;
       logCache.set(key, r.data);
-      if (!r.unchanged || !el.dataset.filled) { morph(el, storyHtml(r.data.story)); el.dataset.filled = '1'; }
+      if (!r.unchanged || !el.dataset.filled) { morph(el, storyHtml(r.data.story, key)); el.dataset.filled = '1'; }
     },
   });
 }
@@ -1696,7 +1703,7 @@ async function applyWork(host) {
   repaint(host);
 }
 
-const PANELS = { stats: panelStats, psyche: panelPsyche, psy: panelPsy, ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+const PANELS = { stats: panelStats, psyche: panelPsyche, psy: panelPsy, ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, genes: (p) => panelGenes(p, { esc, section, imgUrl: animalImg, openTrait }), gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 const visibleTabs = (p) => { const v = new Set(visibleSubs(p).map((s) => s.id)); return TABS.filter((t) => t.areas.some((a) => v.has(a))); };
 const activeTab = (p) => (visibleTabs(p).some((t) => t.id === curSub) ? curSub : 'overview');
@@ -1843,7 +1850,7 @@ function panelIdeo(p) {
   const precepts = i.precepts.length ? section('Gebote', `<div class="ideo-precepts">${i.precepts.map((x, n) =>
     `<div class="ideo-pre imp-${esc(x.impact)}">${ideoItem('ip:' + n, `<span class="small muted">${esc(x.issue)}:</span> ${esc(x.label)}`, x.desc)}</div>`).join('')}</div>`) : '';
   const roles = i.roles.length ? section('Rollen', i.roles.map((r, n) =>
-    `<div class="ideo-role">${ideoItem('ir:' + n, esc(r.label), r.desc, r.holders.length ? ` <span class="small muted">· ${esc(r.holders.join(', '))}</span>` : ' <span class="small muted">· unbesetzt</span>')}</div>`).join('')) : '';
+    `<div class="ideo-role">${ideoItem('ir:' + n, esc(r.label), r.desc, r.holders.length ? ` <span class="small muted">· ${r.holders.map((h, k) => { const id = r.holderIds?.[k] || null; return id && id !== (p.id || p.user) ? xrefHtml(h, id, true) : linkText(h, { span: true, skip: p.id || p.user }); }).join(', ')}</span>` : ' <span class="small muted">· unbesetzt</span>')}</div>`).join('')) : '';
   const rituals = i.rituals.length ? section('Rituale', `<div class="traits">${i.rituals.map((r, n) => ideoItem('it:' + n, esc(r.label), r.desc)).join('')}</div>`) : '';
   const about = `<p class="small muted" style="margin:6px 0 0">${esc(i.name)}${i.culture ? ` · Kultur: ${esc(i.culture)}` : ''} · ${fmt(i.followers)} Anhänger in der Kolonie${i.primary ? ' · Hauptglaube der Kolonie' : ''}</p>`;
   return head + about + (i.desc ? `<p class="ideo-desc">${esc(i.desc)}</p>` : '') + memes + precepts + roles + rituals
@@ -2125,6 +2132,7 @@ function startInterPoll(host) {
 
 function mountCharacter(host, p) {
   host._pawn = p;
+  noteFullName(p.id || p.user, p.fullName);
   morph(host, characterHtml(p));
   afterPaint(host);
   if (host._bound) return;
@@ -2336,7 +2344,95 @@ function animalChips(a) {
 }
 
 // Querverweis: Name eines Kolonisten als Link auf seine Seite (ohne id nur Text)
-const pawnLink = (name, id) => (id ? `<a class="xref" href="#/kolonie/${encodeURIComponent(id)}">${esc(name)}</a>` : `<b>${esc(name)}</b>`);
+const pawnLink = (name, id) => (id ? `<a class="xref" data-xgo="${esc(id)}" href="#/kolonie/${encodeURIComponent(id)}">${esc(name)}</a>` : `<b>${esc(name)}</b>`);
+
+// ---------- Querverweise: Namen von Kolonisten (und Tieren) im Text werden zu Links ----------
+// Zuordnung Name -> Seite aus der zuletzt geladenen Kolonie-Liste (Rufname, volle Namen aus Detail/Beziehungen, Zuschauername).
+// Mehrdeutige Namen (zwei Kolonisten gleichen Namens) werden nie verlinkt. Immer: erst Rohtext zerlegen, Teile einzeln escapen.
+const px = { list: [], full: new Map(), animals: [], byName: new Map(), byUser: new Map(), animalNames: new Set(), re: null, sig: '', ver: 0 };
+const pxEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const pxRegex = (names) => {
+  const arr = [...names].sort((a, b) => b.length - a.length || a.localeCompare(b));
+  if (!arr.length) return null;
+  try { return new RegExp(`(?<![\\p{L}\\p{N}_])(${arr.map(pxEsc).join('|')})(?=s?(?![\\p{L}\\p{N}_]))`, 'gu'); } catch { return null; }   // ältere Browser ohne Lookbehind: keine Links
+};
+function pxBuild() {
+  const key = JSON.stringify([px.list.map((q) => [q.id, q.name, q.user]), [...px.full], px.animals]);
+  if (key === px.sig) return;
+  px.sig = key; px.ver++;
+  px.byName = new Map(); px.byUser = new Map(); px.animalNames = new Set();
+  const add = (name, id) => {
+    name = String(name || '').trim();
+    if (name.length < 3 || !id) return;
+    const cur = px.byName.get(name);
+    if (cur === undefined) px.byName.set(name, id); else if (cur !== id) px.byName.set(name, null);   // null = mehrdeutig
+  };
+  const alive = new Set();
+  for (const q of px.list) {
+    const id = q.id || q.user;
+    if (!id) continue;
+    alive.add(id);
+    add(q.name, id);
+    if (q.user) px.byUser.set(String(q.user).toLowerCase(), id);
+  }
+  for (const [id, full] of px.full) if (alive.has(id)) add(full, id);
+  for (const n of px.animals) { const t = String(n || '').trim(); if (t.length >= 3 && !px.byName.has(t)) px.animalNames.add(t); }
+  px.re = pxRegex([...[...px.byName].filter(([, v]) => v).map(([k]) => k), ...px.animalNames]);
+}
+/** Kolonie-Liste (PawnSummary[]) merken. */
+function noteColony(list) { if (Array.isArray(list)) px.list = list.map((q) => ({ id: q.id, name: q.name, user: q.user })); }
+/** Voller Name zu einer id (aus Detail/Beziehungen). */
+function noteFullName(id, full) { if (id && full && px.full.get(id) !== full) px.full.set(id, full); }
+const userPawnId = (user) => { pxBuild(); return px.byUser.get(String(user ?? '').replace(/^@/, '').trim().toLowerCase()) || null; };
+
+const xrefHtml = (name, id, span) => (span
+  ? `<span class="xref" role="link" data-xgo="${esc(id)}">${esc(name)}</span>`
+  : `<a class="xref" data-xgo="${esc(id)}" href="#/kolonie/${encodeURIComponent(id)}">${esc(name)}</a>`);
+const animalXref = (name, span) => (span
+  ? `<span class="xref" role="link" data-xanimal="1">${esc(name)}</span>`
+  : `<a class="xref" data-xanimal="1" href="#/kolonie">${esc(name)}</a>`);
+
+/**
+ * Text -> HTML mit Links auf Kolonisten (Tiere: auf Kolonie > Tiere). o.span: Link als <span> (innerhalb von Knöpfen),
+ * o.skip: id, die nicht verlinkt wird (die Seite, auf der man schon ist), o.pawns: [{id, name}] aus der Mod (genauer als die Namenssuche).
+ */
+function linkText(text, o = {}) {
+  const raw = live.stripTags(text == null ? '' : String(text));
+  pxBuild();
+  const local = new Map();
+  for (const q of o.pawns || []) if (q && q.id && String(q.name || '').trim().length >= 2) local.set(String(q.name).trim(), String(q.id));
+  let re = px.re;
+  if (local.size) {
+    const names = new Set([...px.byName].filter(([, v]) => v).map(([k]) => k));
+    for (const n of px.animalNames) names.add(n);
+    for (const n of local.keys()) names.add(n);
+    re = pxRegex(names);
+  }
+  if (!re) return escRaw(raw);
+  let out = '', last = 0, m;
+  re.lastIndex = 0;
+  while ((m = re.exec(raw))) {
+    const nm = m[1];
+    const id = local.get(nm) ?? px.byName.get(nm);
+    out += escRaw(raw.slice(last, m.index));
+    last = m.index + nm.length;
+    if (id && id !== o.skip) out += xrefHtml(nm, id, o.span);
+    else if (!id && px.animalNames.has(nm) && px.byName.get(nm) === undefined) out += animalXref(nm, o.span);
+    else out += escRaw(nm);
+  }
+  return out + escRaw(raw.slice(last));
+}
+
+/** Klick auf einen Querverweis (auch in Knöpfen): zum Kolonisten bzw. zu den Tieren, ohne dass der Eltern-Knopf aufklappt. */
+function xrefClick(e) {
+  const x = e.target.closest?.('[data-xgo],[data-xanimal]');
+  if (!x || e.button > 0 || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  e.preventDefault(); e.stopPropagation();
+  if (x.dataset.xgo) { location.hash = '#/kolonie/' + encodeURIComponent(x.dataset.xgo); return; }
+  kolSub = 'animals'; saveSub('ys-kol-sub', kolSub);
+  if (/^#\/?kolonie\/?$/.test(location.hash)) document.querySelector('[data-kolsub="animals"]')?.click();
+  else location.hash = '#/kolonie';
+}
 
 // Kleine Balkenzeile in der Tierkachel: Name · Balken (Farbe nach Zustand) · Prozent
 const anBar = (label, pct, tn) => `<div class="an-bar"><span>${esc(label)}</span>${bar(clamp(pct), tn)}<span class="an-pct">${Math.round(clamp(pct))} %</span></div>`;
@@ -2459,7 +2555,7 @@ function colonyList() {
       count.textContent = list.length ? `${fmt(list.length)} Kolonist${list.length === 1 ? '' : 'en'}` : '';
       morph(grid, list.length ? list.map((p) => colonyCard(p, me)).join('')
         : `<div class="empty" style="grid-column:1/-1">Noch keine Kolonisten zu sehen. Mit <code>${esc(live.prefix())}join</code> im Chat kannst du die Erste oder der Erste sein.</div>`);
-      plist = list;
+      plist = list; noteColony(list);
       drawRanks();
     };
     live.poll({
@@ -2611,7 +2707,7 @@ function goalsHtml(goals) {
   return `<ul class="goal-list gc-list">${goals.map((g) => {
     const cur = Number(g.current) || 0, tgt = Number(g.target) || 0;
     const pct = tgt > 0 ? (cur / tgt) * 100 : 0;
-    const top = (g.top || []).slice(0, 3).map((t) => `<li><span class="gt-user">${esc(t.user)}</span> <span class="muted">${valTxt(t.amount)}</span></li>`).join('');
+    const top = (g.top || []).slice(0, 3).map((t) => `<li><span class="gt-user">${(() => { const id = userPawnId(t.user); return id ? xrefHtml(t.user, id) : esc(t.user); })()}</span> <span class="muted">${valTxt(t.amount)}</span></li>`).join('');
     return `<li class="gc${g.done ? ' done' : ''}">
       <div class="gc-top"><div><b>${esc(g.title)}</b>${g.what ? `<div class="small muted">${esc(g.what)}</div>` : ''}</div>${g.done ? '<span class="badge good">Geschafft</span>' : ''}</div>
       <div class="gc-bar">${bar(pct, g.done ? 'good' : 'acc')}<span class="gc-num">${fmt(cur)} / ${fmt(tgt)}</span></div>
@@ -2791,9 +2887,17 @@ const evKey = (e) => `${e.day}|${e.label}|${e.ago}`;
 let evView = 'letters'; // 'letters' = Briefe, 'social' = Gespräche unter Kolonisten
 let evSocial = [];
 
+// Ziel des Briefs (img: pawn) ist der Kolonist, um den es geht – genauer als die Namenssuche (Rufname + voller Name)
+const evPawns = (e) => {
+  const m = e?.img;
+  if (!m || m.type !== 'pawn' || !m.id || !m.name) return [];
+  const first = String(m.name).trim().split(/\s+/)[0];
+  return [{ id: m.id, name: m.name }, { id: m.id, name: first }];
+};
+
 function socialHtml() {
   if (!evSocial.length) return '<div class="empty">Noch keine Gespräche aufgezeichnet.</div>';
-  return `<ol class="logl">${evSocial.map((e) => `<li><span class="log-text">${esc(e.text)}</span><span class="log-ago">vor ${esc(agoDe(e.ago))}</span></li>`).join('')}</ol>`;
+  return `<ol class="logl">${evSocial.map((e) => `<li><span class="log-text">${linkText(e.text, { pawns: e.pawns })}</span><span class="log-ago">vor ${esc(agoDe(e.ago))}</span></li>`).join('')}</ol>`;
 }
 
 function eventsLiveHtml(list) {
@@ -2837,7 +2941,7 @@ function evFigHtml(e, big) {
     const src = live.artUrl('x', 0).replace(/\/api\/art\/.*$/, '/api/img/' + encodeURIComponent(m.img));
     inner = `<img class="np-img" data-evimg src="${esc(src)}" alt="${esc(cap)}" loading="lazy">`;
   } else return '';
-  return `<figure class="np-fig${big ? ' big' : ''}">${inner}${big && cap ? `<figcaption class="small muted">${esc(cap)}</figcaption>` : ''}</figure>`;
+  return `<figure class="np-fig${big ? ' big' : ''}">${inner}${big && cap ? `<figcaption class="small muted">${m.type === 'pawn' && m.id ? xrefHtml(cap, m.id, true) : esc(cap)}</figcaption>` : ''}</figure>`;
 }
 
 const kindOf = (e) => (KIND_LABEL[e.kind] ? e.kind : 'neutral');
@@ -2860,10 +2964,11 @@ function newspaperHtml(shown) {
       const sn = sentences(e.text);
       const teaser = sn.slice(0, big ? 2 : 1).join(' ');
       const more = !!e.text && e.text.replace(/\s+/g, ' ').trim() !== teaser;
-      const body = !e.text ? '' : open ? `<p class="np-text">${esc(e.text)}</p>` : `<p class="np-text">${esc(teaser)}${more ? ' …' : ''}</p>`;
+      const lo = { span: true, pawns: evPawns(e) };
+      const body = !e.text ? '' : open ? `<p class="np-text">${linkText(e.text, lo)}</p>` : `<p class="np-text">${linkText(teaser, lo)}${more ? ' …' : ''}</p>`;
       return `<article class="np-art${big ? ' np-lead' : ''} k-${k}">
         <button type="button" class="np-btn${big ? '' : ' sm'}" data-evopen="${esc(key)}" aria-expanded="${open}">
-          ${evFigHtml(e, big)}${rubric(k)}<${big ? 'h3' : 'h4'} class="np-h">${esc(e.label)}</${big ? 'h3' : 'h4'}>
+          ${evFigHtml(e, big)}${rubric(k)}<${big ? 'h3' : 'h4'} class="np-h">${linkText(e.label, lo)}</${big ? 'h3' : 'h4'}>
           ${body}<span class="np-meta small muted">vor ${esc(agoDe(e.ago))}${e.text && (more || open) ? ` · ${open ? 'weniger' : 'weiterlesen'}` : ''}</span>
         </button></article>`;
     };
@@ -2885,11 +2990,11 @@ function timelineHtml(shown) {
     return `${head}<li class="ev tl-item k-${kind}">
       <span class="gdot tl-dot" aria-hidden="true" title="${esc(KIND_LABEL[kind])}"></span>
       <button type="button" class="ev-main" data-evopen="${esc(key)}" aria-expanded="${open}">
-        <span class="ev-label">${esc(e.label)}</span>
+        <span class="ev-label">${linkText(e.label, { span: true, pawns: evPawns(e) })}</span>
         <span class="ev-meta small muted">vor ${esc(agoDe(e.ago))}</span>
         <span class="ev-chev" aria-hidden="true">${open ? '▾' : '▸'}</span>
       </button>
-      ${open && e.text ? `<p class="ev-text">${esc(e.text)}</p>` : ''}
+      ${open && e.text ? `<p class="ev-text">${linkText(e.text, { pawns: evPawns(e) })}</p>` : ''}
     </li>`;
   }).join('');
   return `<ol class="ev-list timeline">${items}</ol>`;
@@ -2902,7 +3007,7 @@ export function ereignisseView() {
     let list = null, last = '';
     const draw = (force) => {
       if (!list) return;
-      const key = JSON.stringify([list, evSocial, evView, evFilter, evStyle, [...evOpen]]);
+      const key = JSON.stringify([list, evSocial, evView, evFilter, evStyle, [...evOpen], (pxBuild(), px.ver)]);
       if (!force && key === last) return;
       last = key;
       morph(host, eventsLiveHtml(list));

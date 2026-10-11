@@ -5,7 +5,7 @@ import { icon } from './icons.js';
 import { initChat, renderSlot, offerSend, handleSlotClick } from './chat.js';
 import * as live from './live.js';
 import { initLiveUi, setLiveData, offerLive, ichView, kolonieView, spielView, ereignisseView, gedenkenView } from './live-views.js';
-import { streamView, streamTabVisible, initStreamSettings, syncStreamDock } from './stream.js';
+import { initStreamSettings, syncStreamDock, openStreamBar } from './stream.js';
 
 const TABS = [
   { id: 'start', label: 'Start', view: startView },
@@ -27,13 +27,8 @@ const LIVE_TABS = [
   { id: 'gedenken', label: 'Gedenken', view: gedenkenView },
 ];
 const LIVE_IDS = LIVE_TABS.map((t) => t.id);
-// Reiter „Stream“ (Twitch-Player/-Chat) unabhängig von der Mod; jeder Zuschauer kann ihn ausblenden.
-const STREAM_TAB = { id: 'stream', label: 'Stream', view: streamView };
-const tabList = () => {
-  const base = live.isLive() ? [TABS[0], ...LIVE_TABS, ...TABS.slice(1)] : [...TABS];
-  if (streamTabVisible()) base.splice(1, 0, STREAM_TAB);
-  return base;
-};
+// Der Stream ist kein Reiter mehr, sondern eine Leiste oben (stream.js).
+const tabList = () => (live.isLive() ? [TABS[0], ...LIVE_TABS, ...TABS.slice(1)] : [...TABS]);
 
 // ---------- Design (hell/dunkel) ----------
 const THEME_KEY = 'ys-theme';
@@ -73,6 +68,12 @@ function renderTabs() {
   const nav = document.getElementById('tabs');
   nav.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   updateTabFade();
+  setTabsH();
+}
+
+function setTabsH() {
+  const tb = document.querySelector('.tabs-bar');
+  if (tb) document.documentElement.style.setProperty('--tabs-h', `${tb.offsetHeight}px`);
 }
 
 function updateTabFade() {
@@ -88,7 +89,13 @@ function currentTab() {
 }
 
 function renderView() {
-  const rawId = location.hash.replace(/^#\/?/, '').split('/')[0].toLowerCase();
+  let rawId = location.hash.replace(/^#\/?/, '').split('/')[0].toLowerCase();
+  if (rawId === 'stream') {
+    // Alte Adresse des früheren Stream-Reiters: auf Start, Leiste aufklappen
+    history.replaceState(null, '', '#/start');
+    rawId = 'start';
+    openStreamBar();
+  }
   if (LIVE_IDS.includes(rawId) && !live.isLive() && !live.isSettled()) {
     // Live-Status noch unbekannt: gewünschte Ansicht abwarten statt auf Start umzubiegen.
     renderTabs();
@@ -97,7 +104,7 @@ function renderView() {
   }
   const tab = tabList().find((t) => t.id === currentTab());
   shownTab = tab.id;
-  syncStreamDock(tab.id);
+  syncStreamDock();
   const main = document.getElementById('view');
   renderTabs();
   if (!DATA) { main.innerHTML = '<div class="empty">Lade Daten …</div>'; return; }
@@ -140,6 +147,12 @@ async function boot() {
     if (s) { e.preventDefault(); s.focus(); }
   });
 
+  // Höhe der klebenden Reiterleiste merken, damit die Stream-Leiste direkt darunter kleben kann
+  const tb = document.querySelector('.tabs-bar');
+  if (window.ResizeObserver) new ResizeObserver(setTabsH).observe(tb);
+  window.addEventListener('resize', setTabsH);
+  setTabsH();
+
   renderTabs();
   renderView();
   window.addEventListener('hashchange', renderView);
@@ -151,10 +164,10 @@ async function boot() {
   live.on('change', () => {
     const wanted = location.hash.replace(/^#\/?/, '').split('/')[0].toLowerCase();
     // Nur neu zeichnen, wenn eine Live-Ansicht betroffen ist - sonst gehen z. B. Sucheingaben nicht verloren.
-    if (LIVE_IDS.includes(wanted) || LIVE_IDS.includes(shownTab) || shownTab === 'stream' || wanted === 'stream') renderView(); else renderTabs();
+    if (LIVE_IDS.includes(wanted) || LIVE_IDS.includes(shownTab)) renderView(); else { renderTabs(); syncStreamDock(); }
   });
   live.initLive();
-  initStreamSettings(() => { if (shownTab === 'stream' || currentTab() === 'stream') renderView(); else { renderTabs(); syncStreamDock(shownTab); } });
+  initStreamSettings(() => syncStreamDock());
 
   let config = null;
   try { const r = await fetch('data/site-config.json', { cache: 'no-cache' }); if (r.ok) config = await r.json(); } catch { /* optional */ }

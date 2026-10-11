@@ -8,6 +8,7 @@
   <meta name="description" content="Preisliste und Befehle für den RICS-Chat: Items, Events, Wetter, Eigenschaften, Rassen – verständlich erklärt.">
   <title>Yokus Store</title>
   <link rel="stylesheet" href="assets/css/site.css">
+  <link rel="stylesheet" href="assets/css/stream.css">
   <script>
     /* Gespeichertes Design sofort anwenden (verhindert Aufblitzen) */
     try { if (localStorage.getItem('ys-theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
@@ -44,8 +45,19 @@
     </div>
   </div>
 
+  <div class="wrap stream-dock-wrap" id="stream-wrap" hidden>
+    <div class="stream-toolbar" id="stream-toolbar">
+      <span class="stream-note">Chat schreiben: bei Twitch anmelden.</span>
+      <a class="stream-popout" href="https://www.twitch.tv/popout/dasyoku/chat" target="_blank" rel="noopener">Chat in eigenem Fenster ↗</a>
+      <button type="button" class="stream-tool" data-stream-chat-close title="Chat schließen">Chat ✕</button>
+      <button type="button" class="stream-tool" data-stream-player-close title="Stream schließen">Stream ✕</button>
+      <button type="button" class="stream-tool" data-stream-collapse title="Leiste einklappen (der Stream läuft klein weiter)">Einklappen ▴</button>
+    </div>
+    <div id="stream-dock" class="stream-dock" hidden></div>
+    <button type="button" class="stream-strip" id="stream-strip" hidden><span class="stream-strip-text"></span><span aria-hidden="true">▾</span></button>
+  </div>
+
   <main>
-    <div class="wrap stream-dock-wrap"><div id="stream-dock" class="stream-dock" hidden></div></div>
     <div class="wrap" id="view" aria-live="polite"><div class="empty">Lade …</div></div>
   </main>
 
