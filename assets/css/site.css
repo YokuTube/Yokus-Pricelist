@@ -558,6 +558,8 @@ body:has(dialog.live-dialog[open]) { overflow: hidden; }
 
 /* ---------- Stream (Twitch-Player und -Chat) ---------- */
 .stream-menu { position: relative; }
+/* Kopf ist eigene Ebene (z-index 1) – Reiterleiste (20) und Stream (15/30) lägen sonst über dem Menü. Nur solange es offen ist anheben. */
+.site-header:has(.stream-panel:not([hidden])) { z-index: 55; }
 .stream-panel {
   position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 200px;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
