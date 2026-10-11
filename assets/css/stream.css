@@ -170,3 +170,18 @@ body.stream-bottom.stream-dragging .stream-dock iframe { pointer-events: none; }
   body.stream-bottom .stream-pos-btn span { display: none; }
 }
 @media print { body.stream-bottom { padding-bottom: 0; } }
+
+/* ---------- Seitenlage mit Chat NEBEN dem Video (volle Höhe) ----------
+   Spalte = Video (--side-w, ziehbar) + Chat (--chat-w). Video oben bündig, Chat von oben bis unten. */
+@media (min-width: 1200px) {
+  body.stream-side-left.stream-beside { padding-left: calc(var(--side-w) + var(--chat-w)); }
+  body.stream-side-right.stream-beside { padding-right: calc(var(--side-w) + var(--chat-w)); }
+  body.stream-beside .stream-dock-wrap { width: calc(var(--side-w) + var(--chat-w)); }
+  body.stream-beside .stream-dock, body.stream-beside .stream-dock.has-player.has-chat { flex-direction: row; align-items: stretch; }
+  body.stream-beside .stream-player { flex: 1 1 auto; align-self: flex-start; min-width: 0; }
+  body.stream-beside .stream-dock .stream-chat, body.stream-beside .stream-dock.has-player.has-chat .stream-chat { flex: 0 0 calc(var(--chat-w) - 8px); width: auto; height: auto; }
+  body.stream-chat-left .stream-dock .stream-chat { order: -1; }
+  body.stream-side-left.stream-beside .vote-card, body.stream-side-left.stream-beside .vote-card.min { left: calc(var(--side-w) + var(--chat-w) + 16px); }
+  body.stream-side-right.stream-beside .to-top { right: calc(var(--side-w) + var(--chat-w) + 16px); }
+}
+.stream-chatside[hidden] { display: none; }

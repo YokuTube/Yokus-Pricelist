@@ -20,6 +20,7 @@ export function getStreamPrefs() {
     pos: POS.includes(p?.pos) ? p.pos : null,                 // null = Zuschauer hat nie gewählt → Automatik
     w: Number.isFinite(p?.w) ? p.w : null,
     h: Number.isFinite(p?.h) ? p.h : null,                     // Höhe der Leiste in Lage „Unten“
+    chatSide: ['below', 'left', 'right'].includes(p?.chatSide) ? p.chatSide : 'below',   // Seitenlage: Chat unter/neben dem Video
   };
 }
 
@@ -31,7 +32,9 @@ const botDefaultVh = () => (window.innerWidth < 700 ? 0.6 : 0.38);   // Handy: V
 const clampH = (h) => Math.min(Math.floor(window.innerHeight * 0.75), Math.max(BOT_MIN_H, Math.round(h)));
 const SIDE_MIN_VIEW = 1200;   // darunter immer Oben
 const SIDE_MIN_W = 320, SIDE_DEFAULT_W = 440;
-const sideMax = () => Math.max(SIDE_MIN_W, Math.floor(window.innerWidth * 0.5));
+const CHAT_W = 340;   // Chat-Spalte, wenn der Chat neben dem Video steht (volle Höhe)
+const besideNow = () => document.body.classList.contains('stream-beside');
+const sideMax = () => Math.max(SIDE_MIN_W, Math.floor(window.innerWidth * (besideNow() ? 0.62 : 0.5)) - (besideNow() ? CHAT_W : 0));
 const clampW = (w) => Math.min(sideMax(), Math.max(SIDE_MIN_W, Math.round(w)));
 function effectivePos(p) {
   if (p.pos === 'bottom') return 'bottom';
@@ -57,7 +60,22 @@ function applyLayout() {
   b.classList.toggle('stream-side-left', side && pos === 'left');
   b.classList.toggle('stream-side-right', side && pos === 'right');
   wrap.classList.toggle('side-nochat', side && !p.chat);
+  // Chat neben dem Video (volle Höhe): Video kann wachsen, ohne dass der Chat schrumpft
+  const beside = side && p.chat && p.player && p.chatSide !== 'below';
+  b.classList.toggle('stream-beside', beside);
+  b.classList.toggle('stream-chat-left', beside && p.chatSide === 'left');
+  b.classList.toggle('stream-chat-right', beside && p.chatSide === 'right');
+  document.documentElement.style.setProperty('--chat-w', `${CHAT_W}px`);
   document.documentElement.style.setProperty('--side-w', `${clampW(p.w ?? SIDE_DEFAULT_W)}px`);
+  const cg = $('stream-chatside');
+  if (cg) {
+    cg.hidden = !(side && p.chat && p.player);
+    cg.querySelectorAll('[data-stream-chatside]').forEach((btn) => {
+      const on = btn.dataset.streamChatside === p.chatSide;
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.classList.toggle('active', on);
+    });
+  }
   const rz = $('stream-resizer');
   if (rz) rz.hidden = !(side || bottom);
   const grp = $('stream-pos');
@@ -80,7 +98,7 @@ function initResizer() {
   if (!rz || rz.dataset.bound) return;
   rz.dataset.bound = '1';
   let dragging = false;
-  const widthFrom = (x) => (document.body.classList.contains('stream-side-left') ? x : window.innerWidth - x);
+  const widthFrom = (x) => (document.body.classList.contains('stream-side-left') ? x : window.innerWidth - x) - (besideNow() ? CHAT_W : 0);
   const isBottom = () => document.body.classList.contains('stream-bottom');
   const setH = (h, save) => {
     const v = clampH(h);
@@ -258,6 +276,9 @@ function bind(wrap, d) {
     } else if (t('[data-stream-pos]')) {
       const v = t('[data-stream-pos]').dataset.streamPos;
       update((p) => { p.pos = v; });
+    } else if (t('[data-stream-chatside]')) {
+      const v = t('[data-stream-chatside]').dataset.streamChatside;
+      update((p) => { p.chatSide = v; });
     } else if (t('[data-stream-collapse]')) {
       update((p) => { p.collapsed = true; });
     } else if (t('#stream-strip') && $('stream-strip').dataset.restore) {
