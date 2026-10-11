@@ -422,9 +422,14 @@ footer { border-top: 1px solid var(--border); padding: 20px 0 40px; color: var(-
 
 /* Charakter */
 .ch { display: grid; gap: 12px; }
-.ch-hero { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 4px 16px; align-items: start; }
+.ch-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; align-items: start; }
 .portrait { border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-2); object-fit: cover; }
 .ch-portrait { width: 96px; height: 96px; }
+.ch-pics { display: flex; gap: 8px; align-items: flex-start; }
+.ch-art-btn { padding: 0; border: 0; background: none; cursor: zoom-in; line-height: 0; }
+.ch-art { width: 128px; height: 128px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-2, var(--surface)); object-fit: cover; }
+.ch-art-btn.big { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: rgba(0,0,0,.8); cursor: zoom-out; }
+.ch-art-btn.big .ch-art { width: min(92vw, 92vh, 720px); height: auto; aspect-ratio: 1; }
 .portrait.ph { display: grid; place-items: center; font-family: var(--head-font); font-weight: 700; color: var(--muted); font-size: 2rem; }
 .ch-name { font-size: 1.5rem; overflow-wrap: anywhere; }
 .ch-sub { font-size: .9rem; overflow-wrap: anywhere; }
@@ -482,7 +487,9 @@ footer { border-top: 1px solid var(--border); padding: 20px 0 40px; color: var(-
 @media (max-width: 640px) {
   .live-in { gap: 8px; }
   .live-colony { display: none; }
-  .ch-hero { grid-template-columns: 80px minmax(0, 1fr); gap: 4px 12px; }
+  .ch-hero { grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; }
+  .ch-pics { flex-direction: column; }
+  .ch-art { width: 80px; height: 80px; }
   .ch-portrait { width: 80px; height: 80px; }
   .ch-name { font-size: 1.3rem; }
   .ch-bars .brow, .brow { grid-template-columns: minmax(0, 10ch) minmax(0, 1fr) minmax(4ch, auto); gap: 4px 8px; }

@@ -62,7 +62,7 @@ def cond(label, part=None, bad=True, bleeding=False):
 def make_pawn(user, display, name, full, gender, age, race, xeno, state, state_label, job, health, mood, mood_label,
               child, adult, skills, traits, conditions, pain, gear, wants, quirks, asp, kills, portrait=1, needs=None):
     return {
-        "user": user, "displayName": display, "name": name, "portrait": portrait,
+        "user": user, "displayName": display, "name": name, "portrait": portrait, "art": portrait,
         "healthPct": health, "moodPct": mood, "state": state, "stateLabel": state_label, "job": job,
         "fullName": full, "gender": gender, "age": age, "race": race, "xenotype": xeno,
         "childhood": child, "adulthood": adult, "location": "Kolonie", "moodLabel": mood_label,
@@ -679,6 +679,12 @@ class H(BaseHTTPRequestHandler):
                 pawn["duelIncoming"] = duel_state()
             return self.js(200, {"user": user, "displayName": ALLOWED_USERS.get(user, user), "coins": coins,
                                  "karma": karma, "coinsPerMinute": 7.5, "earning": True, "activeMinutesLeft": 24, "pawn": pawn})
+        if p.startswith("/api/art/"):
+            user = unquote(p[9:]).lower()
+            key = user if user in PAWNS else next((k for k, v in PAWNS.items() if v.get("id") == user), None)
+            if key is None or not PAWNS[key].get("art"):
+                return self.js(404, {"error": "Kein gemaltes Porträt."}, cache=False)
+            return self.send(200, png(key), "image/png", extra={"Cache-Control": "public, max-age=3600"})
         if p.startswith("/api/portrait/"):
             user = unquote(p[14:]).lower()
             if user not in PAWNS or PAWNS[user]["portrait"] == 0:

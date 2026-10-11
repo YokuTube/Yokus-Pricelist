@@ -722,12 +722,14 @@ function ensureBadgeLog(host) {
   }).catch(() => {});
 }
 
+let artBig = false; // gemaltes Porträt vergrößert (übersteht das Neuzeichnen)
+
 function heroHtml(p) {
   const meta = [p.race, p.xenotype && p.xenotype !== p.race ? p.xenotype : null, p.age != null ? `${p.age} Jahre` : null, p.gender]
     .filter(Boolean).map(esc).join(' · ');
   const mood = p.moodPct == null ? '' : barRow('Stimmung', p.moodPct, p.moodLabel || `${Math.round(p.moodPct)} %`);
   return `<div class="card ch-hero">
-    ${portraitHtml(p, 'ch-portrait')}
+    <div class="ch-pics">${portraitHtml(p, 'ch-portrait')}${p.art ? `<button type="button" class="ch-art-btn${artBig ? ' big' : ''}" data-art-zoom aria-pressed="${artBig}" title="Gemaltes Porträt – antippen zum Vergrößern"><img class="ch-art" src="${esc(live.artUrl(p.id || p.user, p.art))}" alt="Gemaltes Porträt von ${esc(p.name)}" width="128" height="128" loading="lazy"></button>` : ''}</div>
     <div class="ch-id">
       <h2 class="ch-name">${esc(p.name)}</h2>
       <div class="ch-sub"><span class="muted">${p.user ? '@' + esc(p.displayName || p.user) : 'Kolonist'}</span>${p.fullName && p.fullName !== p.name ? ` · <span class="muted">${esc(p.fullName)}</span>` : ''}</div>
@@ -1538,6 +1540,8 @@ function mountCharacter(host, p) {
     const tc = e.target.closest('[data-tree]');
     const at = e.target.closest('[data-alltrees]');
     const nd = e.target.closest('[data-node]');
+    const az = e.target.closest('[data-art-zoom]');
+    if (az) { artBig = !artBig; if (host._pawn) morph(host, characterHtml(host._pawn)); afterPaint(host); return; }
     if (pawn && ab) { runAct(host, ab); return; }
     const pp = e.target.closest('[data-psypath]');
     if (pawn && pp) { psySel = pp.dataset.psypath; openTrait = null; repaint(host); return; }

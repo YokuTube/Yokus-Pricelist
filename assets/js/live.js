@@ -35,6 +35,8 @@ export const prefix = () => S.status?.prefix || '!';
 const NEVER = ['pawn', 'leave'];
 export const isAllowed = (cmd) => { const c = String(cmd).toLowerCase(); return !NEVER.includes(c) && !!S.status?.allowed?.includes(c); };
 export const portraitUrl = (user, v) => `${S.base}/api/portrait/${encodeURIComponent(user)}?v=${encodeURIComponent(v ?? 0)}`;
+/** Gemaltes Porträt (Mod Portraits of the Rim), nur wenn PawnDetail.art > 0 */
+export const artUrl = (id, v) => `${S.base}/api/art/${encodeURIComponent(id)}?v=${encodeURIComponent(v ?? 0)}`;
 
 // ---------- Netzwerk ----------
 /** Eine Anfrage an die Schnittstelle. Wirft bei Netzfehler/Zeitüberschreitung ein Objekt mit net:true. */
