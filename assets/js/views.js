@@ -6,6 +6,7 @@ import * as vb from './visual-b.js';   // Paket B: Symbole statt Text
 import * as vbl from './live-visual-b.js';   // Spielsymbole (nur mit laufender Live-Mod)
 import * as live from './live.js';
 import { setIcons, fillAll as fillPics, hue, hasStaticPic } from './pics.js';
+import { eventPic, weatherPic } from './event-pics.js';
 import { introCardsHtml, itemTeaserHtml, fillTeasers } from './live-visual-a.js';
 
 const PAGE = 48;
@@ -49,6 +50,7 @@ function pager(host, countEl, list, renderOne, emptyText) {
     }
     const next = list.slice(shown, shown + PAGE);
     host.insertAdjacentHTML('beforeend', next.map(renderOne).join(''));
+    fillPics(host);
     shown += next.length;
     host.querySelector('.more-wrap')?.remove();
     if (shown < list.length) {
@@ -64,8 +66,9 @@ function pager(host, countEl, list, renderOne, emptyText) {
 // =====================================================================
 // START
 // =====================================================================
-function uniRow(title, sub, price, cmd, link) {
-  return `<div class="uni-row"><div class="uni-main"><div class="uni-title">${title}</div>${sub ? `<div class="small muted">${sub}</div>` : ''}</div>
+function uniRow(title, sub, price, cmd, link, pic = '') {
+  const body = `<div class="uni-title">${title}</div>${sub ? `<div class="small muted">${sub}</div>` : ''}`;
+  return `<div class="uni-row"><div class="uni-main${pic ? ' with-pic' : ''}">${pic ? `${pic}<div>${body}</div>` : body}</div>
     ${price ? `<div class="price">${fmt(price)}</div>` : ''}<div class="uni-act">${cmd ? cmdBtn(cmd) : link || ''}</div></div>`;
 }
 
@@ -104,9 +107,9 @@ function showcase(data) {
   if (itemPick.length) out.push(card('Items kaufen', 'items', 'Rohstoffe, Medizin, Waffen und mehr – direkt in die Kolonie oder an deinen Pawn.',
     itemPick.map(showItemRow).join(''), `Alle ${fmt(sold.length)} Items ansehen`));
   if (evPick.length) out.push(card('Events auslösen', 'events', 'Gutes wie Schlechtes passiert sofort im Spiel – für Coins.',
-    evPick.map((e) => uniRow(`${esc(cap(e.label))} ${karmaBadge(e.karma)}`, esc(e.text || ''), e.cost, '!event ' + e.cmdName)).join(''), `Alle ${fmt(data.events.length)} Events ansehen`));
+    evPick.map((e) => uniRow(`${esc(cap(e.label))} ${karmaBadge(e.karma)}`, esc(e.text || ''), e.cost, '!event ' + e.cmdName, '', eventPic(e.defName, e.label, e.karma, 44))).join(''), `Alle ${fmt(data.events.length)} Events ansehen`));
   if (wPick.length) out.push(card('Wetter ändern', 'wetter', 'Vom Sonnenschein bis zum Sturm.',
-    wPick.map((w) => uniRow(esc(cap(w.label)), esc(w.text || ''), w.cost, '!weather ' + w.cmdName)).join(''), `Alle ${fmt(data.weather.length)} Wetterlagen ansehen`));
+    wPick.map((w) => uniRow(esc(cap(w.label)), esc(w.text || ''), w.cost, '!weather ' + w.cmdName, '', weatherPic(w.defName, w.label, w.karma, 44, w.text))).join(''), `Alle ${fmt(data.weather.length)} Wetterlagen ansehen`));
   const own = [['!mypawn', '!mypawn'], ['!genderswap', '!genderswap'], ['!sethair list', '!sethair list'], ['!dyehair list', '!dyehair list'], ['!addtrait', '!addtrait ']]
     .filter(([, c]) => on(c.trim().split(' ')[0].slice(1)));
   if (own.length) out.push(card('Deinen Pawn gestalten', 'befehle', 'Aussehen, Eigenschaften und Werte deines Kolonisten ändern und ansehen.',
@@ -198,9 +201,9 @@ export function startView(data) {
       if (its.length) sections.push([`Items (${fmt(its.length)})`,its.slice(0, 5).map((i) => uniRow(esc(i.name), esc(i.category), i.price, (i.enabled ? '!buy ' : i.usable ? '!use ' : i.equippable ? '!equip ' : '!wear ') + i.cmdName)).join(''), 'items']);
       else if (itsOff.length) sections.push(['Items',`<div class="small muted" style="padding:6px 0">Gibt es im Spiel, wird aber gerade nicht verkauft: ${itsOff.slice(0, 5).map((i) => esc(i.name)).join(', ')}.</div>`, 'items']);
       const evs = data.events.filter((e) => m(`${e.label} ${e.de} ${e.defName} ${e.text}`));
-      if (evs.length) sections.push([`Events (${fmt(evs.length)})`,evs.slice(0, 5).map((e) => uniRow(`${esc(cap(e.label))} ${karmaBadge(e.karma)}`, esc(e.text || ''), e.cost, '!event ' + e.cmdName)).join(''), 'events']);
+      if (evs.length) sections.push([`Events (${fmt(evs.length)})`,evs.slice(0, 5).map((e) => uniRow(`${esc(cap(e.label))} ${karmaBadge(e.karma)}`, esc(e.text || ''), e.cost, '!event ' + e.cmdName, '', eventPic(e.defName, e.label, e.karma, 44))).join(''), 'events']);
       const ws = data.weather.filter((e) => m(`${e.label} ${e.defName} ${e.text}`));
-      if (ws.length) sections.push([`Wetter (${ws.length})`,ws.slice(0, 4).map((e) => uniRow(`${esc(cap(e.label))} ${karmaBadge(e.karma)}`, esc(e.text || ''), e.cost, '!weather ' + e.cmdName)).join(''), 'wetter']);
+      if (ws.length) sections.push([`Wetter (${ws.length})`,ws.slice(0, 4).map((e) => uniRow(`${esc(cap(e.label))} ${karmaBadge(e.karma)}`, esc(e.text || ''), e.cost, '!weather ' + e.cmdName, '', weatherPic(e.defName, e.label, e.karma, 44, e.text))).join(''), 'wetter']);
       const trs = data.traits.filter((t) => m(`${t.name} ${t.defName} ${t.description}`));
       if (trs.length) sections.push([`Traits (${trs.length})`,trs.slice(0, 4).map((t) => uniRow(rich(t.name), '', t.addPrice, t.canAdd ? '!addtrait ' + slug(t.name) : '')).join(''), 'traits']);
       out.innerHTML = sections.length
@@ -363,6 +366,7 @@ function itemRow(i) {
         <h3>${esc(i.name)}</h3>
         <div class="meta"><span class="chip accent">${esc(i.category)}</span>${i.mod !== 'RimWorld' ? `<span class="chip">${esc(i.mod)}</span>` : ''}${limit}
         ${i.usable ? '<span class="chip">benutzbar</span>' : ''}${i.equippable ? '<span class="chip">ausrüstbar</span>' : ''}${i.wearable ? '<span class="chip">anziehbar</span>' : ''}</div>
+        ${i.desc ? `<p class="small muted it-desc">${esc(i.desc)}</p>` : ''}
       </div>
       <div class="it-d-price">${vb.coin(i.price, 'big')}</div>
       <div class="acts">${!i.available ? '<span class="chip" style="background:var(--doom);color:#fff;justify-self:start" title="Der Streamer hat dieses Item in RICS ausgeschaltet">gerade nicht im Store</span>' : `${hasQty ? qty : ''}<div class="cmd-row">${acts.join('')}</div>`}</div>
@@ -542,8 +546,8 @@ function eventCard(e, cmdName) {
   let text = vb.stripModTail(e.text, e.mod);   // Mod-Name steht schon als Badge
   if (vb.looksEnglish(text)) text = '';        // englischer Mod-Text ohne Übersetzung: weglassen
   return `
-    <article class="card ev-card kar-${vb.kar(e.karma).cls}">
-      <div class="ev-top"><div><h3>${richCap(e.label)}</h3>${de}</div>${vb.karSym(e.karma)}</div>
+    <article class="card ev-card kar-${vb.kar(e.karma).cls}${e.type === 'weather' ? ' has-wpic' : ''}">
+      <div class="ev-top"><div class="ev-head">${e.type === 'weather' ? weatherPic(e.defName, e.label, e.karma, 56, e.text) : eventPic(e.defName, e.label, e.karma, 56)}<div><h3>${richCap(e.label)}</h3>${de}</div></div>${vb.karSym(e.karma)}</div>
       ${text ? `<p>${esc(text)}</p>` : ''}
       <div class="meta">${type}${e.mod !== 'RimWorld' ? `<span class="chip">${esc(e.mod)}</span>` : ''}${pause}</div>
       <div class="ev-top" style="align-items:center"><div class="cmd-row">${cmdBtn(`!${cmdName} ${e.cmdName || e.defName}`)}</div>${vb.coin(e.cost, 'big')}</div>
@@ -663,7 +667,7 @@ function traitCard(t) {
   const price = (ok, v) => (ok ? vb.coin(v) : '<span class="muted" title="nicht möglich">–</span>');
   return `
     <article class="card ev-card tr-card tone-${tone}${t.legacy ? ' legacy' : ''}">
-      <div class="ev-top"><h3><span class="tr-sym" role="img" aria-label="${esc(vb.TRAIT_LABEL[tone])}" title="${esc(vb.TRAIT_LABEL[tone])}">${vb.TRAIT_SYM[tone]}</span> ${rich(t.name)}</h3>${t.mod !== 'RimWorld' ? `<span class="chip">${esc(t.mod)}</span>` : ''}${t.legacy ? '<span class="chip" title="Aus einer früheren Mod-Version – wird beim ersten Laden umgewandelt">veraltet</span>' : ''}</div>
+      <div class="ev-top"><h3><span class="tr-sym" role="img" aria-label="${esc(vb.TRAIT_LABEL[tone])}" title="${esc(vb.TRAIT_LABEL[tone])}" data-pickey="tr_${esc(t.defName)}_${t.degree}" data-pcls="tr-img" data-psize="40">${vb.TRAIT_SYM[tone]}</span> ${rich(t.name)}</h3>${t.mod !== 'RimWorld' ? `<span class="chip">${esc(t.mod)}</span>` : ''}${t.legacy ? '<span class="chip" title="Aus einer früheren Mod-Version – wird beim ersten Laden umgewandelt">veraltet</span>' : ''}</div>
       <div class="rt small"><p>${rich(t.description)}</p></div>
       ${stats}${conf}
       <div class="kv tr-prices">

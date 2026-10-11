@@ -7,6 +7,8 @@ const esc = (s) => escRaw(live.stripTags(s));
 import { CHAT_POPOUT as CHAT_URL } from './stream.js';
 import { panelGenes, hasGenes } from './live-genes.js';
 import * as A from './live-visual-a.js';
+import { optionPic } from './event-pics.js';
+import { fillAll as fillPics } from './pics.js';
 import * as vb from './live-visual-b.js';   // Paket B: Symbole statt Text
 
 let DATA = null;
@@ -408,10 +410,10 @@ function voteHtml(v) {
   const canVote = linked && mine == null && live.isAllowed('vote');
   const rows = opts.map((o, i) => {
     const n = i + 1, pct = clamp(o.pct), isMine = mine === n;
-    const inner = `<span class="vb-fill" style="width:${pct}%"></span><span class="vb-n">${n}</span><span class="vb-l">${esc(o.label)}</span><span class="vb-p">${isMine ? '✓ ' : ''}${Math.round(pct)} %${o.count ? ` · ${fmt(o.count)}` : ''}</span>`;
+    const inner = `<span class="vb-fill" style="width:${pct}%"></span><span class="vb-n">${n}</span>${optionPic(o.defName || o.def, o.label, o.karma, 40)}<span class="vb-l">${esc(o.label)}</span><span class="vb-p">${isMine ? '✓ ' : ''}${Math.round(pct)} %${o.count ? ` · ${fmt(o.count)}` : ''}</span>`;
     return `<li class="vote-opt${isMine ? ' mine' : ''}">${canVote
-      ? `<button type="button" class="vote-big" data-vote="${n}" title="Für Nr. ${n} stimmen"${voteBusy ? ' disabled' : ''}>${inner}</button>`
-      : `<div class="vote-big static${isMine ? ' mine' : ''}">${inner}</div>`}</li>`;
+      ? `<button type="button" class="vote-big with-pic" data-vote="${n}" title="Für Nr. ${n} stimmen"${voteBusy ? ' disabled' : ''}>${inner}</button>`
+      : `<div class="vote-big with-pic static${isMine ? ' mine' : ''}">${inner}</div>`}</li>`;
   }).join('');
   const note = linked && live.isAllowed('vote') ? '' : `<p class="small muted vote-note">Schreib die Zahl (1–${opts.length}) in den Chat${linked ? '.' : ', oder verbinde dich oben, um hier abzustimmen.'}</p>`;
   return `<div class="vote-head"><b>🗳 Abstimmung</b><span class="vt-left">Noch ${voteLeft()} s</span><span class="small muted">${fmt(v.total)} Stimmen</span></div>
@@ -453,6 +455,7 @@ function renderVote() {
     return;
   }
   morph(voteEl, `<button type="button" class="vote-min" data-vote-toggle aria-label="Abstimmung einklappen" title="Einklappen">▾</button>${voteHtml(voteState)}`);
+  fillPics(voteEl);
   startVoteTick();
 }
 
@@ -832,7 +835,7 @@ function panelOverview(p) {
   if ((p.traits || []).length) {
     const open = p.traits.find((t) => t.label === openTrait);
     traits = section('Eigenschaften', `<div class="traits">${p.traits.map((t) =>
-      `<button type="button" class="trait" data-trait="${esc(t.label)}" aria-expanded="${t === open}" title="${esc(t.desc)}">${esc(t.label)}</button>`).join('')}</div>
+      `<button type="button" class="trait" data-trait="${esc(t.label)}" aria-expanded="${t === open}" title="${esc(t.desc)}">${t.def ? `<span class="tr-sym" data-pickey="tr_${esc(t.def)}_${Number(t.degree) || 0}" data-pcls="tr-img sm" data-psize="28"></span>` : ''}${esc(t.label)}</button>`).join('')}</div>
       ${open ? `<p class="trait-desc"><b>${esc(open.label)}:</b> ${esc(open.desc)}</p>` : '<p class="small muted trait-hint">Tippe auf eine Eigenschaft, um sie zu lesen.</p>'}`);
   }
   const bonds = (p.bonds || []).length ? `<p class="bonds"><span class="heart" aria-hidden="true">♥</span> Gebunden an: <b>${p.bonds.map((b) => bondLink(b)).join(', ')}</b></p>` : '';
@@ -2147,6 +2150,7 @@ function expertiseHtml(p) {
 }
 
 function afterPaint(host) {
+  fillPics(host);
   startLogPoll(host);
   startRelPoll(host);
   startStoryPoll(host);

@@ -1652,3 +1652,28 @@ body.stream-side-right.stream-beside .duel-strip { right: calc(var(--side-w) + v
 
 /* Kategorie-Knöpfe: echtes Spielsymbol eines typischen Items */
 .cat-btn .cb-i .cb-img { width: 22px; height: 22px; object-fit: contain; image-rendering: auto; vertical-align: middle; }
+
+/* ===== Event- und Wetter-Bilder (event-pics.js) ===== */
+.evp { flex: none; display: inline-grid; place-items: center; width: var(--evp, 52px); height: var(--evp, 52px); border-radius: 50%; line-height: 1; background: var(--surface-2); }
+.evp .evp-emo { font-style: normal; font-size: calc(var(--evp, 52px) * .55); }
+.evp .evp-img { width: calc(var(--evp, 52px) * .78); height: calc(var(--evp, 52px) * .78); object-fit: contain; }
+.evp.k-good { background: color-mix(in srgb, var(--good) 22%, var(--surface)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--good) 55%, transparent); }
+.evp.k-neutral { background: color-mix(in srgb, var(--neutral) 20%, var(--surface)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--neutral) 45%, transparent); }
+.evp.k-bad { background: color-mix(in srgb, var(--bad) 22%, var(--surface)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--bad) 55%, transparent); }
+.evp.k-doom { background: color-mix(in srgb, var(--doom) 28%, var(--surface)); box-shadow: inset 0 0 0 2px var(--doom); }
+.ev-head { display: flex; gap: 12px; align-items: center; min-width: 0; flex: 1; }
+.ev-head > div { min-width: 0; }
+.ev-card.has-wpic.kar-good { background: color-mix(in srgb, var(--good) 6%, var(--surface)); }
+.ev-card.has-wpic.kar-neutral { background: color-mix(in srgb, var(--neutral) 6%, var(--surface)); }
+.ev-card.has-wpic.kar-bad { background: color-mix(in srgb, var(--bad) 7%, var(--surface)); }
+.uni-main.with-pic { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.uni-main.with-pic > div { min-width: 0; }
+.vote-big.with-pic { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+.vote-big .evp { position: relative; z-index: 1; }
+
+/* Eigenschafts-Bilder (Mod Trait and Backstory Icons) */
+.tr-sym[data-pic="ok"] { width: auto; }
+.tr-img { width: 32px; height: 32px; vertical-align: middle; image-rendering: auto; }
+.it-desc { margin: 6px 0 0; max-width: 60ch; }
+.trait .tr-sym:empty { display: none; }
+.trait .tr-img { width: 26px; height: 26px; margin-right: 6px; }

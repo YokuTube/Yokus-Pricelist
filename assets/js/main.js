@@ -4,6 +4,8 @@ import { startView, commandsView, itemsView, eventsView, weatherView, traitsView
 import { icon } from './icons.js';
 import { initChat, renderSlot, offerSend, handleSlotClick } from './chat.js';
 import * as live from './live.js';
+import { setIcons, fillAll as fillPics } from './pics.js';
+import { setEventIndex } from './event-pics.js';
 import { initLiveUi, setLiveData, offerLive, ichView, kolonieView, spielView, ereignisseView, gedenkenView } from './live-views.js';
 import { initStreamSettings, syncStreamDock, openStreamBar } from './stream.js';
 import { initCooldowns, setCooldownData } from './cooldowns.js';
@@ -110,9 +112,11 @@ function renderView() {
   const main = document.getElementById('view');
   renderTabs();
   if (!DATA) { main.innerHTML = '<div class="empty">Lade Daten …</div>'; return; }
+  setIcons(DATA.icons); setEventIndex(DATA.events, DATA.weather);
   const v = tab.view(DATA);
   main.innerHTML = v.html;
   v.bind(main);
+  fillPics(main);
   document.title = (tab.id === 'start' ? 'Yokus Store' : `${tab.label} – Yokus Store`);
   // Nur bei echtem Wechsel der Adresse nach oben; ein Neuzeichnen derselben Ansicht (z. B. Live an/aus) behält die Scrollposition
   if (renderedHash !== location.hash && !location.hash.split('/')[2]) scrollPageTo({ top: 0 });

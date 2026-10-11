@@ -38,7 +38,7 @@ export async function loadAll() {
   return {
     meta,
     failed: out.failed,
-    items: processItems(out.items, labels.items || {}),
+    items: processItems(out.items, labels.items || {}, labels.itemdesc || {}),
     events: processEvents(out.events, notes, labels.events || {}),
     weather: processWeather(out.weather, notes, labels.weather || {}),
     traits: processTraits(out.traits),
@@ -67,7 +67,7 @@ function assignCmdNames(list, labelOf) {
 }
 
 // ---------- Items ----------
-function processItems(raw, game = {}) {
+function processItems(raw, game = {}, descs = {}) {
   const obj = raw?.items ?? raw ?? {};
   const all = Object.entries(obj).map(([key, d]) => ({
     defName: d.DefName || key,
@@ -79,6 +79,7 @@ function processItems(raw, game = {}) {
     mod: modName(d.Mod),
     usable: !!d.IsUsable, equippable: !!d.IsEquippable, wearable: !!d.IsWearable,
     enabled: d.Enabled !== false,
+    desc: plain(descs[d.DefName || key]) || '',
     active: d.modactive === true,
   })).filter((i) => i.active && i.price > 0);
   assignCmdNames(all, (i) => i.name);
