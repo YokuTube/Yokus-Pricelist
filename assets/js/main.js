@@ -57,6 +57,7 @@ function initTheme() {
 // ---------- Start ----------
 let DATA = null;
 let shownTab = 'start';
+let renderedHash = null;   // Adresse der zuletzt gezeichneten Ansicht
 
 function renderTabs() {
   const cur = currentTab();
@@ -112,7 +113,9 @@ function renderView() {
   main.innerHTML = v.html;
   v.bind(main);
   document.title = (tab.id === 'start' ? 'Yokus Store' : `${tab.label} – Yokus Store`);
-  if (!location.hash.split('/')[2]) window.scrollTo({ top: 0 });
+  // Nur bei echtem Wechsel der Adresse nach oben; ein Neuzeichnen derselben Ansicht (z. B. Live an/aus) behält die Scrollposition
+  if (renderedHash !== location.hash && !location.hash.split('/')[2]) window.scrollTo({ top: 0 });
+  renderedHash = location.hash;
 }
 
 function showUpdated() {

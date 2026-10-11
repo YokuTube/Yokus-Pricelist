@@ -25,7 +25,7 @@ function bar(pct, tn) {
   return `<span class="lbar ${tn || tone(p)}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p)}"><i style="width:${p}%"></i></span>`;
 }
 function barRow(label, pct, text, tn, cls = '') {
-  return `<div class="brow ${cls}"><span class="bl">${esc(label)}</span>${bar(pct, tn)}<span class="bv">${esc(text ?? Math.round(clamp(pct)) + ' %')}</span></div>`;
+  return `<div class="brow ${cls}"><span class="bl">${esc(label)}</span>${bar(pct, tn)}<span class="bv">${esc(text ?? Math.round(Number.isFinite(Number(pct)) ? Number(pct) : 0) + ' %')}</span></div>`;
 }
 
 // Stimmung als feste Skala 0–100 %: Balken füllt sich bis zur Stimmung, Farbe = Zustand (Zusammenbruch-Grenzen aus
@@ -121,14 +121,17 @@ function makeDialog(html) {
 // =====================================================================
 const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 
+let linkDlgOpen = false;
 export function openLinkDialog() {
+  if (linkDlgOpen) return;
+  linkDlgOpen = true;
   const d = makeDialog(`
     <h3>Mit Twitch verbinden</h3>
     <div id="ld-main" class="ld-main"><p class="muted">Code wird geholt …</p></div>
     <div class="ld-actions"><button type="button" class="btn" data-close>Schließen</button></div>`);
   const main = d.querySelector('#ld-main');
   let alive = true, pollTimer = null, clock = null;
-  d.addEventListener('close', () => { alive = false; clearTimeout(pollTimer); clearInterval(clock); });
+  d.addEventListener('close', () => { alive = false; linkDlgOpen = false; clearTimeout(pollTimer); clearInterval(clock); });
 
   const showError = (msg) => {
     main.innerHTML = `<p class="ld-err">${esc(msg)}</p><button type="button" class="btn primary" data-retry>Neuen Code holen</button>`;
@@ -284,6 +287,8 @@ let strip = null;
 let stripName = null;
 let barGame = null, barPawns = null, barPolling = false;
 
+const badPortraits = new Map();   // Porträt-Adresse -> Zeitpunkt des Fehlers: danach 60 s lang direkt der Platzhalter, kein erneutes <img>
+const isBadPortrait = (u) => { const t = badPortraits.get(u); if (t == null) return false; if (Date.now() - t > 60000) { badPortraits.delete(u); return false; } return true; };
 const MOOD_TONE = (p) => (p.state === 'downed' || p.state === 'mental' ? 'low' : tone(p.moodPct ?? p.healthPct ?? 100));
 
 function gameChipsHtml(g) {
@@ -305,7 +310,7 @@ function pawnBarHtml(list) {
     const mine = p.user && p.user === me;
     const mood = p.moodPct == null ? null : Math.round(p.moodPct);
     const ini = esc((p.name || '?').charAt(0).toUpperCase());
-    const img = p.portrait
+    const img = p.portrait && !isBadPortrait(live.portraitUrl(p.id || p.user, p.portrait))
       ? `<img src="${esc(live.portraitUrl(p.id || p.user, p.portrait))}" alt="" width="40" height="40" data-portrait data-initial="${ini}" class="portrait">`
       : `<div class="portrait ph" aria-hidden="true">${ini}</div>`;
     const st = p.state && p.state !== 'ok' ? `<i class="lp-state ${STATE_BADGE[p.state] || 'neutral'}" title="${esc(p.stateLabel || '')}"></i>` : '';
@@ -409,13 +414,13 @@ function voteHtml(v) {
   const rows = opts.map((o, i) => {
     const n = i + 1, pct = clamp(o.pct), isMine = mine === n;
     let act = '';
-    if (linked && mine == null) act = `<button type="button" class="btn primary vote-go" data-vote="${n}"${voteBusy ? ' disabled' : ''}>Stimme ${n}</button>`;
+    if (linked && mine == null && live.isAllowed('vote')) act = `<button type="button" class="btn primary vote-go" data-vote="${n}"${voteBusy ? ' disabled' : ''}>Stimme ${n}</button>`;
     else if (isMine) act = '<span class="vote-mine">✓ Deine Stimme</span>';
     return `<li class="vote-opt${isMine ? ' mine' : ''}">
       <div class="vo-top"><span class="vo-label"><b>${n}</b> ${esc(o.label)}</span><span class="vo-pct">${Math.round(pct)} %${o.count ? ` · ${fmt(o.count)}` : ''}</span></div>
       ${bar(pct, 'acc')}${act}</li>`;
   }).join('');
-  const note = linked ? '' : `<p class="small muted vote-note">Schreib die Zahl (1–${opts.length}) in den Chat, oder verbinde dich oben, um hier abzustimmen.</p>`;
+  const note = linked && live.isAllowed('vote') ? '' : `<p class="small muted vote-note">Schreib die Zahl (1–${opts.length}) in den Chat${linked ? '.' : ', oder verbinde dich oben, um hier abzustimmen.'}</p>`;
   return `<div class="vote-head"><b>Abstimmung</b><span class="vt-left">Noch ${voteLeft()} s</span><span class="small muted">${fmt(v.total)} Stimmen</span></div>
     <ol class="vote-opts">${rows}</ol>${note}`;
 }
@@ -464,9 +469,14 @@ async function castVote(n) {
   voteBusy = true; renderVote();
   try {
     const msgs = await live.act('vote', String(n));
-    rememberVote(opts, n);
-    toast(msgs.length ? msgs.join(' · ') : `Stimme ${n} abgegeben`, 4000);
-    setVoteMin(true); // nach der eigenen Stimme Platz machen
+    // Klingt die Antwort nach Ablehnung (schon abgestimmt, beendet, ungültig …), die Stimme nicht als abgegeben merken
+    if (msgs.some((m) => /schon|bereits|beendet|nicht|kein|ungültig|already|not/i.test(m))) {
+      toast(msgs.join(' · '), 5000);
+    } else {
+      rememberVote(opts, n);
+      toast(msgs.length ? msgs.join(' · ') : `Stimme ${n} abgegeben`, 4000);
+      setVoteMin(true); // nach der eigenen Stimme Platz machen
+    }
   } catch (e) {
     toast(e.message, 5000);
   } finally {
@@ -505,7 +515,7 @@ function answerDuel(v) {
 }
 
 function handleDuel() {
-  const inc = live.isLive() ? (live.getMe()?.pawn?.duelIncoming || null) : null;
+  const inc = live.isLive() && live.isAllowed('duel') ? (live.getMe()?.pawn?.duelIncoming || null) : null;
   if (!inc) { duelDismissed = null; duelKey = null; closeDuel(); return; }
   const key = `${inc.from}|${inc.fromUser || ''}`;
   if (duelDlg?.open && duelKey === key) return;   // läuft schon
@@ -631,9 +641,10 @@ export function initLiveUi() {
     if (b.dataset.live === 'connect') openLinkDialog();
     else if (b.dataset.live === 'logout') { await live.logout(); toast('Abgemeldet'); }
   });
-  // Porträt nicht ladbar: Platzhalter statt kaputtem Bild
+  // Porträt nicht ladbar: Platzhalter statt kaputtem Bild; fehlgeschlagene Adressen werden gemerkt (siehe portraitHtml/pawnBarHtml)
   document.addEventListener('error', (e) => {
     const img = e.target;
+    if (img?.matches?.('img[data-portrait]')) badPortraits.set(img.getAttribute('src'), Date.now());
     if (img?.matches?.('img[data-evimg]')) { img.closest('.np-fig')?.remove(); return; }   // Zeitungsbild fehlt: einfach weglassen
     if (img?.matches?.('img[data-animg]')) {   // Tierbild fehlt (noch nicht gerendert / 404): Pfotensymbol
       const ph = document.createElement('span');
@@ -740,7 +751,7 @@ const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'ideo' || !!p.ideo) && (
 
 function portraitHtml(p, cls) {
   const ini = esc((p.name || p.displayName || '?').trim().charAt(0).toUpperCase() || '?');
-  if (!p.portrait) return `<div class="portrait ph ${cls}" aria-hidden="true">${ini}</div>`;
+  if (!p.portrait || isBadPortrait(live.portraitUrl(p.id || p.user, p.portrait))) return `<div class="portrait ph ${cls}" aria-hidden="true">${ini}</div>`;
   return `<img class="portrait ${cls}" src="${esc(live.portraitUrl(p.id || p.user, p.portrait))}" alt="Porträt von ${esc(p.name)}" width="96" height="96" loading="lazy" data-portrait data-initial="${ini}">`;
 }
 
@@ -796,7 +807,7 @@ function ensureBadgeLog(host) {
 let artBig = false; // gemaltes Porträt vergrößert (übersteht das Neuzeichnen)
 
 function heroHtml(p) {
-  const meta = [p.race, p.xenotype && p.xenotype !== p.race ? p.xenotype : null, p.age != null ? `${p.age} Jahre` : null, p.gender]
+  const meta = [p.race, p.xenotype && p.xenotype !== p.race ? p.xenotype : null, p.age != null ? `${fmt(p.age)} Jahre` : null, p.gender]
     .filter(Boolean).map(esc).join(' · ');
   const mood = moodRow(p, p.moodLabel || `${Math.round(p.moodPct)} %`);
   return `<div class="card ch-hero">
@@ -853,7 +864,7 @@ function panelMood(p) {
     const open = openTrait === key;
     const tn = t.value > 0 ? 'good' : t.value < 0 ? 'doom' : 'neutral';
     return `<button type="button" class="thought" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(t.desc)}">
-        <span class="th-label">${linkText(t.label, { span: true, skip: p.id || p.user })}${t.count > 1 ? ` <span class="muted">×${t.count}</span>` : ''}</span>
+        <span class="th-label">${linkText(t.label, { span: true, skip: p.id || p.user })}${t.count > 1 ? ` <span class="muted">×${fmt(t.count)}</span>` : ''}</span>
         <span class="th-val ${tn}">${sign(t.value)}</span>
       </button>${open && t.desc ? `<p class="trait-desc th-desc">${linkText(t.desc, { skip: p.id || p.user })}</p>` : ''}`;
   }).join('');
@@ -962,7 +973,7 @@ function inventoryHtml(p, g) {
 
 // ---------- Aktions-Knöpfe (nur für den eigenen Kolonisten) ----------
 const isMine = (p) => !!p?.user && live.isLinked() && p.user === live.getMe()?.user;
-let armedKey = null, armedTimer = null, busyKey = null;   // Bestätigung per zweitem Tippen / laufende Aktion
+let armedKey = null, armedTimer = null, busyKey = null, armedAt = 0;   // Bestätigung per zweitem Tippen / laufende Aktion
 
 /** Kleiner Knopf; bei confirm erst „Sicher?“, dann beim zweiten Tippen ausführen. Der Zustand kommt aus dem HTML (übersteht morph). */
 function actBtn(cmd, args, label, { confirm = false, title = '', cls = '', armedLabel = 'Sicher?' } = {}) {
@@ -974,8 +985,9 @@ function actBtn(cmd, args, label, { confirm = false, title = '', cls = '', armed
 async function runAct(host, btn, redraw = () => repaint(host)) {
   const cmd = btn.dataset.act, args = btn.dataset.args, key = cmd + ' ' + args;
   if (busyKey || btn.disabled) return;
+  if (btn.dataset.confirm && armedKey === key && Date.now() - armedAt < 500) return;   // Doppeltippen soll nicht gleich bestätigen
   if (btn.dataset.confirm && armedKey !== key) {
-    armedKey = key;
+    armedKey = key; armedAt = Date.now();
     clearTimeout(armedTimer);
     armedTimer = setTimeout(() => { if (armedKey === key) { armedKey = null; if (host.isConnected) redraw(); } }, 4000);
     redraw();
@@ -986,6 +998,7 @@ async function runAct(host, btn, redraw = () => repaint(host)) {
   redraw();
   try {
     const msgs = await live.act(cmd, args);
+    delete pickedColor[cmd];   // gewählte Farbe ist jetzt angewandt: ab dann gilt wieder der Serverwert
     toast(msgs.length ? msgs.join(' · ') : 'An RICS übergeben.', 7000);
   } catch (e) {
     toast(e.message, 5000);
@@ -1018,7 +1031,7 @@ function ensureDuelTicker() {
   duelTicker = setInterval(() => {
     const els = document.querySelectorAll('[data-duel-left]');
     if (!els.length) return;
-    const t = `⏱ ${duelLeft()} s`;
+    const t = `⏱ Wetten noch ${duelLeft()} s (Spielzeit)`;
     els.forEach((el) => { if (el.textContent !== t) el.textContent = t; });
   }, 1000);
 }
@@ -1033,7 +1046,7 @@ function duelSide(s, cls) {
     ${portraitHtml({ name: s.name, id: s.id || s.user, portrait: 1 }, 'duel-portrait')}
     <b class="duel-name">${(s.id || s.user) ? xrefHtml(s.name, s.id || s.user) : esc(s.name)}</b>
     ${s.user ? `<span class="small muted duel-user">@${esc(s.user)}</span>` : '<span class="small muted duel-user">&nbsp;</span>'}
-    ${barRow('Gesundheit', s.healthPct, null, null, 'mini')}
+    ${s.healthPct == null ? barRow('Gesundheit', 0, '?', 'neutral', 'mini') : barRow('Gesundheit', s.healthPct, null, null, 'mini')}
   </div>`;
 }
 
@@ -1046,6 +1059,7 @@ function duelCardHtml(g) {
   const ba = Number(d.a.bets) || 0, bb = Number(d.b.bets) || 0, total = ba + bb;
   const pa = total > 0 ? (ba / total) * 100 : 50;
   const pot = d.pot != null ? Number(d.pot) : total;
+  const hidden = d.a.healthPct == null || d.b.healthPct == null;
   let ctl = '';
   if (!d.betOpen) ctl = '<p class="small muted duel-note">Die Wetten sind geschlossen – der Kampf läuft.</p>';
   else if (live.isAllowed('wette')) {
@@ -1056,17 +1070,18 @@ function duelCardHtml(g) {
       const lo = list[0], hi = list[list.length - 1];
       if (!(betAmount >= lo && betAmount <= hi)) betAmount = lo;
       const amts = list.map((v) => `<button type="button" class="chip-btn bet-amt" data-bet="${v}" aria-pressed="${v === betAmount}">${fmt(v)} 🪙</button>`).join('') + betInputHtml(lo, hi, betAmount);
-      const bet = (s, cls) => actBtn('wette', `${s.name} ${betAmount}`, `Auf ${s.name} wetten`,
+      const bet = (s, cls) => actBtn('wette', `${s.user ? '@' + s.user : s.name} ${betAmount}`, `Auf ${s.name} wetten`,
         { confirm: true, armedLabel: `${fmt(betAmount)} 🪙 – sicher?`, cls: `duel-bet ${cls}`, title: `${fmt(betAmount)} Münzen auf ${s.name} setzen` });
       ctl = `<div class="duel-amts" role="group" aria-label="Einsatz">${amts}</div>
         <div class="duel-btns">${bet(d.a, 'a')}${bet(d.b, 'b')}</div>`;
     }
   }
   return `<section class="card duel-card" aria-label="Duell läuft">
-    <div class="duel-head"><b class="duel-title">⚔ Duell läuft</b>${d.betOpen ? `<span class="duel-count" data-duel-left>⏱ ${duelLeft()} s</span>` : '<span class="badge neutral">Wetten zu</span>'}</div>
+    <div class="duel-head"><b class="duel-title">⚔ Duell läuft</b>${d.betOpen ? `<span class="duel-count" data-duel-left>⏱ Wetten noch ${duelLeft()} s (Spielzeit)</span>` : '<span class="badge neutral">Wetten zu</span>'}</div>
     <div class="duel-vs">${duelSide(d.a, 'a')}<span class="duel-x" aria-hidden="true">VS</span>${duelSide(d.b, 'b')}</div>
     <div class="duel-bets" role="img" aria-label="Wetten: ${fmt(ba)} gegen ${fmt(bb)} Münzen"><i class="a" style="width:${pa.toFixed(1)}%"></i><i class="b" style="width:${(100 - pa).toFixed(1)}%"></i></div>
     <div class="duel-sums"><span class="a">${fmt(ba)} 🪙</span><span class="pot">Topf ${fmt(pot)} 🪙</span><span class="b">${fmt(bb)} 🪙</span></div>
+    ${hidden ? '<p class="small muted duel-note">Die Gesundheit der Kämpfer ist verdeckt bis Wettschluss.</p>' : ''}
     ${ctl}
   </section>`;
 }
@@ -1075,8 +1090,10 @@ function duelCardHtml(g) {
 let slotBet = 0;
 
 function slotsCardHtml(g) {
-  const sl = g?.slots;
-  if (!sl || !live.isAllowed('slots')) return '';
+  const raw = g?.slots;
+  if (!raw || !live.isAllowed('slots')) return '';
+  const sl = { minBet: Math.round(Number(raw.minBet)), maxBet: Math.round(Number(raw.maxBet)), cooldownHours: Number(raw.cooldownHours) || 0 };
+  if (!(sl.minBet >= 1) || !(sl.maxBet >= sl.minBet)) return '';   // ohne gültige Einsätze keinen Knopf zeigen
   const amounts = [...new Set([sl.minBet, 25, 50, 100, sl.maxBet].filter((v) => v >= sl.minBet && v <= sl.maxBet))].sort((a, b) => a - b);
   if (!(slotBet >= sl.minBet && slotBet <= sl.maxBet)) slotBet = amounts[0];
   let ctl;
@@ -1148,7 +1165,7 @@ const praiseOf = (p) => {
 
 function praiseBtnHtml(p) {
   if (!live.isLinked() || isMine(p) || !live.isAllowed('lob') || !p.name) return '';
-  return `<div class="ch-praise">${actBtn('lob', p.name, '👏 Loben', { cls: 'praise-btn', title: `${p.name} loben` })}</div>`;
+  return `<div class="ch-praise">${actBtn('lob', p.user ? '@' + p.user : p.name, '👏 Loben', { cls: 'praise-btn', title: `${p.name} loben` })}</div>`;
 }
 
 // Nachhilfe: eigener Kolonist unterrichtet in Fertigkeiten, in denen er deutlich besser ist
@@ -1174,7 +1191,7 @@ function tutorHtml(p) {
     const price = fmt(Number(t.price) || 0);
     body = list.length
       ? `<div class="tutor-box"><p class="small muted">Du unterrichtest ${esc(p.name)} für ${price} 🪙. Angezeigt: deine Stufe → Stufe von ${esc(p.name)}.</p>
-          <div class="tutor-skills">${list.map((k) => actBtn('nachhilfe', `${p.name} ${k.label}`, `${k.label} ${k.mine} → ${k.theirs}`,
+          <div class="tutor-skills">${list.map((k) => actBtn('nachhilfe', `${p.user ? '@' + p.user : p.name} ${k.label}`, `${k.label} ${k.mine} → ${k.theirs}`,
             { confirm: true, armedLabel: `${price} 🪙 – sicher?`, cls: 'tutor-skill', title: `${k.label}: ${price} Münzen` })).join('')}</div></div>`
       : `<div class="tutor-box"><p class="small muted">Gerade passt keine Fertigkeit: Du brauchst mindestens Stufe ${fmt(Number(t.minLevel) || 0)} und ${fmt(Number(t.gap) || 0)} Stufen mehr als ${esc(p.name)}.</p></div>`;
   }
@@ -1768,9 +1785,12 @@ function styleListHtml(p, kind, cur, options) {
   return `<div class="sty-chips">${chips || '<span class="small muted">Nichts gefunden.</span>'}</div>${more}`;
 }
 
+const pickedColor = {};   // gewählte, noch nicht übernommene Farbe je Art (dyehair/setfavoritecolor) - übersteht das Neuzeichnen
 function colorRow(p, kind, label, value) {
   const mine = isMine(p) && live.isAllowed(kind);
-  const v = /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#888888';
+  let v = /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#888888';
+  if (pickedColor[kind] && pickedColor[kind].toLowerCase() === v.toLowerCase()) delete pickedColor[kind];   // Server hat sie übernommen
+  else if (pickedColor[kind] && mine) v = pickedColor[kind];
   return `<div class="sty-color"><span class="sty-swatch" style="background:${esc(v)}"></span><b>${esc(label)}</b>
     ${mine ? `<input type="color" value="${esc(v)}" data-style-color="${kind}" aria-label="${esc(label)} wählen">${actBtn(kind, v, 'Übernehmen', { cls: 'sty-apply', title: `${label} setzen` })}` : ''}</div>`;
 }
@@ -1807,6 +1827,8 @@ function startStylePoll(host) {
       if (inp) { inp.focus(); try { inp.setSelectionRange(pos, pos); } catch { /* egal */ } }
     } else if (e.target.matches('[data-style-color]')) {
       const row = e.target.closest('.sty-color');
+      const kind = e.target.dataset.styleColor;
+      if (kind && /^#[0-9a-f]{6}$/i.test(e.target.value)) pickedColor[kind] = e.target.value;
       const btn = row?.querySelector('.sty-apply');
       if (btn) btn.dataset.args = e.target.value;
       const sw = row?.querySelector('.sty-swatch');
@@ -1826,15 +1848,29 @@ function startStylePoll(host) {
   });
 }
 
-// Glaube (Ideology): Meme, Gebote, Rollen, Rituale aus /api/ideos (selten geändert -> einmal laden, alle 60 s auffrischen)
-let ideosData = null, ideosAt = 0, ideosLoading = false;
-
-function ensureIdeos(host) {
-  if (ideosLoading || (ideosData && Date.now() - ideosAt < 60000)) return;
-  ideosLoading = true;
-  live.getJson('/api/ideos').then((r) => { if (r?.status === 200 && r.data) { ideosData = r.data; ideosAt = Date.now(); } })
-    .catch(() => {}).finally(() => { ideosLoading = false; if (host.isConnected) repaint(host); });
+/**
+ * Einmaliger Abruf statischer Daten (Glaube, Psycasts, Psyche, Expertise). Ein Fehler darf NIE sofort zu einer neuen Anfrage führen
+ * (Fehler -> Neuzeichnen -> Abruf -> Fehler …): nach Fehlern frühestens in 15 s wieder, bei 404 in dieser Sitzung nie wieder.
+ * st = { loading, retryAt, gone, at, has }; set(daten) legt die Antwort ab; refreshMs > 0 = nach so langer Zeit erneut laden.
+ */
+const newLoad = () => ({ loading: false, retryAt: 0, gone: false, at: 0, has: false });
+function loadStatic(st, path, set, host, refreshMs = 0) {
+  if (st.loading || st.gone || Date.now() < st.retryAt) return;
+  if (st.has && !(refreshMs > 0 && Date.now() - st.at >= refreshMs)) return;
+  st.loading = true;
+  live.getJson(path).then((r) => {
+    if (r?.status === 200 && r.data) { set(r.data); st.has = true; st.at = Date.now(); }
+    else if (r?.status === 404) st.gone = true;
+    else st.retryAt = Date.now() + 15000;
+  }).catch(() => { st.retryAt = Date.now() + 15000; })
+    .finally(() => { st.loading = false; if (host.isConnected) repaint(host); });
 }
+
+// Glaube (Ideology): Meme, Gebote, Rollen, Rituale aus /api/ideos (selten geändert -> einmal laden, alle 60 s auffrischen)
+let ideosData = null;
+const ideosLd = newLoad();
+
+function ensureIdeos(host) { loadStatic(ideosLd, '/api/ideos', (d) => { ideosData = d; }, host, 60000); }
 
 function ideoItem(key, label, desc, extra = '') {
   const open = openTrait === key; // gleicher Aufklapp-Mechanismus wie Eigenschaften
@@ -1845,7 +1881,7 @@ function panelIdeo(p) {
   if (!p.ideo) return '<div class="empty">Kein Glaube.</div>';
   const i = (ideosData?.ideos || []).find((x) => x.id === p.ideo.id);
   const head = `<div class="bgrid">${barRow('Überzeugung', p.ideo.certainty)}</div>`;
-  if (!i) return head + '<div class="empty">Lade die Glaubensrichtung …</div>';
+  if (!i) return head + `<div class="empty">${ideosLd.gone ? 'Zu dieser Glaubensrichtung gibt es keine Angaben.' : 'Lade die Glaubensrichtung …'}</div>`;
   const memes = section('Meme', `<div class="traits">${i.memes.map((m, n) => ideoItem('im:' + n, `${m.structure ? '✦ ' : ''}${esc(m.label)}`, m.desc)).join('')}</div>`);
   const precepts = i.precepts.length ? section('Gebote', `<div class="ideo-precepts">${i.precepts.map((x, n) =>
     `<div class="ideo-pre imp-${esc(x.impact)}">${ideoItem('ip:' + n, `<span class="small muted">${esc(x.issue)}:</span> ${esc(x.label)}`, x.desc)}</div>`).join('')}</div>`) : '';
@@ -1858,14 +1894,10 @@ function panelIdeo(p) {
 }
 
 // Psycasts (Vanilla Psycasts Expanded): Pfade ("Stile") mit ihren Psycasts je Stufe; gelernt / lernbar / gesperrt.
-let psyData = null, psyLoading = false, psySel = null, psyAll = false;
+let psyData = null, psySel = null, psyAll = false;
+const psyLd = newLoad();
 
-function ensurePsy(host) {
-  if (psyData || psyLoading) return;
-  psyLoading = true;
-  live.getJson('/api/psycasts').then((r) => { if (r?.status === 200 && r.data) psyData = r.data; })
-    .catch(() => {}).finally(() => { psyLoading = false; if (host.isConnected) repaint(host); });
-}
+function ensurePsy(host) { loadStatic(psyLd, '/api/psycasts', (d) => { psyData = d; }, host); }
 
 function panelPsy(p) {
   const k = p.psycasts;
@@ -1874,30 +1906,32 @@ function panelPsy(p) {
   const head = `<div class="psy-head"><span class="tag">Psylink Stufe ${fmt(k.level)}</span><span class="tag">${fmt(k.points)} Punkt${k.points === 1 ? '' : 'e'} frei</span></div>
     <div class="bgrid">${barRow('Erfahrung', xpPct, `${fmt(k.xp)} / ${fmt(k.xpNext)}`)}</div>`;
   const paths = psyData?.paths;
-  if (!paths) return head + '<div class="empty">Lade die Psycast-Pfade …</div>';
-  const mine = paths.filter((x) => k.paths.includes(x.id));
+  if (!Array.isArray(paths)) return head + `<div class="empty">${psyLd.gone ? 'Die Psycast-Pfade sind nicht vorhanden.' : 'Lade die Psycast-Pfade …'}</div>`;
+  const kPaths = Array.isArray(k.paths) ? k.paths : [], kLearned = Array.isArray(k.learned) ? k.learned : [], kLearnable = Array.isArray(k.learnable) ? k.learnable : [], kLearnPaths = Array.isArray(k.learnablePaths) ? k.learnablePaths : [];
+  const mine = paths.filter((x) => kPaths.includes(x.id));
   const shown = psyAll || !mine.length ? paths : mine;
   if (!psySel || !shown.some((x) => x.id === psySel)) psySel = (mine[0] || paths[0])?.id;
   const chips = shown.map((x) => {
-    const own = k.paths.includes(x.id), can = k.learnablePaths.includes(x.id);
+    const own = kPaths.includes(x.id), can = kLearnPaths.includes(x.id);
     return `<button type="button" class="seg psy-path${x.id === psySel ? ' on' : ''}${own ? ' own' : ''}" data-psypath="${esc(x.id)}">${own ? '★ ' : ''}${esc(x.label)}${can ? ' <span class="small">· freischaltbar</span>' : ''}</button>`;
   }).join('');
   const toggle = mine.length ? `<button type="button" class="linklike small" data-psyall>${psyAll ? 'Nur eigene Pfade' : `Alle ${paths.length} Pfade ansehen`}</button>` : '';
   const path = paths.find((x) => x.id === psySel);
   let body = '';
   if (path) {
-    const own = k.paths.includes(path.id);
+    const own = kPaths.includes(path.id);
     const byLevel = new Map();
-    for (const a of path.abilities) { if (!byLevel.has(a.level)) byLevel.set(a.level, []); byLevel.get(a.level).push(a); }
-    const names = new Map(path.abilities.map((a) => [a.id, a.label]));
-    const rows = [...byLevel.entries()].sort((a, b) => a[0] - b[0]).map(([lvl, list]) => `<div class="psy-row"><span class="psy-lvl">Stufe ${lvl}</span><div class="psy-abs">${list.map((a) => {
-      const st = k.learned.includes(a.id) ? 'learned' : k.learnable.includes(a.id) ? 'learnable' : 'locked';
+    const abilities = Array.isArray(path.abilities) ? path.abilities : [];
+    for (const a of abilities) { if (!byLevel.has(a.level)) byLevel.set(a.level, []); byLevel.get(a.level).push(a); }
+    const names = new Map(abilities.map((a) => [a.id, a.label]));
+    const rows = [...byLevel.entries()].sort((a, b) => a[0] - b[0]).map(([lvl, list]) => `<div class="psy-row"><span class="psy-lvl">Stufe ${fmt(lvl)}</span><div class="psy-abs">${list.map((a) => {
+      const st = kLearned.includes(a.id) ? 'learned' : kLearnable.includes(a.id) ? 'learnable' : 'locked';
       const key = 'pa:' + a.id, open = openTrait === key;
       return `<button type="button" class="psy-ab st-${st}" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(a.desc)}">${esc(a.label)}</button>`;
     }).join('')}</div></div>`).join('');
-    const sel = path.abilities.find((a) => openTrait === 'pa:' + a.id);
-    const info = sel ? `<div class="isk-info"><b>${esc(sel.label)}</b> <span class="small muted">Stufe ${sel.level}</span>
-      ${sel.prereqs.length ? `<div class="small muted">Braucht: ${esc(sel.prereqs.map((x) => names.get(x) || x).join(', '))}</div>` : ''}
+    const sel = abilities.find((a) => openTrait === 'pa:' + a.id);
+    const info = sel ? `<div class="isk-info"><b>${esc(sel.label)}</b> <span class="small muted">Stufe ${fmt(sel.level)}</span>
+      ${(sel.prereqs || []).length ? `<div class="small muted">Braucht: ${esc(sel.prereqs.map((x) => names.get(x) || x).join(', '))}</div>` : ''}
       <p class="isk-desc">${esc(sel.desc)}</p></div>` : '<p class="small muted trait-hint">Tippe auf einen Psycast für die Beschreibung.</p>';
     body = `<p class="ideo-desc">${esc(path.desc)}</p>${!own && path.locked ? `<p class="small muted">🔒 ${esc(path.locked)}</p>` : ''}
       <div class="psy-grid">${rows}</div>
@@ -1911,17 +1945,12 @@ function panelPsy(p) {
 // Liebe (Orientierung, Kinsey-Skala, Libido). Körperbau (Rimbody) steht bei „Gesundheit“.
 // Nur Werte aus dem Spiel; Beschreibungen erst beim Antippen.
 // =====================================================================
-let pchData = null, pchLoading = false, pchHost = null, psyAllP = false;
+let pchData = null, pchHost = null, psyAllP = false;
+const pchLd = newLoad();
 const PSYV_KEY = 'ys-psyche-view';
 let psyView = lsGet(PSYV_KEY) || 'pers';
 
-function ensurePch() {
-  if (pchData || pchLoading || !pchHost) return;
-  pchLoading = true;
-  const host = pchHost;
-  live.getJson('/api/psyche').then((r) => { if (r?.status === 200 && r.data) pchData = r.data; })
-    .catch(() => {}).finally(() => { pchLoading = false; if (host.isConnected) repaint(host); });
-}
+function ensurePch() { if (pchHost) loadStatic(pchLd, '/api/psyche', (d) => { pchData = d; }, pchHost); }
 
 function persHtml(ps) {
   const defs = pchData.personalities || [];
@@ -1980,7 +2009,7 @@ function loveHtml(ps) {
 function panelPsyche(p) {
   const ps = p.psyche;
   if (!ps) return '<div class="empty">Keine Psyche-Daten.</div>';
-  if (!pchData) { ensurePch(); return '<div class="empty">Lade …</div>'; }
+  if (!pchData) { ensurePch(); return `<div class="empty">${pchLd.gone ? 'Zur Psyche gibt es hier keine Angaben.' : 'Lade …'}</div>`; }
   const views = [['pers', 'Persönlichkeit', !!ps.personality], ['int', 'Interessen', !!ps.interests], ['love', 'Liebe', !!ps.sexuality]].filter((v) => v[2]);
   if (!views.length) return '<div class="empty">Keine Psyche-Daten.</div>';
   if (!views.some((v) => v[0] === psyView)) psyView = views[0][0];
@@ -2047,29 +2076,25 @@ function bodyHtml(p) {
 
 // Expertise (Vanilla Skills Expanded): alle möglichen Expertisen je Fertigkeit zum Nachlesen, eigene hervorgehoben.
 // Vergeben tut sie der Streamer – hier nur lesen.
-let expData = null, expLoading = false;
+let expData = null;
+const expLd = newLoad();
 
-function ensureExp(host) {
-  if (expData || expLoading) return;
-  expLoading = true;
-  live.getJson('/api/expertise').then((r) => { if (r?.status === 200 && r.data) expData = r.data; })
-    .catch(() => {}).finally(() => { expLoading = false; if (host.isConnected) repaint(host); });
-}
+function ensureExp(host) { loadStatic(expLd, '/api/expertise', (d) => { expData = d; }, host); }
 let expHost = null;
 const ensureExpLazy = () => { if (expHost) ensureExp(expHost); };
 
 function expertiseHtml(p) {
   const ex = p.expertise;
   if (!ex) return '';
-  if (!expData) { ensureExpLazy(); return ''; }
+  if (!expData || !Array.isArray(expData.skills)) { ensureExpLazy(); return ''; }
   const own = new Map((ex.owned || []).map((e) => [e.id, e.level]));
   const avail = new Set(ex.available || []);
   const groups = expData.skills.map((g) => {
-    const items = g.list.filter((e) => own.has(e.id) || avail.has(e.id));
+    const items = (g.list || []).filter((e) => own.has(e.id) || avail.has(e.id));
     if (!items.length) return '';
     const html = items.map((e) => {
       const key = 'ex:' + e.id, open = openTrait === key, has = own.has(e.id);
-      return `<button type="button" class="trait exp-item${has ? ' own' : ''}" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(e.desc)}">${esc(e.label)}${has ? ` · Stufe ${own.get(e.id)}` : ' · möglich'}</button>`
+      return `<button type="button" class="trait exp-item${has ? ' own' : ''}" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(e.desc)}">${esc(e.label)}${has ? ` · Stufe ${fmt(own.get(e.id))}` : ' · möglich'}</button>`
         + (open ? `<div class="trait-desc">${esc(e.desc)}${(e.effects || []).length ? `<ul class="isk-bonus">${e.effects.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</div>` : '');
     }).join('');
     return `<div class="exp-group"><div class="small muted exp-skill">${esc(g.skill)}</div><div class="traits">${html}</div></div>`;
@@ -2325,7 +2350,8 @@ function colonyCard(p, meUser) {
 }
 
 export function kolonieView() {
-  const user = decodeURIComponent(location.hash.replace(/^#\/?/, '').split('/')[1] || '');
+  let user = '';
+  try { user = decodeURIComponent(location.hash.replace(/^#\/?/, '').split('/')[1] || ''); } catch { user = ''; }   // kaputte %-Folge in der Adresse: Kolonie-Liste
   return user ? pawnDetail(user) : colonyList();
 }
 
@@ -2615,10 +2641,12 @@ function colonyList() {
   return { html, bind };
 }
 
+let pdHash = null;
 function pawnDetail(user) {
   const html = `<div class="live-page"><p class="back"><a href="#/kolonie">← Alle Kolonisten</a></p><div id="pd-host"><div class="empty">Lade …</div></div></div>`;
   function bind(root) {
-    window.scrollTo({ top: 0 });
+    if (pdHash !== location.hash) window.scrollTo({ top: 0 });   // nur bei neuer Adresse, nicht beim Neuzeichnen derselben Seite
+    pdHash = location.hash;
     const host = root.querySelector('#pd-host');
     let last = '', cur = null, vk = null;
     // Verknüpfung oder eigener Kolonist ändert sich: Ansicht neu zeichnen (z. B. Knopf „Herausfordern“)
@@ -2662,7 +2690,7 @@ function boostHtml(g) {
     const wait = Number(live.getMe()?.researchWaitHours);
     ctl = wait > 0
       ? `<button type="button" class="act-btn" disabled>Wieder in ${fmt(wait)} Spielstunde${wait === 1 ? '' : 'n'}</button>`
-      : actBtn('forschung', '', `🔬 Anschieben · ${what}`, { confirm: true, armedLabel: `${fmt(rb.price)} Münzen – sicher?`, title: `Laufende Forschung um ${rb.percent} % anschieben` });
+      : actBtn('forschung', '', `🔬 Anschieben · ${what}`, { confirm: true, armedLabel: `${fmt(rb.price)} Münzen – sicher?`, title: `Laufende Forschung um ${fmt(rb.percent)} % anschieben` });
   }
   return `<div class="rs-boost"><div class="small"><b>Forschung anschieben:</b> ${esc(what)}. ${esc(rules)}</div>${ctl}</div>`;
 }
@@ -2789,7 +2817,7 @@ function spielHtml(g, res) {
   const hh = String(Math.floor(Number(g.hour) || 0)).padStart(2, '0');
   const stat = (k, v, sub) => `<div class="gstat"><span class="gk">${esc(k)}</span><b class="gv">${esc(v)}</b><span class="gs">${esc(sub || '')}</span></div>`;
   const stats = [
-    stat('Datum', `Tag ${g.day}`, g.date), stat('Uhrzeit', `${hh}:00 Uhr`), stat('Jahreszeit', g.season),
+    stat('Datum', `Tag ${fmt(g.day)}`, g.date), stat('Uhrzeit', `${hh}:00 Uhr`), stat('Jahreszeit', g.season),
     stat('Wetter', g.weather, g.temperature), stat('Koloniewert', `${fmt(g.wealth)} Silber`),
     stat('Kolonisten', fmt(g.colonists)), stat('Gefangene', fmt(g.prisoners)), stat('Tiere', fmt(g.animals)),
     stat('Zuschauer-Pawns', fmt(g.viewerPawns)),
@@ -2882,7 +2910,18 @@ export function spielView() {
 const EV_FILTERS = [['all', 'Alle'], ['threat', 'Gefahr'], ['bad', 'Schlecht'], ['good', 'Gut'], ['neutral', 'Neutral']];
 let evFilter = 'all';
 const evOpen = new Set();   // aufgeklappte Einträge (über Schlüssel, übersteht Aktualisierungen)
-const evKey = (e) => `${e.day}|${e.label}|${e.ago}`;
+// Schlüssel ohne „ago“ (das ändert sich ständig): Tag | Titel | laufende Nummer gleicher Einträge am selben Tag (von den ältesten her)
+let evKeys = new Map();
+const evKey = (e) => evKeys.get(e) ?? `${e.day}|${e.label}|0`;
+function indexEvents(list) {
+  evKeys = new Map();
+  const seen = new Map();
+  for (let i = list.length - 1; i >= 0; i--) {
+    const e = list[i], base = `${e.day}|${e.label}`, n = seen.get(base) || 0;
+    seen.set(base, n + 1);
+    evKeys.set(e, `${base}|${n}`);
+  }
+}
 
 let evView = 'letters'; // 'letters' = Briefe, 'social' = Gespräche unter Kolonisten
 let evSocial = [];
@@ -2920,6 +2959,7 @@ function eventsLettersHtml(list) {
     `<button type="button" class="seg${evStyle === k ? ' on' : ''}" data-evstyle="${k}" aria-pressed="${evStyle === k}">${l}</button>`).join('')}</div>`;
   const head = styles + filters;
   list = list.filter((e) => !isShopLetter(e));
+  indexEvents(list);
   if (!list.length) return `${head}<div class="empty">Noch keine Briefe aufgezeichnet.</div>`;
   const shown = list.filter((e) => evFilter === 'all' || e.kind === evFilter);
   if (!shown.length) return `${head}<div class="empty">Keine Ereignisse in dieser Art.</div>`;

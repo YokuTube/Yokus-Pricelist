@@ -279,7 +279,30 @@ PAWNS["yoku"]["isekai"] = isekai_data("krieger", 7, 340, 500, "D-Rang", 3, 2,
                                       ["kr_start", "kr_a1", "kr_a2", "kr_a4"])
 PAWNS["luna_88"]["isekai"] = isekai_data(None, 2, 40, 120, None, 1, 0,
                                          {"str": 5, "dex": 6, "vit": 6, "int": 9, "wis": 8, "cha": 7}, [])
+def _gear_item(text):
+    """Aus "Revolver (gut)" ein GearItem wie in der Mod machen: label, icon, quality 0-6, qualityLabel, hpPct."""
+    if not text:
+        return None
+    qmap = {"schrott": 0, "schlecht": 1, "normal": 2, "gut": 3, "hervorragend": 4, "meisterhaft": 5, "legendär": 6}
+    label, q = text, None
+    if "(" in text and text.endswith(")"):
+        label, q = text[:text.index("(")].strip(), text[text.index("(") + 1:-1].strip().lower()
+    hp = 40 + int(hashlib.md5(text.encode()).hexdigest()[:2], 16) % 61
+    return {"label": label, "icon": "t_" + "".join(c for c in label if c.isalnum()),
+            "quality": qmap.get(q) if q in qmap else None, "qualityLabel": q.capitalize() if q in qmap else None,
+            "hpPct": hp}
+
+
 for _p in PAWNS.values():
+    _g = _p["gear"]
+    _g["weaponItem"] = _gear_item(_g.get("weapon"))
+    _g["apparelItems"] = [_gear_item(a) for a in _g.get("apparel", [])]
+    for _i, _t in enumerate(_p["thoughts"]):   # manche Gedanken haben ein Symbol, manche nicht
+        _t["icon"] = ["h_AteFineMeal", "h_Beauty", None, "h_Pain", None][_i % 5]
+    if _p["wants"]:
+        for _i, _w in enumerate(_p["wants"]["list"]):
+            if _i % 3 != 2:   # bei jedem dritten kennt die Mod keinen Teilfortschritt -> Feld fehlt
+                _w["pct"] = [35, 80, 0, 12][_i % 4]
     _p.setdefault("isekai", None)
     _p["bonds"] = {"yoku": ["Rex (Husky)"], "luna_88": ["Mieze (Katze)"]}.get(_p["user"], [])
     if _p["wants"]:
@@ -480,19 +503,23 @@ def summary(p):
 
 
 # ---------- Gedenkwand, Koloniewert-Verlauf, Fraktionen, Besucher (GameInfo) ----------
+for _i, _e in enumerate(EVENTS):
+    _e["letterDef"] = {"threat": "ThreatBig", "bad": "NegativeEvent", "good": "PositiveEvent"}.get(_e["kind"], "NeutralEvent")
+    _e["def"] = ["RaidEnemy", "OrbitalTraderArrival", "ShortCircuit", "FoodFight", None, "Disease_Flu", "WandererJoin", "WeatherChange"][_i % 8] or _e["letterDef"]
+
 MEMORIALS = [
     {"name": "Olaf", "fullName": "Olaf Aldemar", "user": None, "cause": "Schussverletzung (Plünderer)",
-     "diedDay": 29, "joinedDay": 3, "age": 58, "kills": 6, "ago": "8 Tage"},
+     "diedDay": 29, "joinedDay": 3, "age": 58, "kills": 6, "ago": "8 Tage", "portrait": "m_olaf", "causeKind": "shot"},
     {"name": "Fenja", "fullName": "Fenja Pixel", "user": "fenja_pixel", "cause": "Blutverlust nach einem Angriff",
-     "diedDay": 33, "joinedDay": 20, "age": 22, "kills": 2, "ago": "4 Tage"},
+     "diedDay": 33, "joinedDay": 20, "age": 22, "kills": 2, "ago": "4 Tage", "portrait": None, "causeKind": "bleed"},
 ]
 NOISE = [0, 90, -60, 40, -120, 70, 20, 0, 10]   # kleine Schwankungen; Tag 37 (letzter Punkt) ist exakt 48250
 WEALTH_HISTORY = [[d, 41000 + (d - 8) * 250 + NOISE[(d * 7) % 9]] for d in range(8, 38)]
 FACTIONS = [
-    {"name": "Glitzerwelt", "kind": "Imperium", "goodwill": 62, "hasGoodwill": True, "relation": "ally"},
-    {"name": "Pilzbund", "kind": "Stamm", "goodwill": 8, "hasGoodwill": True, "relation": "neutral"},
-    {"name": "Schwarzer Pakt", "kind": "Piraten", "goodwill": -74, "hasGoodwill": True, "relation": "hostile"},
-    {"name": "Raumhafen-Kette", "kind": "Händler", "goodwill": 0, "hasGoodwill": False, "relation": "neutral"},
+    {"name": "Glitzerwelt", "kind": "Imperium", "goodwill": 62, "hasGoodwill": True, "relation": "ally", "img": "f_Empire_FFD700"},
+    {"name": "Pilzbund", "kind": "Stamm", "goodwill": 8, "hasGoodwill": True, "relation": "neutral", "img": "f_Tribe_55AA55"},
+    {"name": "Schwarzer Pakt", "kind": "Piraten", "goodwill": -74, "hasGoodwill": True, "relation": "hostile", "img": "f_Pirate_CC3333"},
+    {"name": "Raumhafen-Kette", "kind": "Händler", "goodwill": 0, "hasGoodwill": False, "relation": "neutral", "img": None},
 ]
 VISITORS = {
     "groups": [{"faction": "Glitzerwelt", "count": 4, "trader": "Waffenhändler"}],
@@ -521,9 +548,9 @@ def duel_fight(t):
     ph = t % 60
     open_ = ph < 40
     ba, bb = 300 + ph * 9, 180 + ph * 5 + BETS["b"]
-    return {"a": {"name": "Mira", "user": "mira_spielt", "id": "mira_spielt", "healthPct": max(10, 100 - ph), "bets": ba + BETS["a"]},
-            "b": {"name": "Luna", "user": "luna_88", "id": "luna_88", "healthPct": max(15, 90 - ph // 2), "bets": bb},
-            "betOpen": open_, "betSecondsLeft": max(0, 40 - ph) if open_ else 0, "minBet": 10, "maxBet": 500,
+    return {"a": {"name": "Mira", "user": "mira_spielt", "id": "mira_spielt", "healthPct": max(10, 100 - ph) if not open_ else None, "bets": ba + BETS["a"]},
+            "b": {"name": "Luna", "user": "luna_88", "id": "luna_88", "healthPct": max(15, 90 - ph // 2) if not open_ else None, "bets": bb},
+            "betOpen": open_, "betSecondsLeft": max(0, 40 - ph) if open_ else 0, "minBet": 10, "maxBet": 500,  # Sekunden = Spielsekunden
             "pot": ba + BETS["a"] + bb}
 
 
@@ -541,17 +568,18 @@ def game_info():
         "sponsorPrice": 300,
         "researchBoost": {"price": 800, "percent": 25, "viewerCooldownHours": 24, "maxPerDay": 3},
         "colony": "Neu-Yoku", "date": "5. Aprimay 5501", "day": 37, "hour": (t // 20) % 24,
-        "season": "Frühling", "weather": "Leichter Regen", "temperature": "12 °C", "wealth": 48250 + (t // 10) % 7 * 10,
+        "season": "Frühling", "seasonKey": "Spring", "weatherDef": "RainyLight", "weather": "Leichter Regen", "temperature": "12 °C", "wealth": 48250 + (t // 10) % 7 * 10,
         "colonists": 6, "prisoners": 1, "animals": 9, "viewerPawns": len(PAWNS),
         "storyteller": "Cassandra Classic", "difficulty": "Herausforderung",
         "research": {"label": "Elektrizität", "pct": 62},
         "conditions": [
-            {"label": "Hitzewelle", "desc": "Es ist ungewöhnlich heiß.", "left": "1,2 Tage"},
-            {"label": "Toxischer Niederschlag", "desc": "Gift liegt in der Luft.", "left": "3 Tage"},
-            {"label": "Ruhige Zeiten", "desc": "Der Erzähler hält sich zurück.", "left": None}],
+            {"label": "Hitzewelle", "desc": "Es ist ungewöhnlich heiß.", "left": "1,2 Tage", "kind": "HeatWave", "good": False},
+            {"label": "Toxischer Niederschlag", "desc": "Gift liegt in der Luft.", "left": "3 Tage", "kind": "ToxicFallout", "good": False},
+            {"label": "Polarlicht", "desc": "Der Himmel leuchtet.", "left": "8 Stunden", "kind": "Aurora", "good": True},
+            {"label": "Ruhige Zeiten", "desc": "Der Erzähler hält sich zurück.", "left": None, "kind": "QuietTimes", "good": None}],
         "events": [
-            {"label": "Überfall: Plünderer", "kind": "threat", "ago": "vor 2 Stunden", "day": 37},
-            {"label": "Händler aus Fernost", "kind": "good", "ago": "vor 7 Stunden", "day": 37},
+            {"label": "Überfall: Plünderer", "kind": "threat", "ago": "vor 2 Stunden", "day": 37, "def": "RaidEnemy", "letterDef": "ThreatBig"},
+            {"label": "Händler aus Fernost", "kind": "good", "ago": "vor 7 Stunden", "day": 37, "def": "OrbitalTraderArrival", "letterDef": "PositiveEvent"},
             {"label": "Pawn ist krank: Grippe", "kind": "bad", "ago": "vor 1 Tag", "day": 36},
             {"label": "Wanderer schließt sich an", "kind": "good", "ago": "vor 2 Tagen", "day": 35},
             {"label": "Wetterwechsel", "kind": "neutral", "ago": "vor 3 Tagen", "day": 34}],
@@ -569,7 +597,8 @@ def game_info():
         "factions": FACTIONS,
         "visitors": VISITORS,
         "stock": {"foodNutrition": 2140, "foodDays": 6.4,
-                  "items": [{"label": "Reis", "count": 120}, {"label": "Bier", "count": 14}, {"label": "Medizin", "count": 22}, {"label": "Stahl", "count": 540}]},
+                  "items": [{"label": "Reis", "count": 120, "def": "RawRice", "img": "t_RawRice"}, {"label": "Bier", "count": 14, "def": "Beer", "img": "t_Beer"},
+                            {"label": "Medizin", "count": 22, "def": "MedicineIndustrial", "img": "t_MedicineIndustrial"}, {"label": "Stahl", "count": 540, "def": "Steel", "img": "t_Steel"}]},
     }
 
 
@@ -771,7 +800,7 @@ class H(BaseHTTPRequestHandler):
                           {"label": "Erntemeister", "desc": "Spezialist für die Ernte.", "holders": []}],
                 "rituals": [{"label": "Sonnenfest", "desc": "Ein Fest zur Sommersonnenwende."}]}]})
         if p == "/api/events":
-            return self.js(200, {"events": EVENTS, "social": [{"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "1 Stunde", "pawns": [{"id": "yoku", "name": "Kira"}, {"id": "mira_spielt", "name": "Mira"}]}, {"text": "Luna hat Eddi ein Geschenk gemacht.", "ago": "3 Stunden"}, {"text": "Eddi hat Kira beleidigt.", "ago": "2 Tage"}]})
+            return self.js(200, {"events": EVENTS, "social": [{"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "1 Stunde", "pawns": [{"id": "yoku", "name": "Kira"}, {"id": "mira_spielt", "name": "Mira"}], "kind": "Chitchat", "good": True, "icon": "i_Chitchat"}, {"text": "Luna hat Eddi ein Geschenk gemacht.", "ago": "3 Stunden", "kind": "Gift", "good": True, "icon": None}, {"text": "Eddi hat Kira beleidigt.", "ago": "2 Tage", "kind": "Insult", "good": False, "icon": "i_Insult"}, {"text": "Mira hat versucht, ein Tier zu zähmen.", "ago": "3 Tage", "kind": "TameAttempt", "good": None, "icon": None}]})
         if p == "/api/colony":
             return self.js(200, {"pawns": [summary(x) for x in PAWNS.values()]})
         if p.startswith("/api/log/"):
@@ -785,9 +814,9 @@ class H(BaseHTTPRequestHandler):
                           "hairOptions": [["Bob", "Bob"], ["Braids", "Zöpfe"], ["Mohawk", "Irokese"], ["Pigtails", "Rattenschwänze"], ["Shaved", "Rasiert"]],
                           "beard": None, "beardLabel": None, "beardOptions": None},
                 "social": [
-                    {"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "2 Stunden"},
-                    {"text": "Kira hat Eddi beleidigt.", "ago": "5 Stunden"},
-                    {"text": "Luna hat Kira ein tiefes Gespräch über das Leben angeboten.", "ago": "1 Tag"},
+                    {"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "2 Stunden", "kind": "Chitchat", "good": True, "icon": "i_Chitchat"},
+                    {"text": "Kira hat Eddi beleidigt.", "ago": "5 Stunden", "kind": "Insult", "good": False, "icon": "i_Insult"},
+                    {"text": "Luna hat Kira ein tiefes Gespräch über das Leben angeboten.", "ago": "1 Tag", "kind": "DeepTalk", "good": True, "icon": None},
                 ],
                 "combat": [
                     {"text": "Kira hat einen Plünderer mit dem Revolver in den Kopf getroffen.", "ago": "3 Stunden"},

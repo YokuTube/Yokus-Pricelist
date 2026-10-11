@@ -64,7 +64,7 @@ export function makeMatcher(query) {
   return (hay) => { const h = String(hay).toLowerCase(); return list.some((t) => h.includes(t)); };
 }
 
-export const fmt = (n) => Number(n || 0).toLocaleString('de-DE');
+export const fmt = (n) => { const v = Number(n || 0); return Number.isFinite(v) ? v.toLocaleString('de-DE') : '0'; };
 
 export function debounce(fn, ms = 120) {
   let t;

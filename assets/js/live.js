@@ -77,40 +77,90 @@ function goOffline() {
   scheduleRediscover(RETRY_FAILED_MS);
 }
 
-/** Wiederkehrende Abfrage mit ETag. Hört auf, sobald alive() false liefert oder die Seite offline geht. */
-export function poll({ path, every, auth = false, alive = () => true, onResult }) {
-  let stopped = false, timer = null, etag = null, cached = null, running = false;
-  const entry = { kick: () => { clearTimeout(timer); tick(); }, stop: () => stop() };
-  const stop = () => { stopped = true; clearTimeout(timer); pollers.delete(entry); };
-  const next = () => { if (!stopped) timer = setTimeout(tick, every); };
-  async function tick() {
-    if (stopped || running) return;
-    if (!S.live || !alive() || (auth && !S.token)) return stop();
-    if (document.hidden) return;              // kommt beim Sichtbarwerden per kick() wieder
-    running = true;
-    try {
-      const r = await api(path, { auth, etag });
-      if (stopped) return;
-      if (r.status === 401 && auth) { dropToken(true); return stop(); }
-      if (r.status >= 500) { fail(); }
-      else {
-        S.fails = 0;
-        if (r.status === 304) onResult({ status: 200, data: cached, unchanged: true });
-        else {
-          if (r.ok) { etag = r.etag; cached = r.data; } else { etag = null; cached = null; }
-          onResult({ status: r.status, data: r.data, unchanged: false });
-        }
-      }
-    } catch (e) {
-      if (!e?.net) console.warn('[live] Fehler bei', path, e);   // z. B. Fehler beim Zeichnen – sonst unsichtbar
-      if (!stopped) fail();
-    } finally {
-      running = false;
-      if (!stopped && S.live) next();
-    }
+// Gemeinsamer Abruf je Pfad: Fragen mehrere Ansichten dasselbe ab (z. B. /api/colony oder /api/game in Leiste und Ansicht),
+// geht nur EINE Anfrage raus; der kürzeste gewünschte Takt gewinnt, alle Abnehmer bekommen jedes Ergebnis.
+const hubs = new Map();
+
+function hubGap(hub) {
+  let g = Infinity;
+  for (const s of hub.subs) {
+    if (document.hidden) { const b = s.bg(); if (b) g = Math.min(g, Math.max(s.every, b)); }
+    else g = Math.min(g, s.every);
   }
+  return Number.isFinite(g) ? g : 60000;
+}
+
+function hubSchedule(hub) {
+  clearTimeout(hub.timer);
+  if (!hub.subs.size || hub.running || !S.live) return;
+  hub.timer = setTimeout(() => hubTick(hub), Math.max(0, hub.lastAt + hubGap(hub) - Date.now()));
+}
+
+function hubKick(hub) { clearTimeout(hub.timer); hubTick(hub); }
+
+function hubDeliver(hub, res, only) {
+  for (const s of [...(only || hub.subs)]) {
+    if (s.stopped) continue;
+    try { s.onResult(res); } catch (e) { console.warn('[live] Fehler beim Zeichnen von', hub.path, e); }   // z. B. Fehler beim Zeichnen – sonst unsichtbar
+  }
+}
+
+async function hubTick(hub) {
+  if (hub.running) return;
+  for (const s of [...hub.subs]) if (!S.live || (hub.auth && !S.token) || !s.alive()) s.entry.stop();
+  if (!hub.subs.size) return;
+  if (document.hidden && ![...hub.subs].some((s) => s.bg())) return;   // kommt beim Sichtbarwerden per kick() wieder
+  hub.running = true;
+  try {
+    const r = await api(hub.path, { auth: hub.auth, etag: hub.etag });
+    if (!hub.subs.size) return;
+    if (r.status === 401 && hub.auth) { dropToken(true); [...hub.subs].forEach((s) => s.entry.stop()); return; }
+    if (r.status >= 500) fail();
+    else {
+      S.fails = 0;
+      if (r.status === 304) hubDeliver(hub, { status: 200, data: hub.cached, unchanged: true });
+      else {
+        if (r.ok) { hub.etag = r.etag; hub.cached = r.data; hub.has = true; } else { hub.etag = null; hub.cached = null; hub.has = false; }
+        hubDeliver(hub, { status: r.status, data: r.data, unchanged: false });
+      }
+    }
+  } catch (e) {
+    if (!e?.net) console.warn('[live] Fehler bei', hub.path, e);
+    if (hub.subs.size) fail();
+  } finally {
+    hub.running = false;
+    hub.lastAt = Date.now();
+    hubSchedule(hub);
+  }
+}
+
+/**
+ * Wiederkehrende Abfrage mit ETag. Hört auf, sobald alive() false liefert oder die Seite offline geht.
+ * backgroundEvery: Funktion, die bei verstecktem Fenster den Takt (ms) liefert; 0/fehlt = dann pausieren.
+ */
+export function poll({ path, every, auth = false, alive = () => true, onResult, backgroundEvery = null }) {
+  const key = (auth ? 'A ' : 'P ') + path;
+  let hub = hubs.get(key);
+  if (!hub) { hub = { key, path, auth, subs: new Set(), timer: null, etag: null, cached: null, has: false, running: false, lastAt: 0 }; hubs.set(key, hub); }
+  const sub = { every, alive, onResult, stopped: false, entry: null,
+    bg: () => (typeof backgroundEvery === 'function' ? Number(backgroundEvery()) || 0 : 0) };
+  const stop = () => {
+    if (sub.stopped) return;
+    sub.stopped = true;
+    hub.subs.delete(sub); pollers.delete(entry);
+    if (!hub.subs.size) { clearTimeout(hub.timer); if (hubs.get(key) === hub) hubs.delete(key); }
+  };
+  const entry = { kick: () => hubKick(hub), stop };
+  sub.entry = entry;
+  hub.subs.add(sub);
   pollers.add(entry);
-  tick();
+  if (hub.has && !hub.running) {
+    // Es gibt schon frische Daten: sofort liefern; nur bei älteren Daten gleich neu fragen
+    queueMicrotask(() => { if (!sub.stopped) hubDeliver(hub, { status: 200, data: hub.cached, unchanged: false }, [sub]); });
+    if (Date.now() - hub.lastAt > 1500) hubKick(hub); else hubSchedule(hub);
+  } else if (hub.running) {
+    // läuft gerade: das Ergebnis geht auch an diesen Abnehmer
+  } else hubKick(hub);
   return stop;
 }
 
@@ -142,7 +192,10 @@ async function findBase() {
   const dev = devBase();
   if (dev) return { base: dev };
   let res;
-  try { res = await fetch(LIVE_JSON, { headers: { Accept: 'application/vnd.github+json' } }); } catch { return { error: true }; }
+  const ctl = new AbortController();
+  const tm = setTimeout(() => ctl.abort(), 10000);
+  try { res = await fetch(LIVE_JSON, { headers: { Accept: 'application/vnd.github+json' }, signal: ctl.signal }); } catch { clearTimeout(tm); return { error: true }; }
+  clearTimeout(tm);
   if (res.status === 404) return { absent: true };
   if (!res.ok) return { error: true };
   try {
@@ -191,6 +244,8 @@ function startMe() {
   if (!S.live || !S.token) return;
   meStop = poll({
     path: '/api/me', every: 1000, auth: true,
+    // Browser-Benachrichtigungen erlaubt: auch bei verstecktem Fenster weiter nachsehen, aber nur alle 15 s
+    backgroundEvery: () => { try { return 'Notification' in window && Notification.permission === 'granted' ? 15000 : 0; } catch { return 0; } },
     onResult: (r) => {
       if (r.status !== 200 || !r.data || r.unchanged) return;
       S.me = r.data;
