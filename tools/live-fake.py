@@ -67,6 +67,7 @@ def make_pawn(user, display, name, full, gender, age, race, xeno, state, state_l
               child, adult, skills, traits, conditions, pain, gear, wants, quirks, asp, kills, portrait=1, needs=None):
     return {
         "user": user, "displayName": display, "name": name, "portrait": portrait, "art": portrait,
+        "breaks": {"extreme": 5, "major": 20, "minor": 35},
         "healthPct": health, "moodPct": mood, "state": state, "stateLabel": state_label, "job": job,
         "fullName": full, "gender": gender, "age": age, "race": race, "xenotype": xeno,
         "childhood": child, "adulthood": adult, "location": "Kolonie", "moodLabel": mood_label,
@@ -287,6 +288,10 @@ RELATIONS = {
              rel("Olaf Aldemar", None, ["Vater"], 0, 0, dead=True),
              rel("Mira Voss", "mira_spielt", [], 35, -10),
              rel("Sven Reiter", None, [], -25, -30),
+             rel("Pia Lund", None, [], 12, 4),
+             rel("Tom Berg", None, [], 48, 40),
+             rel("Hanna Wolf", None, [], -60, -35),
+             rel("Jan Westmann", None, [], 5, 0),
              rel("Rex", None, [], 0, 0, animal=True)],
     "mira_spielt": [rel("Kira Aldemar", "yoku", [], 30, 35),
                     rel("Luna Mertens", "luna_88", [], -15, 5)],
@@ -297,12 +302,13 @@ RELATIONS = {
 
 # ---------- Ereignisse (Chronik mit Text) ----------
 EVENTS = [
-    {"label": "Überfall: Plünderer", "text": "Fünf Plünderer sind über den Nordpass gekommen. Zwei wurden erledigt, die übrigen flohen.", "kind": "threat", "ago": "2 Stunden", "day": 37},
-    {"label": "Händler aus Fernost", "text": "Ein Händler hat drei Kisten Stahl gegen Reis getauscht.", "kind": "good", "ago": "7 Stunden", "day": 37},
-    {"label": "Pawn ist krank: Grippe", "text": "Mira hat sich bei einem Wanderer angesteckt und liegt im Bett.", "kind": "bad", "ago": "1 Tag", "day": 36},
-    {"label": "Wanderer schließt sich an", "text": "Ein Wanderer aus dem Westen wollte bleiben. Sein Name ist Jan.", "kind": "good", "ago": "2 Tage", "day": 35},
+    {"img": {"type": "img", "img": "faction-pirates", "name": "Plünderer"}, "label": "Überfall: Plünderer", "text": "Fünf Plünderer sind über den Nordpass gekommen. Zwei wurden erledigt, die übrigen flohen.", "kind": "threat", "ago": "2 Stunden", "day": 37},
+    {"img": {"type": "img", "img": "Steel", "name": "Stahl"}, "label": "Händler aus Fernost", "text": "Ein Händler hat drei Kisten Stahl gegen Reis getauscht.", "kind": "good", "ago": "7 Stunden", "day": 37},
+    {"label": "Zwielicht am Himmel", "text": "Ein seltsames Licht stand über dem Tal. Danach war alles wie vorher.", "kind": "neutral", "ago": "9 Stunden", "day": 37},
+    {"img": {"type": "pawn", "id": "mira_spielt", "name": "Mira Voss", "portrait": 1}, "label": "Pawn ist krank: Grippe", "text": "Mira hat sich bei einem Wanderer angesteckt und liegt im Bett.", "kind": "bad", "ago": "1 Tag", "day": 36},
+    {"img": {"type": "pawn", "id": "jan", "name": "Jan", "portrait": 0}, "label": "Wanderer schließt sich an", "text": "Ein Wanderer aus dem Westen wollte bleiben. Sein Name ist Jan.", "kind": "good", "ago": "2 Tage", "day": 35},
     {"label": "Wetterwechsel", "text": "Der Regen hat aufgehört. Es ist jetzt trocken und warm.", "kind": "neutral", "ago": "3 Tage", "day": 34},
-    {"label": "Kurze Kälte", "text": "Die Temperatur ist für einen Tag unter den Gefrierpunkt gefallen.", "kind": "bad", "ago": "4 Tage", "day": 33},
+    {"img": {"type": "img", "img": "404", "name": "Fehlt"}, "label": "Kurze Kälte", "text": "Die Temperatur ist für einen Tag unter den Gefrierpunkt gefallen.", "kind": "bad", "ago": "4 Tage", "day": 33},
     {"label": "Schwarm Fledermäuse", "text": "Ein Schwarm ist in die Höhle gezogen. Niemand wurde verletzt.", "kind": "neutral", "ago": "5 Tage", "day": 32},
     {"label": "Mondfest", "text": "Die Kolonie hat gefeiert. Die Stimmung ist deutlich gestiegen.", "kind": "good", "ago": "6 Tage", "day": 31},
 ]
@@ -765,6 +771,11 @@ class H(BaseHTTPRequestHandler):
             if key is None or not PAWNS[key].get("art"):
                 return self.js(404, {"error": "Kein gemaltes Porträt."}, cache=False)
             return self.send(200, png(key), "image/png", extra={"Cache-Control": "public, max-age=3600"})
+        if p.startswith("/api/img/"):
+            key = unquote(p[9:])
+            if key == "404":
+                return self.js(404, {"error": "Noch nicht gerendert."}, cache=False)
+            return self.send(200, png("img-" + key), "image/png", extra={"Cache-Control": "public, max-age=3600"})
         if p.startswith("/api/animalimg/"):
             key = unquote(p[15:])
             if key == "404":

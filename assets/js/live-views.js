@@ -25,6 +25,26 @@ function barRow(label, pct, text, tn, cls = '') {
   return `<div class="brow ${cls}"><span class="bl">${esc(label)}</span>${bar(pct, tn)}<span class="bv">${esc(text ?? Math.round(clamp(pct)) + ' %')}</span></div>`;
 }
 
+// Stimmung als Skala 0–100 % mit den Zusammenbruch-Grenzen aus PawnDetail.breaks (Prozent; fehlt es → normaler Balken)
+const BREAK_NAMES = [['extreme', 'extremer Zusammenbruch'], ['major', 'größerer Zusammenbruch'], ['minor', 'kleiner Zusammenbruch']];
+function moodRow(p, text, legend = false) {
+  const b = p.breaks;
+  const th = b && typeof b === 'object' ? BREAK_NAMES.filter(([k]) => b[k] != null && Number.isFinite(Number(b[k]))).map(([k, l]) => [k, l, Number(b[k])]) : [];
+  if (p.moodPct == null) return '';
+  if (!th.length) return barRow('Stimmung', p.moodPct, text);
+  const v = clamp(p.moodPct);
+  const cuts = th.map(([k, l, x]) => [k, l, clamp(x)]).sort((x, y) => x[2] - y[2]);
+  const zone = { extreme: 'z-ext', major: 'z-maj', minor: 'z-min' };
+  // Zonen: von 0 bis zur ersten Grenze = tiefste Stufe usw.; darüber neutral
+  let from = 0, segs = '';
+  for (const [k, , x] of cuts) { if (x > from) segs += `<i class="${zone[k]}" style="left:${from}%;width:${x - from}%"></i>`; from = x; }
+  if (from < 100) segs += `<i class="z-ok" style="left:${from}%;width:${100 - from}%"></i>`;
+  const ticks = cuts.map(([, l, x]) => `<b class="mood-tick" style="left:${x}%" title="${esc(l)} ab unter ${Math.round(x)} %"></b>`).join('');
+  const title = `Stimmung ${Math.round(v)} % · ` + cuts.map(([, l, x]) => `${l} unter ${Math.round(x)} %`).join(' · ');
+  const leg = legend ? `<div class="mood-leg small muted" aria-hidden="true">${cuts.map(([k, l, x]) => `<span><i class="${zone[k]}"></i>${esc(l)} &lt; ${Math.round(x)} %</span>`).join('')}</div>` : '';
+  return `<div class="brow mood-row"><span class="bl">Stimmung</span><span class="mood-scale" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(v)}" aria-label="${esc(title)}" title="${esc(title)}">${segs}${ticks}<em class="mood-dot" style="left:${v}%"></em></span><span class="bv">${esc(text ?? Math.round(v) + ' %')}</span></div>${leg}`;
+}
+
 // =====================================================================
 // Münzen mit Animation
 // =====================================================================
@@ -599,6 +619,7 @@ export function initLiveUi() {
   // Porträt nicht ladbar: Platzhalter statt kaputtem Bild
   document.addEventListener('error', (e) => {
     const img = e.target;
+    if (img?.matches?.('img[data-evimg]')) { img.closest('.np-fig')?.remove(); return; }   // Zeitungsbild fehlt: einfach weglassen
     if (img?.matches?.('img[data-animg]')) {   // Tierbild fehlt (noch nicht gerendert / 404): Pfotensymbol
       const ph = document.createElement('span');
       ph.className = 'an-ph';
@@ -761,7 +782,7 @@ let artBig = false; // gemaltes Porträt vergrößert (übersteht das Neuzeichne
 function heroHtml(p) {
   const meta = [p.race, p.xenotype && p.xenotype !== p.race ? p.xenotype : null, p.age != null ? `${p.age} Jahre` : null, p.gender]
     .filter(Boolean).map(esc).join(' · ');
-  const mood = p.moodPct == null ? '' : barRow('Stimmung', p.moodPct, p.moodLabel || `${Math.round(p.moodPct)} %`);
+  const mood = moodRow(p, p.moodLabel || `${Math.round(p.moodPct)} %`);
   return `<div class="card ch-hero">
     <div class="ch-pics">${portraitHtml(p, 'ch-portrait')}${p.art ? `<button type="button" class="ch-art-btn${artBig ? ' big' : ''}" data-art-zoom aria-pressed="${artBig}" title="Gemaltes Porträt – antippen zum Vergrößern"><img class="ch-art" src="${esc(live.artUrl(p.id || p.user, p.art))}" alt="Gemaltes Porträt von ${esc(p.name)}" width="128" height="128" loading="lazy"></button>` : ''}</div>
     <div class="ch-id">
@@ -803,7 +824,7 @@ function panelOverview(p) {
 
 // Gedanken wie im Stimmungs-Reiter des Spiels; Antippen zeigt die Beschreibung (gleicher Mechanismus wie Eigenschaften)
 function panelMood(p) {
-  const head = p.moodPct == null ? '' : `<div class="bgrid">${barRow('Stimmung', p.moodPct, p.moodLabel || `${Math.round(p.moodPct)} %`)}</div>`;
+  const head = p.moodPct == null ? '' : `<div class="bgrid">${moodRow(p, p.moodLabel || `${Math.round(p.moodPct)} %`, true)}</div>`;
   const list = [...(p.thoughts || [])].sort((a, b) => b.value - a.value);
   if (!list.length) return head + '<div class="empty">Gerade keine besonderen Gedanken.</div>';
   const sum = list.reduce((s, t) => s + (Number(t.value) || 0), 0);
@@ -992,8 +1013,9 @@ function duelCardHtml(g) {
     else if (fighting) ctl = '<p class="small muted duel-note">Du kämpfst selbst mit – wetten darfst du nicht.</p>';
     else {
       const list = betAmounts(d);
-      if (!list.includes(betAmount)) betAmount = list[0];
-      const amts = list.map((v) => `<button type="button" class="chip-btn bet-amt" data-bet="${v}" aria-pressed="${v === betAmount}">${fmt(v)} 🪙</button>`).join('');
+      const lo = list[0], hi = list[list.length - 1];
+      if (!(betAmount >= lo && betAmount <= hi)) betAmount = lo;
+      const amts = list.map((v) => `<button type="button" class="chip-btn bet-amt" data-bet="${v}" aria-pressed="${v === betAmount}">${fmt(v)} 🪙</button>`).join('') + betInputHtml(lo, hi, betAmount);
       const bet = (s, cls) => actBtn('wette', `${s.name} ${betAmount}`, `Auf ${s.name} wetten`,
         { confirm: true, armedLabel: `${fmt(betAmount)} 🪙 – sicher?`, cls: `duel-bet ${cls}`, title: `${fmt(betAmount)} Münzen auf ${s.name} setzen` });
       ctl = `<div class="duel-amts" role="group" aria-label="Einsatz">${amts}</div>
@@ -1016,11 +1038,11 @@ function slotsCardHtml(g) {
   const sl = g?.slots;
   if (!sl || !live.isAllowed('slots')) return '';
   const amounts = [...new Set([sl.minBet, 25, 50, 100, sl.maxBet].filter((v) => v >= sl.minBet && v <= sl.maxBet))].sort((a, b) => a - b);
-  if (!amounts.includes(slotBet)) slotBet = amounts[0];
+  if (!(slotBet >= sl.minBet && slotBet <= sl.maxBet)) slotBet = amounts[0];
   let ctl;
   if (!live.isLinked()) ctl = `<p class="small muted" style="margin:0">Verbinde dich oben, um per Knopf zu spielen – oder schreib <code>${esc(live.prefix())}slots Einsatz</code> in den Chat.</p>`;
   else {
-    const chips = amounts.map((v) => `<button type="button" class="chip-btn" data-slotbet="${v}" aria-pressed="${v === slotBet}">${fmt(v)} 🪙</button>`).join('');
+    const chips = amounts.map((v) => `<button type="button" class="chip-btn" data-slotbet="${v}" aria-pressed="${v === slotBet}">${fmt(v)} 🪙</button>`).join('') + betInputHtml(sl.minBet, sl.maxBet, slotBet);
     ctl = `<div class="duel-amts" role="group" aria-label="Einsatz">${chips}</div>
       ${actBtn('slots', String(slotBet), `🎰 Drehen · ${fmt(slotBet)} 🪙`, { confirm: true, armedLabel: `${fmt(slotBet)} 🪙 – los?`, cls: 'slot-go', title: `Für ${fmt(slotBet)} Münzen drehen` })}`;
   }
@@ -1036,8 +1058,34 @@ function slotPick(e, redraw) {
   const b = e.target.closest('[data-slotbet]');
   if (!b) return false;
   slotBet = Number(b.dataset.slotbet) || 0;
+  const inp = b.closest('.slot-card')?.querySelector('.bet-input');
+  if (inp) inp.value = slotBet;
   redraw();
   return true;
+}
+
+// Eigener Einsatz: Zahlenfeld neben den festen Beträgen. Beim Tippen wird nur der Wert gemerkt (kein Neuzeichnen, Fokus bleibt);
+// erst bei „change“ (Verlassen/Enter) wird auf min..max begrenzt und neu gezeichnet. Das Feld selbst wird von morph weiterverwendet.
+function betInputHtml(lo, hi, val) {
+  return `<label class="bet-own"><span class="small muted">Eigener Einsatz</span><input type="number" class="bet-input" data-betinput min="${lo}" max="${hi}" step="1" inputmode="numeric" pattern="[0-9]*" value="${val}" aria-label="Eigener Einsatz in Münzen (${fmt(lo)} bis ${fmt(hi)})"><span aria-hidden="true">🪙</span></label>`;
+}
+
+/** Eingabe im Einsatzfeld; kind = 'slot' | 'duel'. */
+function betInput(e, kind, redraw) {
+  const el = e.target.closest?.('[data-betinput]');
+  if (!el) return false;
+  const lo = Number(el.min) || 1, hi = Number(el.max) || lo;
+  const v = Math.round(Number(el.value));
+  const set = (n) => { if (kind === 'slot') slotBet = n; else betAmount = n; };
+  if (e.type === 'input') { if (Number.isFinite(v) && el.value !== '') set(Math.max(lo, Math.min(hi, v))); return true; }
+  if (e.type === 'change') {
+    const n = Number.isFinite(v) && el.value !== '' ? Math.max(lo, Math.min(hi, v)) : (kind === 'slot' ? slotBet : betAmount);
+    set(n); el.value = n; redraw();
+  }
+  return true;
+}
+function betKey(e) {
+  if (e.key === 'Enter' && e.target.closest?.('[data-betinput]')) { e.preventDefault(); e.target.blur(); }
 }
 
 /** Klick auf einen Einsatz-Knopf; true = behandelt. */
@@ -1045,6 +1093,8 @@ function betPick(e, redraw) {
   const b = e.target.closest('[data-bet]');
   if (!b) return false;
   betAmount = Number(b.dataset.bet) || 0;
+  const inp = b.closest('.duel-card')?.querySelector('.bet-input');
+  if (inp) inp.value = betAmount;
   redraw();
   return true;
 }
@@ -1444,18 +1494,53 @@ function relRow(p, r) {
   const pic = portraitHtml({ name: r.name, id: r.id, portrait: r.portrait }, 'rel-portrait');
   const name = r.colonist && r.id && !r.dead
     ? `<a class="rel-name" href="#/kolonie/${encodeURIComponent(r.id)}">${esc(r.name)}</a>` : `<b class="rel-name">${esc(r.name)}</b>`;
-  return `<li class="rel-row">${pic}<div class="rel-body"><div class="rel-main">${name}${who}<span class="rel-badges">${fam}${status}</span></div>${lines}</div></li>`;
+  return `<li class="rel-row" data-relkey="${esc(r.id || r.name)}">${pic}<div class="rel-body"><div class="rel-main">${name}${who}<span class="rel-badges">${fam}${status}</span></div>${lines}</div></li>`;
+}
+
+// Beziehungsnetz: Kolonist in der Mitte, bis zu 10 wichtigste Beziehungen im Kreis (Familie zuerst, dann stärkste Meinung).
+// Linienfarbe = Meinung (grün/rot/grau), Dicke = Stärke, gestrichelt + ♥ = Familie/Partner.
+const REL_MAX = 10;
+function relGraphHtml(p, list) {
+  const strength = (r) => Math.abs(Number(r.opinion) || 0);
+  const fam = list.filter((r) => (r.relations || []).length).sort((a, b) => strength(b) - strength(a));
+  const rest = list.filter((r) => !(r.relations || []).length && !r.dead).sort((a, b) => strength(b) - strength(a));
+  const pick = [...fam, ...rest].slice(0, REL_MAX);
+  if (!pick.length) return '';
+  const R = 37, n = pick.length;
+  const lines = [], nodes = [];
+  pick.forEach((r, i) => {
+    const a = -Math.PI / 2 + (i / n) * Math.PI * 2;
+    const x = 50 + R * Math.cos(a), y = 50 + R * Math.sin(a);
+    const op = Number(r.opinion) || 0;
+    const tn = r.dead ? 'neutral' : op >= 5 ? 'good' : op <= -5 ? 'doom' : 'neutral';
+    const isFam = (r.relations || []).length > 0;
+    const w = (1.5 + Math.min(100, Math.abs(op)) / 100 * 4.5).toFixed(1);
+    lines.push(`<line class="rg-l ${tn}${isFam ? ' fam' : ''}" x1="50" y1="50" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke-width="${w}"/>`);
+    const key = r.id || r.name;
+    const goes = r.colonist && r.id && !r.dead;
+    const rel = (r.relations || []).join(', ');
+    const title = `${r.name}${rel ? ' – ' + rel : ''}${r.dead ? ' (tot)' : ` · Meinung ${relSign(op)}`}${goes ? ' · antippen öffnet den Kolonisten' : ' · antippen zeigt den Eintrag'}`;
+    nodes.push(`<button type="button" class="rg-node ${tn}${isFam ? ' fam' : ''}${r.dead ? ' dead' : ''}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%" data-relnode="${esc(key)}"${goes ? ` data-relgo="${esc(r.id)}"` : ''} title="${esc(title)}" aria-label="${esc(title)}">${portraitHtml({ name: r.name, id: r.id, portrait: r.portrait }, 'rg-pic')}${isFam ? '<span class="rg-heart" aria-hidden="true">♥</span>' : ''}<span class="rg-name">${esc(String(r.name).split(' ')[0])}</span></button>`);
+  });
+  const summary = pick.map((r) => `${r.name}: ${(r.relations || []).join(', ') || relSign(Number(r.opinion) || 0)}`).join('; ');
+  return `<div class="rg" role="group" aria-label="Beziehungsnetz von ${esc(p.name)}: ${esc(summary)}">
+    <svg class="rg-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines.join('')}</svg>
+    ${nodes.join('')}
+    <div class="rg-center" aria-hidden="true">${portraitHtml(p, 'rg-pic rg-me')}<span class="rg-name">${esc(String(p.name).split(' ')[0])}</span></div>
+  </div>
+  <p class="small muted rg-leg"><span class="rg-k good"></span>mag <span class="rg-k doom"></span>mag nicht <span class="rg-k neutral"></span>neutral <span class="rg-k fam"></span>♥ Familie · dicker = stärker</p>`;
 }
 
 function relHtml(p, data) {
   const list = (data?.relations || []).filter((r) => r && !r.animal);
   if (!list.length) return '<div class="empty">Noch keine Beziehungen erfasst.</div>';
+  const graph = relGraphHtml(p, list);
   const fam = list.filter((r) => (r.relations || []).length);
   const others = list.filter((r) => !(r.relations || []).length && !r.dead).sort((a, b) => (Number(b.opinion) || 0) - (Number(a.opinion) || 0));
   const famHtml = fam.length ? section('Partner & Familie', `<ul class="rel-list">${fam.map((r) => relRow(p, r)).join('')}</ul>`) : '';
   const othHtml = others.length ? section('Freunde & Rivalen', `<ul class="rel-list">${others.map((r) => relRow(p, r)).join('')}</ul>
     <p class="small muted" style="margin:8px 0 0">Die Zahl ist die Meinung wie im Spiel: ab +20 befreundet, ab −20 Rivalen.</p>`) : '';
-  return famHtml + othHtml || '<div class="empty">Noch keine Beziehungen erfasst.</div>';
+  return graph + famHtml + othHtml || '<div class="empty">Noch keine Beziehungen erfasst.</div>';
 }
 
 function panelRelations(p) {
@@ -2027,6 +2112,17 @@ function mountCharacter(host, p) {
     const at = e.target.closest('[data-alltrees]');
     const nd = e.target.closest('[data-node]');
     const az = e.target.closest('[data-art-zoom]');
+    const rn = e.target.closest('[data-relnode]');
+    if (rn) {
+      if (rn.dataset.relgo) { location.hash = '#/kolonie/' + encodeURIComponent(rn.dataset.relgo); return; }
+      const row = [...host.querySelectorAll('[data-relkey]')].find((x) => x.dataset.relkey === rn.dataset.relnode);
+      if (row) {
+        row.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' });
+        row.classList.remove('rel-hit'); void row.offsetWidth; row.classList.add('rel-hit');
+        setTimeout(() => row.classList.remove('rel-hit'), 2200);
+      }
+      return;
+    }
     if (az) { artBig = !artBig; if (host._pawn) morph(host, characterHtml(host._pawn)); afterPaint(host); return; }
     if (pawn && e.target.closest('[data-tutor-toggle]')) { tutorOpen = !tutorOpen; fullRepaint(host); return; }
     // Knöpfe außerhalb des Panels (Kopf, Herausfordern, Nachhilfe …) brauchen ein Neuzeichnen des Ganzen für „Sicher?“/„…“
@@ -2358,6 +2454,8 @@ function colonyList() {
         }
       },
     });
+    for (const t of ['input', 'change']) duelBox.addEventListener(t, (e) => betInput(e, 'duel', () => drawDuel(true)));
+    duelBox.addEventListener('keydown', betKey);
     duelBox.addEventListener('click', (e) => {
       if (betPick(e, () => drawDuel(true))) return;
       const ab = e.target.closest('[data-act]');
@@ -2614,6 +2712,8 @@ export function spielView() {
     // Knopf „Anschieben“: Wartezeit/Verknüpfung kommen mit /api/me
     let boostKey = '';
     whileMounted(host, [['me', () => { const k = `${live.isLinked()}|${live.getMe()?.researchWaitHours}|${live.getMe()?.pawn?.id}`; if (k !== boostKey) { boostKey = k; draw(true); } }], ['change', () => draw(true)]]);
+    for (const t of ['input', 'change']) host.addEventListener(t, (e) => { if (!betInput(e, e.target.closest('.slot-card') ? 'slot' : 'duel', () => draw(true))) return; });
+    host.addEventListener('keydown', betKey);
     host.addEventListener('click', (e) => {
       if (betPick(e, () => draw(true))) return;
       if (slotPick(e, () => draw(true))) return;
@@ -2659,25 +2759,93 @@ function eventsLiveHtml(list) {
   return views + eventsLettersHtml(list);
 }
 
+const EV_PRIO = { threat: 3, bad: 2, good: 1, neutral: 0 };
+let evStyle = lsGet('ys-ev-style') === 'list' ? 'list' : 'paper';   // 'paper' = Zeitung (Standard), 'list' = Zeitleiste
+const sentences = (t) => (String(t || '').replace(/\s+/g, ' ').trim().match(/[^.!?]+[.!?]+(?:["“”»«)]*)|[^.!?]+$/g) || []).map((x) => x.trim()).filter(Boolean);
+
 function eventsLettersHtml(list) {
   const filters = `<div class="ev-filter" role="group" aria-label="Nach Art filtern">${EV_FILTERS.map(([k, l]) =>
     `<button type="button" class="seg${evFilter === k ? ' on' : ''}" data-evf="${k}" aria-pressed="${evFilter === k}">${l}</button>`).join('')}</div>`;
-  if (!list.length) return `${filters}<div class="empty">Noch keine Briefe aufgezeichnet.</div>`;
+  const styles = `<div class="log-switch ev-style" role="group" aria-label="Darstellung">${[['paper', 'Zeitung'], ['list', 'Liste']].map(([k, l]) =>
+    `<button type="button" class="seg${evStyle === k ? ' on' : ''}" data-evstyle="${k}" aria-pressed="${evStyle === k}">${l}</button>`).join('')}</div>`;
+  const head = styles + filters;
+  if (!list.length) return `${head}<div class="empty">Noch keine Briefe aufgezeichnet.</div>`;
   const shown = list.filter((e) => evFilter === 'all' || e.kind === evFilter);
-  if (!shown.length) return `${filters}<div class="empty">Keine Ereignisse in dieser Art.</div>`;
-  return `${filters}<ol class="ev-list">${shown.map((e) => {
-    const kind = KIND_LABEL[e.kind] ? e.kind : 'neutral';
+  if (!shown.length) return `${head}<div class="empty">Keine Ereignisse in dieser Art.</div>`;
+  return head + (evStyle === 'paper' ? newspaperHtml(shown) : timelineHtml(shown));
+}
+
+// Bild zum Ereignis (Feld img: pawn | img | null). Nur echte Bilder; Kolonist ohne Porträt = Initial.
+function evFigHtml(e, big) {
+  const m = e.img;
+  if (!m || typeof m !== 'object') return '';
+  let inner = '', cap = '';
+  if (m.type === 'pawn' && (m.id || m.name)) {
+    cap = m.name || '';
+    inner = m.portrait && m.id
+      ? `<img class="np-img" data-evimg src="${esc(live.portraitUrl(m.id, m.portrait))}" alt="${esc(cap)}" loading="lazy">`
+      : `<span class="np-ph" aria-hidden="true">${esc(String(cap || '?').trim().charAt(0).toUpperCase())}</span>`;
+  } else if (m.type === 'img' && m.img) {
+    cap = m.name || '';
+    const src = live.artUrl('x', 0).replace(/\/api\/art\/.*$/, '/api/img/' + encodeURIComponent(m.img));
+    inner = `<img class="np-img" data-evimg src="${esc(src)}" alt="${esc(cap)}" loading="lazy">`;
+  } else return '';
+  return `<figure class="np-fig${big ? ' big' : ''}">${inner}${big && cap ? `<figcaption class="small muted">${esc(cap)}</figcaption>` : ''}</figure>`;
+}
+
+const kindOf = (e) => (KIND_LABEL[e.kind] ? e.kind : 'neutral');
+const rubric = (k) => `<span class="np-rub k-${k}">${esc(KIND_LABEL[k])}</span>`;
+
+// Zeitung: je Spieltag eine Ausgabe; wichtigstes Ereignis (Gefahr > Schlecht > Gut > Neutral, bei Gleichstand das neueste) = Schlagzeile
+function newspaperHtml(shown) {
+  const days = [];
+  for (const e of shown) {
+    let d = days[days.length - 1];
+    if (!d || d.day !== e.day) { d = { day: e.day, list: [] }; days.push(d); }
+    d.list.push(e);
+  }
+  return days.map((d) => {
+    let lead = d.list[0];
+    for (const e of d.list) if (EV_PRIO[kindOf(e)] > EV_PRIO[kindOf(lead)]) lead = e;
+    const rest = d.list.filter((e) => e !== lead);
+    const item = (e, big) => {
+      const key = evKey(e), open = evOpen.has(key), k = kindOf(e);
+      const sn = sentences(e.text);
+      const teaser = sn.slice(0, big ? 2 : 1).join(' ');
+      const more = !!e.text && e.text.replace(/\s+/g, ' ').trim() !== teaser;
+      const body = !e.text ? '' : open ? `<p class="np-text">${esc(e.text)}</p>` : `<p class="np-text">${esc(teaser)}${more ? ' …' : ''}</p>`;
+      return `<article class="np-art${big ? ' np-lead' : ''} k-${k}">
+        <button type="button" class="np-btn${big ? '' : ' sm'}" data-evopen="${esc(key)}" aria-expanded="${open}">
+          ${evFigHtml(e, big)}${rubric(k)}<${big ? 'h3' : 'h4'} class="np-h">${esc(e.label)}</${big ? 'h3' : 'h4'}>
+          ${body}<span class="np-meta small muted">vor ${esc(agoDe(e.ago))}${e.text && (more || open) ? ` · ${open ? 'weniger' : 'weiterlesen'}` : ''}</span>
+        </button></article>`;
+    };
+    return `<section class="np-issue" aria-label="Ausgabe Tag ${fmt(d.day)}">
+      <header class="np-head"><div class="np-name">Rim-Kurier</div><div class="np-sub">Tag ${fmt(d.day)}</div></header>
+      ${item(lead, true)}
+      ${rest.length ? `<div class="np-cols">${rest.map((e) => item(e, false)).join('')}</div>` : ''}
+    </section>`;
+  }).join('');
+}
+
+function timelineHtml(shown) {
+  let lastDay = null;
+  const items = shown.map((e) => {
+    const kind = kindOf(e);
     const key = evKey(e), open = evOpen.has(key);
-    return `<li class="ev k-${kind}">
+    const head = e.day !== lastDay ? `<li class="tl-day"><span class="tl-day-t">Tag ${fmt(e.day)}</span></li>` : '';
+    lastDay = e.day;
+    return `${head}<li class="ev tl-item k-${kind}">
+      <span class="gdot tl-dot" aria-hidden="true" title="${esc(KIND_LABEL[kind])}"></span>
       <button type="button" class="ev-main" data-evopen="${esc(key)}" aria-expanded="${open}">
-        <span class="gdot" aria-hidden="true"></span>
         <span class="ev-label">${esc(e.label)}</span>
-        <span class="ev-meta small muted">Tag ${fmt(e.day)} · vor ${esc(agoDe(e.ago))}</span>
+        <span class="ev-meta small muted">vor ${esc(agoDe(e.ago))}</span>
         <span class="ev-chev" aria-hidden="true">${open ? '▾' : '▸'}</span>
       </button>
       ${open && e.text ? `<p class="ev-text">${esc(e.text)}</p>` : ''}
     </li>`;
-  }).join('')}</ol>`;
+  }).join('');
+  return `<ol class="ev-list timeline">${items}</ol>`;
 }
 
 export function ereignisseView() {
@@ -2687,7 +2855,7 @@ export function ereignisseView() {
     let list = null, last = '';
     const draw = (force) => {
       if (!list) return;
-      const key = JSON.stringify([list, evSocial, evView, evFilter, [...evOpen]]);
+      const key = JSON.stringify([list, evSocial, evView, evFilter, evStyle, [...evOpen]]);
       if (!force && key === last) return;
       last = key;
       morph(host, eventsLiveHtml(list));
@@ -2702,9 +2870,10 @@ export function ereignisseView() {
       },
     });
     host.addEventListener('click', (e) => {
-      const f = e.target.closest('[data-evf]'), o = e.target.closest('[data-evopen]'), vv = e.target.closest('[data-evv]');
-      if (!f && !o && !vv) return;
-      if (vv) evView = vv.dataset.evv;
+      const f = e.target.closest('[data-evf]'), o = e.target.closest('[data-evopen]'), vv = e.target.closest('[data-evv]'), st = e.target.closest('[data-evstyle]');
+      if (!f && !o && !vv && !st) return;
+      if (st) { evStyle = st.dataset.evstyle; lsSet('ys-ev-style', evStyle); }
+      else if (vv) evView = vv.dataset.evv;
       else if (f) evFilter = f.dataset.evf;
       else { const k = o.dataset.evopen; if (evOpen.has(k)) evOpen.delete(k); else evOpen.add(k); }
       draw(true);
