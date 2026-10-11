@@ -3,6 +3,7 @@
 // Kolonistenliste, Live-Leiste und Startseite. Alle neuen Felder der Schnittstelle sind optional – ohne sie sieht es aus wie vorher.
 // Die Hilfsfunktionen aus live-views.js kommen über init() (kein Zirkelbezug beim Laden).
 import * as live from './live.js';
+import * as PICS from './pics.js';
 
 let H = null;
 /** h: { esc, bar, clamp, fmt, tone, imgUrl, xrefHtml, userPawnId, portraitHtml } */
@@ -382,17 +383,10 @@ export function introCardsHtml() {
 /** Item-Streifen: Symbole nur, wenn die Live-Mod online ist (fillTeasers ergänzt sie später); sonst Name + Preis. */
 export function itemTeaserHtml(items, total) {
   if (!items.length) return '';
-  const tiles = items.map((i) => `<a class="tz-tile" href="#/items" title="${e(i.name)} – ${H.fmt(i.price)} Coins" data-tdef="${e(i.defName)}"><span class="tz-pic" aria-hidden="true"></span><b class="tz-name">${e(i.name)}</b><span class="tz-price small muted">${H.fmt(i.price)} 🪙</span></a>`).join('');
+  const tiles = items.map((i) => `<a class="tz-tile" href="#/items" title="${e(i.name)} – ${H.fmt(i.price)} Coins" data-tdef="${e(i.defName)}"><span class="tz-pic" aria-hidden="true" data-pickey="t_${e(i.defName)}" data-pcls="tz-img" data-psize="48"></span><b class="tz-name">${e(i.name)}</b><span class="tz-price small muted">${H.fmt(i.price)} 🪙</span></a>`).join('');
   return `<div class="tz-teaser"><div class="tz-strip">${tiles}</div><a class="small tz-all" href="#/items">Alle ${H.fmt(total)} Items →</a></div>`;
 }
 /** Symbole in Item-Streifen einsetzen bzw. entfernen, je nachdem ob die Live-Mod erreichbar ist. */
 export function fillTeasers() {
-  const on = live.isLive();
-  document.querySelectorAll('.tz-tile[data-tdef]').forEach((t) => {
-    const pic = t.querySelector('.tz-pic');
-    if (!pic) return;
-    t.classList.toggle('has-pic', on);
-    if (!on) { pic.innerHTML = ''; return; }
-    if (!pic.firstChild) pic.innerHTML = iconImg('t_' + t.dataset.tdef, '', 'tz-img', 48);
-  });
+  PICS.fillAll(document.querySelector('.tz-teaser'));
 }

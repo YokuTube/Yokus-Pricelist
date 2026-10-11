@@ -5,6 +5,7 @@ import { icon } from './icons.js';
 import * as vb from './visual-b.js';   // Paket B: Symbole statt Text
 import * as vbl from './live-visual-b.js';   // Spielsymbole (nur mit laufender Live-Mod)
 import * as live from './live.js';
+import { setIcons, fillAll as fillPics, hue } from './pics.js';
 import { introCardsHtml, itemTeaserHtml, fillTeasers } from './live-visual-a.js';
 
 const PAGE = 48;
@@ -123,6 +124,7 @@ function showcase(data) {
 }
 
 export function startView(data) {
+  setIcons(data.icons);
   const cnt = {
     items: data.items.length, events: data.events.length, weather: data.weather.length,
     traits: data.traits.length, races: data.races.length, commands: data.commands.list.length,
@@ -401,28 +403,17 @@ function bindQuantity(root) {
 function itemTile(i) {
   const emo = vb.catIcon(i.category);
   return `<button type="button" class="it-tile${i.available ? '' : ' off'}" data-item="${esc(i.defName)}" aria-expanded="false" title="${esc(i.name)}${i.available ? '' : ' – gerade nicht im Store'}">
-    <span class="it-ico" data-def="${esc(i.defName)}" data-emo="${emo}"><i class="it-emo" aria-hidden="true">${emo}</i></span>
+    <span class="it-ico" data-pickey="t_${esc(i.defName)}" data-pcls="it-img" data-psize="56"><i class="it-emo" aria-hidden="true">${emo}</i></span>
     <span class="it-name">${esc(i.name)}</span>
     <span class="it-price">${vb.coin(i.price)}</span>
   </button>`;
 }
 
-/** Spielsymbole /api/img/t_<DefName> einsetzen (nur wenn die Live-Mod online ist); fehlt ein Bild, bleibt das Symbol der Art stehen. */
-function fillIcons(host) {
-  if (!host || !live.isLive()) return;
-  host.querySelectorAll('.it-ico:not([data-img])').forEach((el) => {
-    const src = vbl.imgUrl('t_' + el.dataset.def);
-    if (!src) return;
-    el.dataset.img = '1';
-    const img = new Image();
-    img.className = 'it-img'; img.alt = ''; img.width = 56; img.height = 56;
-    img.addEventListener('load', () => { el.replaceChildren(img); }, { once: true });
-    img.addEventListener('error', () => { el.dataset.img = 'x'; }, { once: true });
-    img.src = src;
-  });
-}
+/** Symbole einsetzen: data/icons/t_<DefName>.png, sonst Live-Mod /api/img, sonst bleibt das Symbol der Art (siehe pics.js). */
+function fillIcons(host) { fillPics(host); }
 
 export function itemsView(data) {
+  setIcons(data.icons);
   const items = data.items;
   const sold = items.filter((i) => i.available);
   const cats = countBy(sold, (i) => i.category);
@@ -737,6 +728,7 @@ export function traitsView(data) {
 // RASSEN
 // =====================================================================
 export function racesView(data) {
+  setIcons(data.icons);
   const html = `
     <details class="help-box">
       <summary>So kommst du an einen Pawn</summary>
@@ -747,22 +739,61 @@ export function racesView(data) {
         <li>Pro Zuschauer gibt es einen Pawn. Xenotypen brauchen das Biotech-DLC.</li>
       </ul>
     </details>
-    <p class="intro"><strong>Tippe auf eine Rasse oder einen Xenotyp</strong> – der passende Befehl wird kopiert.</p>
-    <div class="grid cols-2" id="r-list">
-      ${data.races.length ? data.races.map((r) => {
-        const g = [r.male ? '♂' : '', r.female ? '♀' : '', r.other ? '⚧' : ''].filter(Boolean).join(' ');
-        const rk = slug(r.key);
-        return `
-        <article class="card race-card">
-          <button type="button" class="race-head" data-copy="!pawn ${esc(rk)}" title="Kopiert: !pawn ${esc(rk)}">
-            <span class="ev-top"><h3>${esc(r.name)}</h3>${vb.coin(r.price, 'big')}</span>
-            <span class="kv race-kv"><span title="Alter">⏳ <b>${r.minAge}–${r.maxAge ?? '∞'}</b></span>${g ? `<span title="Geschlecht"><b>${g}</b></span>` : ''}${r.xenos.length ? `<span title="Xenotypen">🧬 <b>${r.xenos.length}</b></span>` : ''}<span class="race-copy" aria-hidden="true">⧉</span></span>
-          </button>
-          ${r.xenos.length ? `<div class="xeno-grid">${r.xenos.map((x) => `<button type="button" class="xeno" data-copy="!pawn ${esc(rk)} ${esc(slug(x.name))}" title="Kopiert: !pawn ${esc(rk)} ${esc(slug(x.name))}"><span>${esc(x.name)}</span>${vb.coin(x.price)}</button>`).join('')}</div>` : ''}
-        </article>`;
-      }).join('') : '<div class="empty">Keine Rassen freigeschaltet.</div>'}
+    <p class="intro"><strong>Tippe auf eine Kachel</strong> – du siehst die Beschreibung und den passenden Befehl zum Kopieren.</p>
+    ${data.races.length > 1 ? `<div class="rc-filter" id="rc-filter" role="group" aria-label="Rasse wählen"><button type="button" class="chip-btn" aria-pressed="true" data-race="">Alle</button>${data.races.map((r) => `<button type="button" class="chip-btn" aria-pressed="false" data-race="${esc(r.key)}">${esc(r.name)}</button>`).join('')}</div>` : ''}
+    <div id="r-list">
+      ${data.races.length ? data.races.map((r) => raceSection(r)).join('') : '<div class="empty">Keine Rassen freigeschaltet.</div>'}
     </div>`;
-  return { html, bind() {} };
+  function bind(root) {
+    const list = root.querySelector('#r-list');
+    if (!list) return;
+    fillPics(list);
+    list.addEventListener('click', (ev) => {
+      const b = ev.target.closest('.rc-btn');
+      if (!b) return;
+      const open = b.getAttribute('aria-expanded') !== 'true';
+      b.setAttribute('aria-expanded', String(open));
+      b.parentElement.querySelector('.rc-detail').hidden = !open;
+    });
+    const f = root.querySelector('#rc-filter');
+    f?.addEventListener('click', (ev) => {
+      const c = ev.target.closest('[data-race]');
+      if (!c) return;
+      f.querySelectorAll('.chip-btn').forEach((x) => x.setAttribute('aria-pressed', String(x === c)));
+      list.querySelectorAll('.rc-sec').forEach((sec) => { sec.hidden = !!c.dataset.race && sec.dataset.race !== c.dataset.race; });
+    });
+    // Live-Mod geht später online: Bilder nachladen
+    root._rcOff?.(); root._rcOff = live.on('change', () => { if (root.contains(list)) fillPics(list); });
+  }
+  return { html, bind };
+}
+
+/** Eine Kachel: großes Bild (Datei → Live-Mod → Buchstabe), Name, Preis oder „aus“; Antippen klappt Beschreibung + Befehl auf. */
+function raceTile({ key, name, desc, price, on, cmd, extra }) {
+  const ph = `<i class="rc-ph" style="--h:${hue(name)}" aria-hidden="true">${esc([...name][0] || '?')}</i>`;
+  return `<article class="rc-tile${on ? '' : ' off'}">
+    <button type="button" class="rc-btn" aria-expanded="false" title="${esc(name)}">
+      <span class="rc-pic" data-pickey="${esc(key)}" data-pcls="rc-img" data-psize="96">${ph}</span>
+      <span class="rc-name">${esc(name)}</span>
+      <span class="rc-price">${on ? vb.coin(price) : '<span class="rc-badge">aus</span>'}</span>
+    </button>
+    <div class="rc-detail" hidden>
+      ${desc ? `<p class="rc-desc">${esc(desc)}</p>` : ''}
+      ${extra || ''}
+      ${on ? cmdBtn(cmd) : '<p class="small muted">Gerade nicht im Store.</p>'}
+    </div>
+  </article>`;
+}
+
+function raceSection(r) {
+  const rk = slug(r.key);
+  const g = [r.male ? '♂' : '', r.female ? '♀' : '', r.other ? '⚧' : ''].filter(Boolean).join(' ');
+  const meta = `<span class="kv race-kv"><span title="Alter">⏳ <b>${r.minAge}–${r.maxAge ?? '∞'}</b></span>${g ? `<span title="Geschlecht"><b>${g}</b></span>` : ''}</span>`;
+  const tiles = [];
+  // Nicht-menschliche Rassen bekommen eine eigene Kachel; beim Menschen ist jeder Xenotyp eine Kachel (Mensch = nur Überschrift)
+  if (r.key !== 'Human') tiles.push(raceTile({ key: 'r_' + r.key, name: r.name, desc: r.desc, price: r.price, on: true, cmd: `!pawn ${rk}`, extra: meta }));
+  r.xenosAll.forEach((x) => tiles.push(raceTile({ key: 'x_' + x.def, name: x.name, desc: x.desc, price: x.price, on: x.on, cmd: `!pawn ${rk} ${slug(x.def)}` })));
+  return `<section class="rc-sec" data-race="${esc(r.key)}"><h3 class="rc-group">${esc(r.name)} ${meta}</h3><div class="rc-grid">${tiles.join('')}</div></section>`;
 }
 
 // =====================================================================

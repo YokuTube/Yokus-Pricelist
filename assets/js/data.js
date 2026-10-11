@@ -39,7 +39,8 @@ export async function loadAll() {
     events: processEvents(out.events, notes, labels.events || {}),
     weather: processWeather(out.weather, notes, labels.weather || {}),
     traits: processTraits(out.traits),
-    races: processRaces(out.races),
+    races: processRaces(out.races, labels),
+    icons: labels.icons || {},
     mods: processMods(out.mods),
     commands: processCommands(out.cmdDocs, out.cmdSettings),
     choices: out.choices || {},
@@ -172,26 +173,38 @@ function processTraits(raw) {
 }
 
 // ---------- Rassen ----------
-function processRaces(raw) {
+function processRaces(raw, labels = {}) {
+  const xl = labels.xenotypes || {};
+  const rl = labels.races || {};
   return Object.entries(raw || {}).map(([key, d]) => {
     const prices = d.XenotypePrices || {};
     const enabled = d.EnabledXenotypes || {};
-    const xenos = Object.keys(enabled).filter((x) => enabled[x] && prices[x] !== undefined)
-      .map((x) => ({ name: x, price: Math.round(prices[x]) }))
-      .sort((a, b) => a.price - b.price || a.name.localeCompare(b.name));
+    const all = Object.keys(prices).filter((x) => enabled[x] !== undefined || prices[x] !== undefined)
+      .map((x) => ({
+        def: x, name: plain(xl[x]?.label) || prettyDef(x), desc: plain(xl[x]?.desc), price: Math.round(prices[x]), on: !!enabled[x],
+      }))
+      .sort((a, b) => (b.on - a.on) || a.price - b.price || a.name.localeCompare(b.name, 'de'));
+    const xenos = all.filter((x) => x.on).map((x) => ({ name: x.def, price: x.price }));
     const g = d.AllowedGenders || {};
     return {
       key,
-      name: d.DisplayName || key,
+      name: plain(rl[key]?.label) || d.DisplayName || key,
+      desc: plain(rl[key]?.desc),
       price: Math.round(d.BasePrice || 0),
       minAge: d.MinAge || 0,
       maxAge: d.MaxAge >= 999999 ? null : d.MaxAge,
       male: !!g.AllowMale, female: !!g.AllowFemale, other: !!g.AllowOther,
       customXeno: !!d.AllowCustomXenotypes,
       xenos,
+      xenosAll: all,
       enabled: d.Enabled !== false && d.ModActive !== false,
     };
   }).filter((r) => r.enabled).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** "Starjack" / "Alien_FooBar" -> "Starjack" / "Alien Foo Bar" (Ersatz, falls kein deutscher Name exportiert wurde). */
+function prettyDef(d) {
+  return String(d).replace(/_/g, ' ').replace(/([a-zäöü])([A-Z])/g, '$1 $2').trim();
 }
 
 // ---------- Mods ----------

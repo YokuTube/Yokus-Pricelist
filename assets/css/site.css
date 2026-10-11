@@ -1625,3 +1625,27 @@ body.stream-side-right.stream-beside .duel-strip { right: calc(var(--side-w) + v
 .cat-btn { padding-top: 2px; }
 .ev-ib-n { position: static; min-width: 0; height: auto; padding: 0 4px; border-radius: 8px; line-height: 1.3; }
 .cat-bar, .ev-bar { contain: paint; }
+
+/* Rassen/Xenotypen: eine Kachel je Eintrag mit großem Bild */
+.rc-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.rc-sec { margin: 0 0 18px; }
+.rc-sec[hidden] { display: none; }
+.rc-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0 0 8px; font-size: .95rem; color: var(--muted); }
+.rc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: start; }
+@media (min-width: 640px) { .rc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .rc-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.rc-tile { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.rc-tile:has(.rc-btn[aria-expanded="true"]) { border-color: var(--accent); background: var(--accent-soft); }
+.rc-tile.off { opacity: .55; order: 1; }
+.rc-btn { all: unset; box-sizing: border-box; width: 100%; min-height: 44px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px; text-align: center; }
+.rc-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rc-pic { display: grid; place-items: center; width: 96px; height: 96px; max-width: 100%; }
+.rc-img { width: 96px; height: 96px; max-width: 100%; object-fit: contain; }
+.rc-ph { display: grid; place-items: center; width: 80px; height: 80px; border-radius: 50%; font-style: normal; font-weight: 800; font-size: 2.2rem; color: #fff; background: hsl(var(--h) 45% 42%); }
+.rc-name { font-size: .88rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.rc-price { margin-top: auto; }
+.rc-badge { display: inline-block; padding: 1px 10px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: .78rem; font-weight: 700; }
+.rc-detail { padding: 0 8px 10px; display: grid; gap: 8px; }
+.rc-detail[hidden] { display: none; }
+.rc-desc { margin: 0; font-size: .85rem; line-height: 1.35; color: var(--muted); text-align: left; }
+.rc-detail .cmd { max-width: 100%; }

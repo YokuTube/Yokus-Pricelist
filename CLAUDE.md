@@ -37,3 +37,4 @@ Antworte auf Deutsch. Öffentliche Preislisten-/Befehlsseite für Andreas' RICS-
 
 ## Lokal ansehen
 `python -m http.server 8765` im Projektordner (oder `preview_start pricelist` aus `../.claude/launch.json`).
+- **Abklingzeiten** (`assets/js/cooldowns.js` + `assets/css/cooldowns.css`, in main.js eingebunden): zeigt Cooldowns nachträglich per DOM dort an, wo sie gebraucht werden – Plakette „⏱ für alle noch …“ (global, `GameInfo.cooldowns`) bzw. „⏱ du noch …“ (nur eigene, `me.cooldowns`) auf Event-/Item-Karten, gesperrter ⚡-Knopf bzw. `[data-act]`-Knopf mit Restzeit (`data-cd-text`), Banner auf Events/Wetter/Items, Chip auf der Befehle-Seite. Gilt beides, gewinnt die längere Restzeit. Echtzeit zählt lokal, Spielzeit nur per Poll. Ohne Mod/alte Mod: nichts. Test: `tools/live-fake.py` (Umgebung `FAKE_ITEM_LOCK`, `FAKE_TYPE_LOCK`, `FAKE_ALL_LOCK`).

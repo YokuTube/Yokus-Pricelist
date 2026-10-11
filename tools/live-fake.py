@@ -40,6 +40,34 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 ORIGINS = {"https://yokutube.github.io", "http://localhost:8765", "http://127.0.0.1:8765"}
+FAKE_START = time.time()
+
+
+def fake_cooldowns_global():
+    # Beispielwerte: global gesperrte Ereignisse/Befehle (unit game = Spielstunden, real = Sekunden)
+    return {
+        "events": {"Ambush": {"left": 31.5, "unit": "game", "used": 1, "max": 1},
+                   "ShipChunkDrop": {"left": 6.2, "unit": "game", "used": 2, "max": 2},
+                   "Rain": {"left": 12.0, "unit": "game", "used": 1, "max": 1},
+                   "Disease_Flu": {"left": 80.0, "unit": "game", "used": 1, "max": 1}},
+        "eventTypes": {"good": {"left": 4.3, "unit": "game", "used": 10, "max": 10}} if os.environ.get("FAKE_TYPE_LOCK") else {},
+        "eventsAll": {"left": 2.4, "unit": "game", "used": 25, "max": 25} if os.environ.get("FAKE_ALL_LOCK") else None,
+        "items": {"left": 9.8, "unit": "game", "used": 50, "max": 50} if os.environ.get("FAKE_ITEM_LOCK") else None,
+        "commands": {"duel": {"left": 1.2, "unit": "game"}, "forschung": {"left": 15.0, "unit": "game", "used": 3, "max": 3},
+                     "raid": {"left": 20.0, "unit": "game", "used": 3, "max": 3}},
+    }
+
+
+def fake_cooldowns_me():
+    # nur fuer den angemeldeten Zuschauer: Echtzeit (Sekunden, laeuft in 300 s herunter, dann wieder von vorn) + Spielzeit
+    real = 300 - int(time.time() - FAKE_START) % 300
+    return {"slots": {"left": 3.0, "unit": "game"}, "lob": {"left": 7.0, "unit": "game"},
+            "chitchat": {"left": real, "unit": "real"}, "flirt": {"left": real, "unit": "real"},
+            "buy": {"left": min(real, 20), "unit": "real"},
+            "forschung": {"left": 5.0, "unit": "game"}, "benutzen": {"left": 1.5, "unit": "game"},
+            "wants": {"left": 12.0, "unit": "game"}, "duel": {"left": 20.0, "unit": "game"}}
+
+
 RB_WAIT = [0]  # Spielstunden bis !forschung wieder geht (Test)
 ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "slots", "wette", "lob", "nachhilfe", "pate", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult", "benutzen"]
 ARGS_RE = re.compile(r"^[\w \-.'#@]{0,80}$", re.UNICODE)
@@ -566,6 +594,7 @@ def game_info():
         "praise": {"yoku": 12, "mira_spielt": 7, "luna_88": 3, "eddi_tv": 0},
         "tutor": {"price": 100, "minLevel": 6, "gap": 2},
         "sponsorPrice": 300,
+        "cooldowns": fake_cooldowns_global(),
         "researchBoost": {"price": 800, "percent": 25, "viewerCooldownHours": 24, "maxPerDay": 3},
         "colony": "Neu-Yoku", "date": "5. Aprimay 5501", "day": 37, "hour": (t // 20) % 24,
         "season": "Frühling", "seasonKey": "Spring", "weatherDef": "RainyLight", "weather": "Leichter Regen", "temperature": "12 °C", "wealth": 48250 + (t // 10) % 7 * 10,
@@ -836,7 +865,7 @@ class H(BaseHTTPRequestHandler):
             if pawn is not None:
                 pawn["duelIncoming"] = duel_state()
             return self.js(200, {"user": user, "displayName": ALLOWED_USERS.get(user, user), "coins": coins,
-                                 "karma": karma, "coinsPerMinute": 7.5, "earning": True, "activeMinutesLeft": 24, "researchWaitHours": RB_WAIT[0], "useWaitHours": float(os.environ.get("FAKE_USE_WAIT", "0")), "pawn": pawn})
+                                 "karma": karma, "coinsPerMinute": 7.5, "earning": True, "activeMinutesLeft": 24, "researchWaitHours": RB_WAIT[0], "useWaitHours": float(os.environ.get("FAKE_USE_WAIT", "0")), "cooldowns": fake_cooldowns_me(), "pawn": pawn})
         if p.startswith("/api/art/"):
             user = unquote(p[9:]).lower()
             key = user if user in PAWNS else next((k for k, v in PAWNS.items() if v.get("id") == user), None)

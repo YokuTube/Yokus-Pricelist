@@ -1,0 +1,37 @@
+/* Abklingzeiten (assets/js/cooldowns.js): gesperrte Knöpfe, Plakette auf der Karte, Banner, Chips */
+
+/* Plakette ganz oben auf einer gesperrten Karte (Ereignis, Item) */
+.cd-ribbon {
+  grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; padding: 4px 10px; margin: -2px 0 2px;
+  border-radius: var(--radius); background: var(--accent-soft); border: 1px solid var(--accent);
+  color: var(--text); font-size: .82rem; font-weight: 700; line-height: 1.25;
+}
+.cd-ribbon.part { background: transparent; border-style: dashed; color: var(--muted); font-weight: 600; }
+.cd-locked > :not(.cd-ribbon) { opacity: .5; filter: grayscale(.75); }
+.cd-locked { border-color: var(--border); }
+
+/* gesperrter Knopf: grau, Restzeit als Text hinter dem Namen (kein Fehlertext nach dem Klick) */
+.cd-block, .cd-block:hover, .cd-block:disabled { cursor: not-allowed !important; }
+.buy-now.cd-block { background: transparent !important; color: var(--muted) !important; border: 1px dashed var(--border) !important; opacity: .85; filter: none; }
+.buy-now.cd-block .buy-price { display: none; }
+.act-btn.cd-block, .act-tile.cd-block { opacity: .6; border-style: dashed; }
+.cd-block[data-cd-text]::after { content: " " attr(data-cd-text); font-weight: 700; white-space: nowrap; color: var(--accent); }
+.buy-now.cd-block[data-cd-text]::after { color: var(--muted); }
+.act-tile.cd-block[data-cd-text]::after {
+  content: attr(data-cd-text); position: absolute; left: 4px; right: 4px; bottom: 3px; font-size: .68rem; text-align: center; color: var(--accent);
+}
+.act-tile.cd-block { padding-bottom: 18px; }
+
+/* Banner oben auf Events/Wetter/Items */
+.cd-banner {
+  margin: 0 0 12px; padding: 10px 14px; border-radius: var(--radius);
+  background: var(--accent-soft); border: 1px solid var(--accent); color: var(--text);
+}
+.cd-banner-h { font-weight: 700; }
+.cd-banner ul { margin: 6px 0 0; padding-left: 18px; }
+.cd-banner .small { color: var(--muted); font-weight: 400; }
+
+/* Chip auf der Befehle-Seite */
+.chip.cd-chip { background: var(--accent-soft); color: var(--text); border: 1px solid var(--accent); }
+.chip.cd-static { border: 1px solid var(--border); }
+@media (pointer: coarse) { .cd-ribbon { min-height: 32px; } }

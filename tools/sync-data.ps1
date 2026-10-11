@@ -50,6 +50,14 @@ foreach ($name in $Allowed) {
   if (-not $DryRun) { Copy-Item -LiteralPath $src -Destination $dst -Force }
 }
 
+# Symbole (data/icons/*.png) schreibt das Spiel direkt ins Repo: neue/geaenderte/geloeschte PNGs zaehlen als Aenderung.
+$iconDir = Join-Path $dataDir 'icons'
+if (Test-Path -LiteralPath $iconDir) {
+  Push-Location $RepoDir
+  try { $st = git status --porcelain -- 'data/icons/*.png'; if ($st) { $changed += 'icons' } }
+  finally { Pop-Location }
+}
+
 if ($changed.Count -eq 0) {
   # Keine neuen Daten - aber falls ein frueherer Upload gescheitert ist, offene Commits jetzt nachholen.
   Push-Location $RepoDir
@@ -76,6 +84,7 @@ Push-Location $RepoDir
 try {
   git pull --rebase --autostash --quiet 2>&1 | Out-Null
   git add -- data/*.json
+  if (Test-Path -LiteralPath $iconDir) { git add -A -- 'data/icons/*.png' }
   git diff --cached --quiet
   if ($LASTEXITCODE -eq 0) { Log "Git sieht keine Aenderung."; exit 0 }
   git commit --quiet -m ("Daten aktualisiert: " + ($changed -join ', '))
