@@ -20,7 +20,8 @@ export function getStreamPrefs() {
     pos: POS.includes(p?.pos) ? p.pos : null,                 // null = Zuschauer hat nie gewählt → Automatik
     w: Number.isFinite(p?.w) ? p.w : null,
     h: Number.isFinite(p?.h) ? p.h : null,                     // Höhe der Leiste in Lage „Unten“
-    chatSide: ['below', 'left', 'right'].includes(p?.chatSide) ? p.chatSide : 'below',   // Seitenlage: Chat unter/neben dem Video
+    chatSide: ['below', 'left', 'right'].includes(p?.chatSide) ? p.chatSide : 'below',
+    cw: Number.isFinite(p?.cw) ? p.cw : null,                   // Chat-Breite, wenn er neben dem Video steht   // Seitenlage: Chat unter/neben dem Video
   };
 }
 
@@ -32,9 +33,11 @@ const botDefaultVh = () => (window.innerWidth < 700 ? 0.6 : 0.38);   // Handy: V
 const clampH = (h) => Math.min(Math.floor(window.innerHeight * 0.75), Math.max(BOT_MIN_H, Math.round(h)));
 const SIDE_MIN_VIEW = 1200;   // darunter immer Oben
 const SIDE_MIN_W = 320, SIDE_DEFAULT_W = 440;
-const CHAT_W = 340;   // Chat-Spalte, wenn der Chat neben dem Video steht (volle Höhe)
+const CHAT_W = 340, CHAT_MIN_W = 260;   // Chat-Spalte, wenn der Chat neben dem Video steht (volle Höhe, ziehbar)
+const clampCW = (w) => Math.min(Math.max(CHAT_MIN_W, Math.floor(window.innerWidth * 0.4)), Math.max(CHAT_MIN_W, Math.round(w)));
+const chatW = () => parseInt(getComputedStyle(document.documentElement).getPropertyValue('--chat-w'), 10) || CHAT_W;
 const besideNow = () => document.body.classList.contains('stream-beside');
-const sideMax = () => Math.max(SIDE_MIN_W, Math.floor(window.innerWidth * (besideNow() ? 0.62 : 0.5)) - (besideNow() ? CHAT_W : 0));
+const sideMax = () => Math.max(SIDE_MIN_W, Math.floor(window.innerWidth * (besideNow() ? 0.62 : 0.5)) - (besideNow() ? chatW() : 0));
 const clampW = (w) => Math.min(sideMax(), Math.max(SIDE_MIN_W, Math.round(w)));
 function effectivePos(p) {
   if (p.pos === 'bottom') return 'bottom';
@@ -65,7 +68,9 @@ function applyLayout() {
   b.classList.toggle('stream-beside', beside);
   b.classList.toggle('stream-chat-left', beside && p.chatSide === 'left');
   b.classList.toggle('stream-chat-right', beside && p.chatSide === 'right');
-  document.documentElement.style.setProperty('--chat-w', `${CHAT_W}px`);
+  document.documentElement.style.setProperty('--chat-w', `${clampCW(p.cw ?? CHAT_W)}px`);
+  const crz = $('stream-chat-resizer');
+  if (crz) crz.hidden = !beside;
   document.documentElement.style.setProperty('--side-w', `${clampW(p.w ?? SIDE_DEFAULT_W)}px`);
   const cg = $('stream-chatside');
   if (cg) {
@@ -93,12 +98,51 @@ function applyLayout() {
   window.dispatchEvent(new Event('ys-layout'));
 }
 
+// Zweiter Griff auf der Grenze Video|Chat: nur die Chat-Breite ändern
+function initChatResizer() {
+  const wrap = $('stream-wrap');
+  if (!wrap || $('stream-chat-resizer')) return;
+  const rz = document.createElement('div');
+  rz.id = 'stream-chat-resizer'; rz.className = 'stream-chat-resizer'; rz.hidden = true;
+  rz.setAttribute('role', 'separator'); rz.setAttribute('aria-orientation', 'vertical'); rz.tabIndex = 0;
+  rz.setAttribute('aria-label', 'Breite des Chats ändern'); rz.title = 'Ziehen: Chat breiter/schmaler (Doppelklick: zurücksetzen)';
+  wrap.appendChild(rz);   // im Behälter, aber außerhalb des Docks – die iframes bleiben unberührt
+  let dragging = false;
+  const fromX = (x) => {
+    const b = wrap.getBoundingClientRect();
+    return document.body.classList.contains('stream-chat-left') ? x - b.left - 8 : b.right - x - 8;
+  };
+  const setCW = (w, save) => {
+    const v = clampCW(w);
+    document.documentElement.style.setProperty('--chat-w', `${v}px`);
+    if (save) { const p = getStreamPrefs(); p.cw = v; setStreamPrefs(p); }
+  };
+  rz.addEventListener('pointerdown', (e) => {
+    dragging = true; try { rz.setPointerCapture(e.pointerId); } catch { /* egal */ }
+    document.body.classList.add('stream-dragging'); e.preventDefault();
+  });
+  rz.addEventListener('pointermove', (e) => { if (dragging) setCW(fromX(e.clientX), false); });
+  const end = (e) => {
+    if (!dragging) return;
+    dragging = false; document.body.classList.remove('stream-dragging');
+    setCW(fromX(e.clientX), true); applyLayout();
+  };
+  rz.addEventListener('pointerup', end);
+  rz.addEventListener('pointercancel', () => { dragging = false; document.body.classList.remove('stream-dragging'); applyLayout(); });
+  rz.addEventListener('dblclick', () => { setCW(CHAT_W, true); applyLayout(); });
+  rz.addEventListener('keydown', (e) => {
+    const left = document.body.classList.contains('stream-chat-left');
+    const grow = e.key === (left ? 'ArrowRight' : 'ArrowLeft'), shrink = e.key === (left ? 'ArrowLeft' : 'ArrowRight');
+    if (grow || shrink) { setCW(chatW() + (grow ? 20 : -20), true); applyLayout(); e.preventDefault(); }
+  });
+}
+
 function initResizer() {
   const rz = $('stream-resizer');
   if (!rz || rz.dataset.bound) return;
   rz.dataset.bound = '1';
   let dragging = false;
-  const widthFrom = (x) => (document.body.classList.contains('stream-side-left') ? x : window.innerWidth - x) - (besideNow() ? CHAT_W : 0);
+  const widthFrom = (x) => (document.body.classList.contains('stream-side-left') ? x : window.innerWidth - x) - (besideNow() ? chatW() : 0);
   const isBottom = () => document.body.classList.contains('stream-bottom');
   const setH = (h, save) => {
     const v = clampH(h);
@@ -172,6 +216,7 @@ export function openStreamBar() {
 export function syncStreamDock() {
   syncInner();
   initResizer();
+  initChatResizer();
   applyLayout();
 }
 

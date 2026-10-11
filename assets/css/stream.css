@@ -185,3 +185,17 @@ body.stream-bottom.stream-dragging .stream-dock iframe { pointer-events: none; }
   body.stream-side-right.stream-beside .to-top { right: calc(var(--side-w) + var(--chat-w) + 16px); }
 }
 .stream-chatside[hidden] { display: none; }
+
+/* Griff zwischen Video und Chat (nur wenn der Chat daneben steht): ändert nur die Chat-Breite */
+.stream-chat-resizer { display: none; }
+@media (min-width: 1200px) {
+  body.stream-beside .stream-chat-resizer {
+    display: block; position: absolute; top: 0; bottom: 0; width: 12px; z-index: 6; cursor: col-resize; touch-action: none;
+  }
+  body.stream-chat-right .stream-chat-resizer { right: calc(var(--chat-w) + 2px); }
+  body.stream-chat-left .stream-chat-resizer { left: calc(var(--chat-w) + 2px); }
+  body.stream-beside .stream-chat-resizer::after { content: ""; position: absolute; top: 50%; left: 4px; width: 4px; height: 48px; margin-top: -24px; border-radius: 2px; background: var(--border); }
+  body.stream-beside .stream-chat-resizer:hover::after, body.stream-beside .stream-chat-resizer:focus-visible::after { background: var(--accent); }
+}
+.stream-chat-resizer[hidden] { display: none !important; }
+@media (pointer: coarse) { body.stream-beside .stream-chat-resizer { width: 24px; } }
