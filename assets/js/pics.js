@@ -2,7 +2,7 @@
 //  1. statisches Symbol data/icons/<key>.png (vom Knopf "Preisliste hochladen" erzeugt; nur laden, wenn es laut Liste existiert -> keine 404)
 //  2. Live-Mod /api/img/<key> (nur wenn online)
 //  3. kein Bild -> Platzhalter bleibt stehen
-// Ergebnis je Schlüssel wird gemerkt: kein Flackern beim Neuzeichnen, kein zweiter Versuch nach Fehlschlag.
+// Ergebnis je Schlüssel wird gemerkt: kein Flackern beim Neuzeichnen; Live-Bilder bis zu 3 Wiederholungen (3/6/12 s), dann aufgeben.
 import * as live from './live.js';
 import { imgUrl as liveImg } from './live-visual-b.js';
 
@@ -40,7 +40,18 @@ export function fillPic(el, key, cls, size) {
     if (i >= list.length) { el.dataset.pic = 'x'; return; }
     const img = make('');
     img.addEventListener('load', () => { good.set(key, list[i]); el.replaceChildren(img); el.dataset.pic = 'ok'; }, { once: true });
-    img.addEventListener('error', () => { bad.add(list[i]); next(i + 1); }, { once: true });
+    // Live-Bilder malt die Mod erst auf Anfrage (404 bis fertig, ohne Zwischenspeicher) -> nach 3, 6, 12 s erneut fragen
+    let tries = 0;
+    const isLiveUrl = list[i].includes('/api/img/');
+    img.addEventListener('error', function onErr() {
+      if (isLiveUrl && tries < 3 && live.isLive()) {
+        const wait = 3000 * 2 ** tries++;
+        setTimeout(() => { img.src = list[i] + (list[i].includes('?') ? '&' : '?') + 'r=' + tries; }, wait);
+        img.addEventListener('error', onErr, { once: true });
+        return;
+      }
+      bad.add(list[i]); next(i + 1);
+    }, { once: true });
     img.src = list[i];
   };
   next(0);
