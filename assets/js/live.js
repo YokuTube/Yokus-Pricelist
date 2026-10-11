@@ -354,6 +354,17 @@ export async function act(command, args) {
   return [];
 }
 
+/** Feedback an den Streamer (anonym oder mit Verknüpfung). Wirft Error mit deutschem Text. */
+export async function sendFeedback(cat, text, page) {
+  if (!S.live) throw new Error('Feedback geht, solange der Stream mit Spiel läuft.');
+  let r;
+  try { r = await api('/api/feedback', { method: 'POST', auth: true, body: { cat, text, page } }); }
+  catch { throw new Error('Keine Verbindung zum Spiel. Versuch es gleich noch einmal.'); }
+  if (r.ok) return;
+  if (r.status === 503) throw new Error('Feedback geht, solange der Stream mit Spiel läuft.');
+  throw new Error(r.data?.error || 'Das hat nicht geklappt (Fehler ' + r.status + ').');
+}
+
 // ---------- Start ----------
 export function initLive() {
   discover();

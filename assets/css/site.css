@@ -1677,3 +1677,27 @@ body.stream-side-right.stream-beside .duel-strip { right: calc(var(--side-w) + v
 .it-desc { margin: 6px 0 0; max-width: 60ch; }
 .trait .tr-sym:empty { display: none; }
 .trait .tr-img { width: 26px; height: 26px; margin-right: 6px; }
+
+/* ---------- Feedback (assets/js/feedback.js) ---------- */
+.fb-open { font-size: 1.05rem; padding: 0; width: 44px; }
+.fb-link { background: none; border: 0; padding: 10px 6px; margin-left: 6px; color: var(--muted); font: inherit; cursor: pointer; text-decoration: underline dotted; min-height: 44px; }
+.fb-link:hover { color: var(--text); }
+.fb-panel { position: fixed; z-index: 60; width: min(360px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; box-sizing: border-box;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: var(--radius);
+  padding: 12px 14px; display: grid; gap: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, .4); }
+.fb-head { display: flex; align-items: center; justify-content: space-between; }
+.fb-x { width: 44px; height: 44px; margin: -8px -10px -8px 0; background: none; border: 0; color: var(--muted); font-size: 1.1rem; cursor: pointer; }
+.fb-kinds { display: flex; gap: 6px; }
+.fb-kind { flex: 1; min-height: 44px; display: grid; place-items: center; padding: 4px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-2); color: var(--muted); cursor: pointer; font: inherit; }
+.fb-kind.on { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+.fb-sym { font-size: 1.2rem; line-height: 1.1; }
+.fb-lbl { font-size: .72rem; }
+.fb-text { width: 100%; box-sizing: border-box; resize: vertical; min-height: 96px; padding: 8px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; font-size: 16px; }
+.fb-info { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: .78rem; }
+.fb-page { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.fb-hint, .fb-note { margin: 0; color: var(--muted); font-size: .85rem; }
+.fb-msg { margin: 0; min-height: 1.2em; font-size: .85rem; color: var(--muted); }
+.fb-msg.bad { color: var(--bad); font-weight: 600; }
+.fb-send { min-height: 44px; border-radius: var(--radius); border: 0; background: var(--accent); color: var(--accent-text); font: inherit; font-weight: 700; cursor: pointer; }
+.fb-send:disabled { opacity: .45; cursor: not-allowed; }
+@media print { .fb-panel, .fb-open, .fb-link { display: none; } }

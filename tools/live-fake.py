@@ -925,6 +925,19 @@ class H(BaseHTTPRequestHandler):
             a = self.headers.get("Authorization", "")
             TOKENS.pop(a[7:], None)
             return self.js(200, {"ok": True}, cache=False)
+        if p == "/api/feedback":
+            # Fake: schreibt NICHT ins Repo, sondern in den Temp-Ordner (oder Umgebung FAKE_FEEDBACK_FILE)
+            b = payload
+            text = str(b.get("text", "")).strip()
+            if b.get("cat") not in ("bug", "idea", "other") or not 3 <= len(text) <= 1000:
+                return self.js(400, {"error": "Text zu kurz oder zu lang (3 bis 1000 Zeichen)."}, cache=False)
+            if "zuschnell" in text:
+                return self.js(429, {"error": "Nicht so schnell – bitte in ein paar Minuten nochmal"}, cache=False)
+            import tempfile
+            fn = os.environ.get("FAKE_FEEDBACK_FILE") or os.path.join(tempfile.gettempdir(), "live-fake-feedback.jsonl")
+            with open(fn, "a", encoding="utf-8") as f:
+                f.write(json.dumps({"cat": b.get("cat"), "page": str(b.get("page", ""))[:200], "text": text}, ensure_ascii=False) + "\n")
+            return self.js(200, {"ok": True}, cache=False)
         if p == "/api/action":
             user = self.user()
             if not user:

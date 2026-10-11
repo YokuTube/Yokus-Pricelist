@@ -9,6 +9,7 @@ import { setEventIndex } from './event-pics.js';
 import { initLiveUi, setLiveData, offerLive, ichView, kolonieView, spielView, ereignisseView, gedenkenView } from './live-views.js';
 import { initStreamSettings, syncStreamDock, openStreamBar } from './stream.js';
 import { initCooldowns, setCooldownData } from './cooldowns.js';
+import { initFeedback } from './feedback.js';
 
 const TABS = [
   { id: 'start', label: 'Start', view: startView },
@@ -171,6 +172,7 @@ async function boot() {
   // RICS Live: im Hintergrund suchen, die Seite wartet nicht darauf.
   initLiveUi();
   initCooldowns();
+  initFeedback();
   live.on('change', () => {
     const wanted = location.hash.replace(/^#\/?/, '').split('/')[0].toLowerCase();
     // Nur neu zeichnen, wenn eine Live-Ansicht betroffen ist - sonst gehen z. B. Sucheingaben nicht verloren.
