@@ -1979,7 +1979,7 @@ function visitorsHtml(v) {
   return `<section class="card ch-sec"><h4>Besucher & Händler</h4><ul class="plain vis-list">${gl}${sl}</ul></section>`;
 }
 
-const SPIEL_SUBS = [['overview', 'Übersicht'], ['research', 'Forschung'], ['stock', 'Vorräte'], ['factions', 'Fraktionen & Besucher'], ['history', 'Verlauf']];
+const SPIEL_SUBS = [['overview', 'Übersicht'], ['research', 'Forschung'], ['stock', 'Vorräte'], ['factions', 'Fraktionen & Besucher'], ['history', 'Koloniewert']];
 let spielSub = loadSub('ys-spiel-sub', 'overview', SPIEL_SUBS.map((x) => x[0]));
 
 function spielHtml(g, res) {
