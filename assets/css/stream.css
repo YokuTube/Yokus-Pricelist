@@ -85,4 +85,53 @@
   .stream-dock.mini { width: 200px; right: 10px; bottom: 10px; }
   .stream-mini-btn { min-width: 44px; height: 36px; padding: 0 6px; }
 }
+
+/* ---------- Seitenlage (Links/Rechts, nur Fenster >= 1200 px): feste Spalte, Seite rückt daneben ----------
+   Klassen am body setzt stream.js (stream-side, stream-side-left/-right); Breite = --side-w (ziehbar). */
+.stream-pos { display: inline-flex; gap: 4px; }
+.stream-pos[hidden], .stream-resizer[hidden] { display: none; }
+.stream-pos-btn.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.stream-resizer { display: none; }
+@media (min-width: 1200px) {
+  body.stream-side-left { padding-left: var(--side-w); }
+  body.stream-side-right { padding-right: var(--side-w); }
+  body.stream-side .stream-dock-wrap {
+    position: fixed; top: 0; bottom: 0; width: var(--side-w); max-width: none; margin: 0; z-index: 30;
+    padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; border-bottom: 0;
+  }
+  body.stream-side-left .stream-dock-wrap { left: 0; right: auto; border-right: 1px solid var(--border); }
+  body.stream-side-right .stream-dock-wrap { right: 0; left: auto; border-left: 1px solid var(--border); }
+  body.stream-side .stream-dock-wrap.side-nochat { bottom: auto; border-bottom: 1px solid var(--border); }
+  body.stream-side .stream-toolbar { margin: 0; justify-content: flex-start; flex: none; }
+  body.stream-side .stream-note { display: none; }
+  body.stream-side .stream-pos { margin-right: auto; }
+  body.stream-side .stream-dock { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }
+  body.stream-side .stream-dock[hidden] { display: none; }
+  body.stream-side .stream-player { flex: none; }
+  body.stream-side .stream-dock .stream-chat { flex: 1; height: auto; min-height: 0; }
+  body.stream-side .stream-resizer {
+    display: block; position: absolute; top: 0; bottom: 0; width: 12px; cursor: col-resize; z-index: 5; touch-action: none;
+  }
+  body.stream-side-left .stream-resizer { right: 0; }
+  body.stream-side-right .stream-resizer { left: 0; }
+  .stream-resizer::after { content: ""; position: absolute; top: 50%; left: 4px; width: 4px; height: 48px; margin-top: -24px; border-radius: 2px; background: var(--border); }
+  .stream-resizer:hover::after, .stream-resizer:focus-visible::after { background: var(--accent); }
+  /* Feste Elemente der Seite (Abstimmung links unten, Nach-oben-Knopf, Hinweis) wandern mit der Spalte */
+  body.stream-side-left .vote-card, body.stream-side-left .vote-card.min { left: calc(var(--side-w) + 16px); }
+  body.stream-side-right .to-top { right: calc(var(--side-w) + 16px); }
+  body.stream-side-left .toast { left: calc(50% + var(--side-w) / 2); }
+  body.stream-side-right .toast { left: calc(50% - var(--side-w) / 2); }
+  /* Während des Ziehens schlucken die iframes sonst die Mausbewegung */
+  body.stream-dragging { user-select: none; cursor: col-resize; }
+  body.stream-dragging .stream-dock iframe { pointer-events: none; }
+}
+@media (pointer: coarse) {
+  .stream-tool, .stream-popout { min-height: 44px; }
+  .stream-pos-btn { min-width: 44px; }
+  .stream-resizer { width: 24px; }
+}
+/* Schmale Spalte: Beschriftung der Positionsknöpfe nur als Symbol */
+.stream-pos-btn span { margin-left: 2px; }
+@media (max-width: 699px) { .stream-pos { display: none; } }
+@media print { body.stream-side-left { padding-left: 0; } body.stream-side-right { padding-right: 0; } }
 @media print { .stream-dock-wrap, .stream-dock.mini { display: none; } }

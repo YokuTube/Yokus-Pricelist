@@ -151,6 +151,7 @@ async function boot() {
   const tb = document.querySelector('.tabs-bar');
   if (window.ResizeObserver) new ResizeObserver(setTabsH).observe(tb);
   window.addEventListener('resize', setTabsH);
+  window.addEventListener('ys-layout', setTabsH);
   setTabsH();
 
   renderTabs();

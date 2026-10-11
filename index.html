@@ -46,9 +46,15 @@
   </div>
 
   <div class="wrap stream-dock-wrap" id="stream-wrap" hidden>
+    <div class="stream-resizer" id="stream-resizer" role="separator" aria-orientation="vertical" aria-label="Breite von Stream und Chat ändern" tabindex="0" title="Ziehen: Breite ändern (Doppelklick: zurücksetzen)" hidden></div>
     <div class="stream-toolbar" id="stream-toolbar">
       <span class="stream-note">Chat schreiben: bei Twitch anmelden.</span>
       <a class="stream-popout" href="https://www.twitch.tv/popout/dasyoku/chat" target="_blank" rel="noopener">Chat in eigenem Fenster ↗</a>
+      <span class="stream-pos" id="stream-pos" role="group" aria-label="Position von Stream und Chat" hidden>
+        <button type="button" class="stream-tool stream-pos-btn" data-stream-pos="left" title="Stream und Chat links neben der Seite" aria-label="Links" aria-pressed="false">◧ <span>Links</span></button>
+        <button type="button" class="stream-tool stream-pos-btn" data-stream-pos="top" title="Stream und Chat oben über der Seite" aria-label="Oben" aria-pressed="false">▭ <span>Oben</span></button>
+        <button type="button" class="stream-tool stream-pos-btn" data-stream-pos="right" title="Stream und Chat rechts neben der Seite" aria-label="Rechts" aria-pressed="false">◨ <span>Rechts</span></button>
+      </span>
       <button type="button" class="stream-tool" data-stream-chat-close title="Chat schließen">Chat ✕</button>
       <button type="button" class="stream-tool" data-stream-player-close title="Stream schließen">Stream ✕</button>
       <button type="button" class="stream-tool" data-stream-collapse title="Leiste einklappen (der Stream läuft klein weiter)">Einklappen ▴</button>
