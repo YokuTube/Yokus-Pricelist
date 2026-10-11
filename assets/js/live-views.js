@@ -825,28 +825,28 @@ function actBtn(cmd, args, label, { confirm = false, title = '', cls = '', armed
   return `<button type="button" class="act-btn ${cls}${armed ? ' armed' : ''}" data-act="${esc(cmd)}" data-args="${esc(args)}"${confirm ? ' data-confirm="1"' : ''}${busy ? ' disabled' : ''} title="${esc(armed ? 'Zum Bestätigen noch einmal antippen' : title)}">${busy ? '…' : esc(armed ? armedLabel : label)}</button>`;
 }
 
-async function runAct(host, btn) {
+async function runAct(host, btn, redraw = () => repaint(host)) {
   const cmd = btn.dataset.act, args = btn.dataset.args, key = cmd + ' ' + args;
   if (busyKey || btn.disabled) return;
   if (btn.dataset.confirm && armedKey !== key) {
     armedKey = key;
     clearTimeout(armedTimer);
-    armedTimer = setTimeout(() => { if (armedKey === key) { armedKey = null; if (host.isConnected) repaint(host); } }, 4000);
-    repaint(host);
+    armedTimer = setTimeout(() => { if (armedKey === key) { armedKey = null; if (host.isConnected) redraw(); } }, 4000);
+    redraw();
     return;
   }
   clearTimeout(armedTimer);
   armedKey = null; busyKey = key;
-  repaint(host);
+  redraw();
   try {
     const msgs = await live.act(cmd, args);
-    toast(msgs.length ? msgs.join(' · ') : 'An RICS übergeben – Antwort im Chat', 7000);
+    toast(msgs.length ? msgs.join(' · ') : 'An RICS übergeben.', 7000);
   } catch (e) {
     toast(e.message, 5000);
   } finally {
     busyKey = null;
     if (cmd === 'quirks') refreshOffers(host);
-    if (host.isConnected) repaint(host);
+    if (host.isConnected) redraw();
   }
 }
 
@@ -1869,11 +1869,29 @@ let openProj = null;
 const PROJ = { 0: ['🔒', 'gesperrt'], 1: ['○', 'erforschbar'], 2: ['▶', 'läuft'], 3: ['✓', 'fertig'] };
 const PROJ_ORDER = { 2: 0, 1: 1, 3: 2, 0: 3 };
 
+// Forschung anschieben (RICS Extras !forschung): +X % aufs laufende Projekt, Pause je Zuschauer
+function boostHtml(g) {
+  const rb = g?.researchBoost;
+  if (!rb || !live.isAllowed('forschung')) return '';
+  const what = `+${fmt(rb.percent)} % für ${fmt(rb.price)} 🪙`;
+  const rules = `Höchstens ${rb.maxPerDay > 0 ? `${fmt(rb.maxPerDay)}× pro Spieltag für alle, ` : ''}jeder alle ${fmt(rb.viewerCooldownHours)} Spielstunden.`;
+  let ctl;
+  if (!live.isLinked()) ctl = `<p class="small muted" style="margin:0">Verbinde dich oben, um die Forschung per Knopf anzuschieben – oder schreib <code>${esc(live.prefix())}forschung</code> in den Chat.</p>`;
+  else {
+    const wait = Number(live.getMe()?.researchWaitHours);
+    ctl = wait > 0
+      ? `<button type="button" class="act-btn" disabled>Wieder in ${fmt(wait)} Spielstunde${wait === 1 ? '' : 'n'}</button>`
+      : actBtn('forschung', '', `🔬 Anschieben · ${what}`, { confirm: true, armedLabel: `${fmt(rb.price)} Münzen – sicher?`, title: `Laufende Forschung um ${rb.percent} % anschieben` });
+  }
+  return `<div class="rs-boost"><div class="small"><b>Forschung anschieben:</b> ${esc(what)}. ${esc(rules)}</div>${ctl}</div>`;
+}
+
 function researchHtml(res, g) {
   const cur = res ? res.current : g.research;
   let html = cur
     ? `<div class="rs-cur"><b>${esc(cur.label)}</b></div>${barRow('Stand', cur.pct, `${Math.round(clamp(cur.pct))} %`, 'acc', 'wide')}`
     : '<p class="muted small" style="margin:0">Keine laufende Forschung.</p>';
+  if (cur) html += boostHtml(g);
   if (!res?.tabs?.length) return html;
   html += '<div class="rs-tabs">' + res.tabs.map((t) => {
     const open = openRTabs.has(t.label);
@@ -2048,7 +2066,12 @@ export function spielView() {
         draw(false);
       },
     });
+    // Knopf „Anschieben“: Wartezeit/Verknüpfung kommen mit /api/me
+    let boostKey = '';
+    whileMounted(host, [['me', () => { const k = `${live.isLinked()}|${live.getMe()?.researchWaitHours}`; if (k !== boostKey) { boostKey = k; draw(true); } }], ['change', () => draw(true)]]);
     host.addEventListener('click', (e) => {
+      const ab = e.target.closest('[data-act]');
+      if (ab) { runAct(host, ab, () => draw(true)); return; }
       const sb = e.target.closest('[data-spsub]');
       if (sb) {
         if (sb.dataset.spsub !== spielSub) { spielSub = sb.dataset.spsub; saveSub('ys-spiel-sub', spielSub); draw(true); }

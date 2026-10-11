@@ -37,7 +37,8 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 ORIGINS = {"https://yokutube.github.io", "http://localhost:8765", "http://127.0.0.1:8765"}
-ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult"]
+RB_WAIT = [0]  # Spielstunden bis !forschung wieder geht (Test)
+ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult"]
 ARGS_RE = re.compile(r"^[\w \-.'#@]{0,80}$", re.UNICODE)
 
 LOCK = threading.Lock()
@@ -452,6 +453,7 @@ def game_info():
     t = int(time.time())
     return {
         "giftPrice": 150,
+        "researchBoost": {"price": 800, "percent": 25, "viewerCooldownHours": 24, "maxPerDay": 3},
         "colony": "Neu-Yoku", "date": "5. Aprimay 5501", "day": 37, "hour": (t // 20) % 24,
         "season": "Frühling", "weather": "Leichter Regen", "temperature": "12 °C", "wealth": 48250 + (t // 10) % 7 * 10,
         "colonists": 6, "prisoners": 1, "animals": 9, "viewerPawns": len(PAWNS),
@@ -496,6 +498,9 @@ def fake_effect(user, cmd, args):
     """Beispielantworten der neuen Knoepfe; fuer "yoku" aendern Lernen/Stat/Quirk die Daten wirklich."""
     pw = PAWNS.get(user)
     a = args.split()
+    if cmd == "forschung":
+        RB_WAIT[0] = 24
+        return "@%s Danke! „Mikroelektronik“ ist jetzt bei 68 %% (+25 %%)." % user
     if cmd == "vote" and a[:1] and a[0].isdigit():
         cyc, ph = vote_phase()
         n = int(a[0])
@@ -678,7 +683,7 @@ class H(BaseHTTPRequestHandler):
             if pawn is not None:
                 pawn["duelIncoming"] = duel_state()
             return self.js(200, {"user": user, "displayName": ALLOWED_USERS.get(user, user), "coins": coins,
-                                 "karma": karma, "coinsPerMinute": 7.5, "earning": True, "activeMinutesLeft": 24, "pawn": pawn})
+                                 "karma": karma, "coinsPerMinute": 7.5, "earning": True, "activeMinutesLeft": 24, "researchWaitHours": RB_WAIT[0], "pawn": pawn})
         if p.startswith("/api/art/"):
             user = unquote(p[9:]).lower()
             key = user if user in PAWNS else next((k for k, v in PAWNS.items() if v.get("id") == user), None)

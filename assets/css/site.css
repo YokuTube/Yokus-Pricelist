@@ -1067,3 +1067,7 @@ button.sty-chip:hover { border-color: var(--accent); }
 
 /* Expertise */
 .exp-item.own { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+
+/* Forschung anschieben */
+.rs-boost { display: grid; gap: 8px; margin: 10px 0 4px; padding: 10px 12px; border: 1px dashed var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
+.rs-boost .act-btn { justify-self: start; }
