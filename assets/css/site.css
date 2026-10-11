@@ -1122,3 +1122,68 @@ button.sty-chip:hover { border-color: var(--accent); }
   .bfigs { justify-content: center; }
 }
 @media (max-width: 640px) { .bscales .brow, .love-meters .brow { grid-template-columns: minmax(0, 12ch) minmax(0, 1fr) minmax(4ch, auto); } }
+
+/* ---------- Zuschauer-Interaktionen: Duell-Wetten, Lob, Nachhilfe, Tier-Paten ---------- */
+.duel-card { margin: 0 0 14px; border-color: var(--doom); background: color-mix(in srgb, var(--doom) 7%, var(--surface)); display: grid; gap: 10px; }
+.duel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.duel-title { font-family: var(--head-font); font-size: 1.1rem; letter-spacing: .02em; color: var(--doom); }
+.duel-count { font-variant-numeric: tabular-nums; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); border: 1px solid var(--accent); }
+.duel-vs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; }
+.duel-side { display: grid; justify-items: center; gap: 2px; min-width: 0; text-align: center; }
+.duel-side .brow { width: 100%; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 6px; }
+.duel-side .brow .bl { display: none; }
+.duel-portrait { width: 72px; height: 72px; }
+.duel-portrait.ph { font-size: 1.6rem; }
+.duel-side.a .duel-portrait { border: 2px solid var(--accent); }
+.duel-side.b .duel-portrait { border: 2px solid var(--doom); }
+.duel-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duel-user { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duel-x { font-family: var(--head-font); font-weight: 800; font-size: 1.3rem; color: var(--doom); }
+.duel-bets { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
+.duel-bets i { display: block; height: 100%; transition: width .6s ease; }
+.duel-bets .a { background: var(--accent); }
+.duel-bets .b { background: var(--doom); }
+.duel-sums { display: flex; justify-content: space-between; gap: 8px; font-size: .88rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.duel-sums .pot { color: var(--muted); font-weight: 600; }
+.duel-note { margin: 0; }
+.duel-amts { display: flex; flex-wrap: wrap; gap: 6px; }
+.duel-amts .chip-btn { min-height: 44px; min-width: 44px; justify-content: center; }
+.duel-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.duel-btns .act-btn { white-space: normal; min-height: 44px; border-radius: var(--radius); line-height: 1.2; padding: 6px 10px; }
+.duel-btns .act-btn.a { border-color: var(--accent); color: var(--text); }
+.duel-btns .act-btn.b { border-color: var(--doom); color: var(--text); }
+.duel-btns .act-btn.armed { color: var(--accent-text); }
+.duel-btns .act-btn.b.armed { background: var(--doom); border-color: var(--doom); }
+
+.ch-praise { margin-top: 8px; }
+.praise-btn { min-height: 44px; }
+.ach.praise { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 16%, transparent); }
+
+.tutor-row { display: grid; gap: 8px; margin: 8px 0; }
+.tutor-toggle { justify-self: start; min-height: 44px; }
+.tutor-box { padding: 10px 12px; border: 1px dashed var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
+.tutor-box p { margin: 0 0 8px; }
+.tutor-box p:last-child { margin: 0; }
+.tutor-skills { display: flex; flex-wrap: wrap; gap: 8px; }
+.tutor-skill { min-height: 44px; }
+
+.an.an-row { grid-template-columns: 52px minmax(0, 1fr); gap: 4px 10px; align-items: start; }
+.an-pic { width: 52px; height: 52px; display: grid; place-items: center; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
+.an-img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+.an-ph { font-size: 1.5rem; opacity: .6; }
+.an-body { display: grid; gap: 4px; min-width: 0; }
+.an-pain { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: center; }
+.an-pain .lbar { height: 5px; }
+.an-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.an-chip { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: .74rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.an-chip.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 16%, transparent); }
+.an-chip.bleed { color: #fff; background: var(--doom); }
+.an-sponsor .ach { min-height: 24px; font-size: .74rem; }
+.an-sponsor.mine .ach { border-color: var(--good); background: color-mix(in srgb, var(--good) 16%, transparent); }
+.an-pate { display: grid; gap: 6px; justify-items: start; }
+.pate-open { min-height: 44px; }
+.pate-form { display: grid; gap: 6px; justify-items: start; width: 100%; padding: 8px; border: 1px dashed var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
+.pate-in { width: 100%; min-height: 44px; }
+.pate-hint { margin: 0; color: var(--doom); }
+.pate-go { min-height: 44px; }
+@media (max-width: 420px) { .an-grid { grid-template-columns: minmax(0, 1fr); } }

@@ -18,6 +18,9 @@ Verhalten:
   relations in /api/log, work/workEditable (nur yoku darf setzen: Aktion mypawn "work <id> <prio>"),
   duelIncoming (alle 120 s Herausforderung von Mira fuer 45 s; "duel ja/nein" beantworten, "duel <Name>" fordert),
   goals und stock in /api/game.
+- Neu (Zuschauer-Interaktionen): GameInfo.duel (Mira gegen Luna, 40 s Wetten offen / 20 s zu), praise, tutor, sponsorPrice;
+  animalList mit id/img/sponsor/conditions/pain (Bild "404" und leeres img testen den Platzhalter); /api/animalimg/<key>;
+  Befehle wette/lob/nachhilfe/pate antworten mit Beispieltext, "pate #p103 Name" setzt den Paten wirklich.
 - Neu: memorials (2 Gedenk-Eintraege), wealthHistory (30 Tage), factions (4), visitors (1 Haendlergruppe + 1 Schiff)
   in /api/game; story (Lebensgeschichte) in /api/log (yoku 6, mira 3 Eintraege, sonst leer); kills, daysInColony und
   isekaiLevel in /api/colony und /api/pawn. Alles nur aus Konstanten, keine Sperre noetig.
@@ -38,7 +41,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 ORIGINS = {"https://yokutube.github.io", "http://localhost:8765", "http://127.0.0.1:8765"}
 RB_WAIT = [0]  # Spielstunden bis !forschung wieder geht (Test)
-ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult"]
+ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "wette", "lob", "nachhilfe", "pate", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult"]
 ARGS_RE = re.compile(r"^[\w \-.'#@]{0,80}$", re.UNICODE)
 
 LOCK = threading.Lock()
@@ -155,6 +158,8 @@ PAWNS = {
         {"pct": 75, "list": [{"label": "Ein Gewächshaus bauen", "done": True}, {"label": "Alle Pflanzen kennen", "done": True},
                              {"label": "Rosenkönigin", "done": False}]}, 3),
 }
+for _p in PAWNS.values():
+    _p["id"] = _p["user"]          # echte Schnittstelle liefert eine Pawn-ID; hier gleich dem Namen
 ALLOWED_USERS = {"yoku": "Yoku"}
 
 
@@ -337,17 +342,26 @@ def duel_state():
 
 
 # ---------- Tiere, Quirk-Angebote, Forschung ----------
+def an(id_, name, kind, gender, age, health, bond=None, master=None, img="", sponsor=None, conditions=None, pain=0):
+    conditions = conditions or []
+    return {"id": id_, "name": name, "kind": kind, "gender": gender, "age": age, "healthPct": health, "bond": bond, "master": master,
+            "img": img or None, "sponsor": sponsor, "conditions": conditions, "pain": pain,
+            "bleeding": any(c["bleeding"] for c in conditions)}
+
+
 ANIMALS = [
-    {"name": "Rex", "kind": "Husky", "gender": "Männlich", "age": 4.2, "healthPct": 96, "bond": "Kira", "master": "Kira"},
-    {"name": "Mieze", "kind": "Katze", "gender": "Weiblich", "age": 2.1, "healthPct": 88, "bond": "Luna", "master": None},
-    {"name": "Bruno", "kind": "Alpaka", "gender": "Männlich", "age": 5.0, "healthPct": 100, "bond": None, "master": "Luna"},
-    {"name": None, "kind": "Huhn", "gender": "Weiblich", "age": 1.3, "healthPct": 74, "bond": None, "master": None},
-    {"name": None, "kind": "Huhn", "gender": "Weiblich", "age": 0.8, "healthPct": 100, "bond": None, "master": None},
-    {"name": "Schnauzi", "kind": "Wildschwein", "gender": "Männlich", "age": 3.4, "healthPct": 35, "bond": None, "master": None},
+    an("p101", "Rex", "Husky", "Männlich", 4.2, 96, "Kira", "Kira", "husky", sponsor="luna_88"),
+    an("p102", "Mieze", "Katze", "Weiblich", 2.1, 88, "Luna", None, "katze", conditions=[cond("Narbe", "Ohr", bad=False)]),
+    an("p103", "Bruno", "Alpaka", "Männlich", 5.0, 100, None, "Luna", "alpaka"),
+    an("p104", None, "Huhn", "Weiblich", 1.3, 74, None, None, "huhn", conditions=[cond("Grippe", None)], pain=12),
+    an("p105", None, "Huhn", "Weiblich", 0.8, 100, None, None, "huhn"),
+    an("p106", "Schnauzi", "Wildschwein", "Männlich", 3.4, 35, None, None, "",   # ohne Bild (img null) -> Platzhalter
+       conditions=[cond("Schusswunde", "Flanke", bleeding=True), cond("Biss", "Bein"), cond("Infektion", None), cond("Prellung", "Kopf"), cond("Narbe", "Rücken", bad=False)], pain=58),
+    an("p107", "Fridolin", "Ziege", "Männlich", 2.5, 90, None, None, "404"),         # Bild liefert 404 -> Platzhalter per onerror
 ]
 if os.environ.get("FAKE_MANY"):
-    ANIMALS += [{"name": None, "kind": "Huhn", "gender": "Weiblich", "age": 1.0 + i / 10, "healthPct": 60 + i * 5, "bond": None, "master": None} for i in range(5)]
-    ANIMALS += [{"name": None, "kind": "Alpaka", "gender": "Männlich", "age": 2.0 + i, "healthPct": 90, "bond": None, "master": "Luna" if i == 0 else None} for i in range(3)]
+    ANIMALS += [an("p2%02d" % i, None, "Huhn", "Weiblich", 1.0 + i / 10, 60 + i * 5, img="huhn", pain=8 if i == 2 else 0) for i in range(5)]
+    ANIMALS += [an("p3%02d" % i, None, "Alpaka", "Männlich", 2.0 + i, 90, None, "Luna" if i == 0 else None, "alpaka") for i in range(3)]
 
 QUIRK_OFFERS = [
     {"label": "Frühaufsteher", "desc": "Braucht weniger Schlaf und ist morgens besonders fit.", "rarity": "common"},
@@ -411,7 +425,7 @@ def png(seed):
 
 
 def summary(p):
-    keys = ["user", "displayName", "name", "portrait", "healthPct", "moodPct", "state", "stateLabel", "job",
+    keys = ["id", "user", "displayName", "name", "portrait", "healthPct", "moodPct", "state", "stateLabel", "job",
             "kills", "daysInColony", "isekaiLevel"]
     return {k: p[k] for k in keys}
 
@@ -453,10 +467,28 @@ STORY = {
 }
 
 
+def duel_fight(t):
+    """Fake-Duell Mira gegen Luna: immer vorhanden; 40 s Wetten offen, 20 s zu (Zyklus 60 s). Wettsummen wachsen mit der Zeit."""
+    ph = t % 60
+    open_ = ph < 40
+    ba, bb = 300 + ph * 9, 180 + ph * 5 + BETS["b"]
+    return {"a": {"name": "Mira", "user": "mira_spielt", "id": "mira_spielt", "healthPct": max(10, 100 - ph), "bets": ba + BETS["a"]},
+            "b": {"name": "Luna", "user": "luna_88", "id": "luna_88", "healthPct": max(15, 90 - ph // 2), "bets": bb},
+            "betOpen": open_, "betSecondsLeft": max(0, 40 - ph) if open_ else 0, "minBet": 10, "maxBet": 500,
+            "pot": ba + BETS["a"] + bb}
+
+
+BETS = {"a": 0, "b": 0}
+
+
 def game_info():
     t = int(time.time())
     return {
         "giftPrice": 150,
+        "duel": duel_fight(t),
+        "praise": {"yoku": 12, "mira_spielt": 7, "luna_88": 3, "eddi_tv": 0},
+        "tutor": {"price": 100, "minLevel": 6, "gap": 2},
+        "sponsorPrice": 300,
         "researchBoost": {"price": 800, "percent": 25, "viewerCooldownHours": 24, "maxPerDay": 3},
         "colony": "Neu-Yoku", "date": "5. Aprimay 5501", "day": 37, "hour": (t // 20) % 24,
         "season": "Frühling", "weather": "Leichter Regen", "temperature": "12 °C", "wealth": 48250 + (t // 10) % 7 * 10,
@@ -502,6 +534,24 @@ def fake_effect(user, cmd, args):
     """Beispielantworten der neuen Knoepfe; fuer "yoku" aendern Lernen/Stat/Quirk die Daten wirklich."""
     pw = PAWNS.get(user)
     a = args.split()
+    if cmd == "wette" and len(a) >= 2 and a[-1].isdigit():
+        who, amt = " ".join(a[:-1]).lower(), int(a[-1])
+        if who not in ("mira", "luna"):
+            return "@%s Dieses Duell kenne ich nicht." % user
+        BETS["a" if who == "mira" else "b"] += amt
+        return "@%s Wette gesetzt: %d Münzen auf %s." % (user, amt, who.capitalize())
+    if cmd == "lob" and a:
+        return "@%s Du hast %s gelobt – ein bisschen Stolz fürs Team!" % (user, " ".join(a))
+    if cmd == "nachhilfe" and len(a) >= 2:
+        return "@%s Nachhilfe gegeben: %s lernt in %s dazu (−100 Münzen)." % (user, a[0], " ".join(a[1:]))
+    if cmd == "pate" and a and a[0].startswith("#"):
+        an_ = next((x for x in ANIMALS if "#" + x["id"] == a[0]), None)
+        if not an_ or an_["sponsor"]:
+            return "@%s Dieses Tier hat schon einen Paten oder gibt es nicht." % user
+        an_["sponsor"] = user
+        if len(a) > 1:
+            an_["name"] = " ".join(a[1:])
+        return "@%s Du bist jetzt Pate von %s (−300 Münzen)." % (user, an_["name"] or an_["kind"])
     if cmd == "forschung":
         RB_WAIT[0] = 24
         return "@%s Danke! „Mikroelektronik“ ist jetzt bei 68 %% (+25 %%)." % user
@@ -707,6 +757,11 @@ class H(BaseHTTPRequestHandler):
             if key is None or not PAWNS[key].get("art"):
                 return self.js(404, {"error": "Kein gemaltes Porträt."}, cache=False)
             return self.send(200, png(key), "image/png", extra={"Cache-Control": "public, max-age=3600"})
+        if p.startswith("/api/animalimg/"):
+            key = unquote(p[15:])
+            if key == "404":
+                return self.js(404, {"error": "Noch nicht gerendert."}, cache=False)
+            return self.send(200, png("tier-" + key), "image/png", extra={"Cache-Control": "public, max-age=3600"})
         if p.startswith("/api/portrait/"):
             user = unquote(p[14:]).lower()
             if user not in PAWNS or PAWNS[user]["portrait"] == 0:

@@ -599,6 +599,14 @@ export function initLiveUi() {
   // Porträt nicht ladbar: Platzhalter statt kaputtem Bild
   document.addEventListener('error', (e) => {
     const img = e.target;
+    if (img?.matches?.('img[data-animg]')) {   // Tierbild fehlt (noch nicht gerendert / 404): Pfotensymbol
+      const ph = document.createElement('span');
+      ph.className = 'an-ph';
+      ph.setAttribute('aria-hidden', 'true');
+      ph.textContent = '🐾';
+      img.replaceWith(ph);
+      return;
+    }
     if (!img?.matches?.('img[data-portrait]')) return;
     const ph = document.createElement('div');
     ph.className = img.className.replace('portrait', 'portrait ph');
@@ -704,6 +712,11 @@ const KILL_BADGES = [[50, '50 Gegner besiegt'], [10, '10 Gegner besiegt'], [1, '
 const ISEKAI_BADGES = [[50, 'Isekai-Meister'], [20, 'Isekai-Veteran'], [10, 'Isekai-Erfahren']];
 const topBadge = (list, v) => list.find(([n]) => v >= n);
 
+function praiseBadge(p) {
+  const n = praiseOf(p);
+  return n ? `<span class="ach praise" title="${fmt(n)}× gelobt">👏 ${fmt(n)}</span>` : '';
+}
+
 function badgeList(p) {
   const out = [];
   const add = (label, title) => out.push({ label, title: title || label });
@@ -723,7 +736,7 @@ function badgeList(p) {
   return out;
 }
 
-const badgesInner = (p) => badgeList(p).map((b) => `<span class="ach" title="${esc(b.title)}">${esc(b.label)}</span>`).join('');
+const badgesInner = (p) => praiseBadge(p) + badgeList(p).map((b) => `<span class="ach" title="${esc(b.title)}">${esc(b.label)}</span>`).join('');
 
 function refreshBadges(host) {
   const el = host.querySelector('.ch-badges');
@@ -757,6 +770,7 @@ function heroHtml(p) {
       ${p.ideo ? `<div class="ch-ideo" title="Überzeugung ${Math.round(p.ideo.certainty || 0)} %">☯ <b>${esc(p.ideo.name)}</b>${p.ideo.role ? ` · ${esc(p.ideo.role)}` : ''} · ${Math.round(p.ideo.certainty || 0)} % überzeugt</div>` : ''}
       <div class="ch-state"><span class="badge ${STATE_BADGE[p.state] || 'neutral'}">${esc(p.stateLabel || p.state)}</span>${p.job ? `<span class="ch-job">${esc(p.job)}</span>` : ''}</div>
       <div class="ch-badges">${badgesInner(p)}</div>
+      ${praiseBtnHtml(p)}
       ${p.id || p.user ? `<button type="button" class="linklike ch-share" data-share="${esc(p.id || p.user)}">Link kopieren</button>` : ''}
     </div>
     <div class="ch-bars">${barRow('Gesundheit', p.healthPct)}${mood}</div>
@@ -869,6 +883,195 @@ async function runAct(host, btn, redraw = () => repaint(host)) {
     if (cmd === 'quirks') refreshOffers(host);
     if (host.isConnected) redraw();
   }
+}
+
+// ---------- Zuschauer-Interaktionen (RICS Extras): Duell-Wetten, Lob, Nachhilfe, Tier-Paten ----------
+let gameInfo = null;                       // zuletzt gesehene GameInfo (Lob-Zähler, Nachhilfe-Preis, Patenpreis)
+const noteGame = (g) => { if (g && typeof g === 'object') gameInfo = g; };
+const interKey = (g) => JSON.stringify([g?.praise ?? null, g?.tutor ?? null, g?.sponsorPrice ?? null]);
+
+// Duell-Wetten: Karte „Duell läuft“ (Spiel → Übersicht und Kolonie)
+let betAmount = 0;
+let duelStamp = { secs: 0, at: 0 };        // Restzeit der Wetten beim letzten Abruf (lokal weitergezählt)
+let duelTicker = null;
+const BET_STEPS = [50, 100, 250];
+const duelLeft = () => Math.max(0, Math.round(duelStamp.secs - (Date.now() - duelStamp.at) / 1000));
+
+function noteDuel(g) {
+  const d = g?.duel;
+  if (d && d.betOpen) duelStamp = { secs: Number(d.betSecondsLeft) || 0, at: Date.now() };
+}
+
+function ensureDuelTicker() {
+  if (duelTicker) return;
+  duelTicker = setInterval(() => {
+    const els = document.querySelectorAll('[data-duel-left]');
+    if (!els.length) return;
+    const t = `⏱ ${duelLeft()} s`;
+    els.forEach((el) => { if (el.textContent !== t) el.textContent = t; });
+  }, 1000);
+}
+
+function betAmounts(d) {
+  const lo = Math.max(1, Number(d.minBet) || 1), hi = Math.max(lo, Number(d.maxBet) || lo);
+  return [...new Set([lo, ...BET_STEPS, hi])].filter((v) => v >= lo && v <= hi).sort((a, b) => a - b);
+}
+
+function duelSide(s, cls) {
+  return `<div class="duel-side ${cls}">
+    ${portraitHtml({ name: s.name, id: s.id || s.user, portrait: 1 }, 'duel-portrait')}
+    <b class="duel-name">${esc(s.name)}</b>
+    ${s.user ? `<span class="small muted duel-user">@${esc(s.user)}</span>` : '<span class="small muted duel-user">&nbsp;</span>'}
+    ${barRow('Gesundheit', s.healthPct, null, null, 'mini')}
+  </div>`;
+}
+
+function duelCardHtml(g) {
+  const d = g?.duel;
+  if (!d || !d.a || !d.b) return '';
+  ensureDuelTicker();
+  const me = live.getMe();
+  const fighting = !!me?.pawn && [d.a, d.b].some((s) => (s.id && s.id === me.pawn.id) || (s.user && s.user === me.user));
+  const ba = Number(d.a.bets) || 0, bb = Number(d.b.bets) || 0, total = ba + bb;
+  const pa = total > 0 ? (ba / total) * 100 : 50;
+  const pot = d.pot != null ? Number(d.pot) : total;
+  let ctl = '';
+  if (!d.betOpen) ctl = '<p class="small muted duel-note">Die Wetten sind geschlossen – der Kampf läuft.</p>';
+  else if (live.isAllowed('wette')) {
+    if (!live.isLinked()) ctl = `<p class="small muted duel-note">Verbinde dich oben, um per Knopf zu wetten – oder schreib <code>${esc(live.prefix())}wette Name Betrag</code> in den Chat.</p>`;
+    else if (fighting) ctl = '<p class="small muted duel-note">Du kämpfst selbst mit – wetten darfst du nicht.</p>';
+    else {
+      const list = betAmounts(d);
+      if (!list.includes(betAmount)) betAmount = list[0];
+      const amts = list.map((v) => `<button type="button" class="chip-btn bet-amt" data-bet="${v}" aria-pressed="${v === betAmount}">${fmt(v)} 🪙</button>`).join('');
+      const bet = (s, cls) => actBtn('wette', `${s.name} ${betAmount}`, `Auf ${s.name} wetten`,
+        { confirm: true, armedLabel: `${fmt(betAmount)} 🪙 – sicher?`, cls: `duel-bet ${cls}`, title: `${fmt(betAmount)} Münzen auf ${s.name} setzen` });
+      ctl = `<div class="duel-amts" role="group" aria-label="Einsatz">${amts}</div>
+        <div class="duel-btns">${bet(d.a, 'a')}${bet(d.b, 'b')}</div>`;
+    }
+  }
+  return `<section class="card duel-card" aria-label="Duell läuft">
+    <div class="duel-head"><b class="duel-title">⚔ Duell läuft</b>${d.betOpen ? `<span class="duel-count" data-duel-left>⏱ ${duelLeft()} s</span>` : '<span class="badge neutral">Wetten zu</span>'}</div>
+    <div class="duel-vs">${duelSide(d.a, 'a')}<span class="duel-x" aria-hidden="true">VS</span>${duelSide(d.b, 'b')}</div>
+    <div class="duel-bets" role="img" aria-label="Wetten: ${fmt(ba)} gegen ${fmt(bb)} Münzen"><i class="a" style="width:${pa.toFixed(1)}%"></i><i class="b" style="width:${(100 - pa).toFixed(1)}%"></i></div>
+    <div class="duel-sums"><span class="a">${fmt(ba)} 🪙</span><span class="pot">Topf ${fmt(pot)} 🪙</span><span class="b">${fmt(bb)} 🪙</span></div>
+    ${ctl}
+  </section>`;
+}
+
+/** Klick auf einen Einsatz-Knopf; true = behandelt. */
+function betPick(e, redraw) {
+  const b = e.target.closest('[data-bet]');
+  if (!b) return false;
+  betAmount = Number(b.dataset.bet) || 0;
+  redraw();
+  return true;
+}
+
+// Lob: Knopf im Kopf fremder Kolonisten + Zähler-Abzeichen
+const praiseOf = (p) => {
+  const m = gameInfo?.praise;
+  const n = m && typeof m === 'object' ? Number(m[p.id || p.user]) : 0;
+  return n > 0 ? n : 0;
+};
+
+function praiseBtnHtml(p) {
+  if (!live.isLinked() || isMine(p) || !live.isAllowed('lob') || !p.name) return '';
+  return `<div class="ch-praise">${actBtn('lob', p.name, '👏 Loben', { cls: 'praise-btn', title: `${p.name} loben` })}</div>`;
+}
+
+// Nachhilfe: eigener Kolonist unterrichtet in Fertigkeiten, in denen er deutlich besser ist
+let tutorOpen = false;
+
+function tutorSkills(p) {
+  const t = gameInfo?.tutor || {};
+  const minLevel = Number(t.minLevel) || 0, gap = Number(t.gap) || 0;
+  const theirs = new Map((p.skills || []).map((s) => [s.label, s]));
+  return (live.getMe()?.pawn?.skills || []).map((s) => ({ s, o: theirs.get(s.label) }))
+    .filter(({ s, o }) => o && !s.disabled && !o.disabled && s.level >= minLevel && s.level >= o.level + gap)
+    .sort((x, y) => (y.s.level - y.o.level) - (x.s.level - x.o.level))
+    .map(({ s, o }) => ({ label: s.label, mine: s.level, theirs: o.level }));
+}
+
+function tutorHtml(p) {
+  const t = gameInfo?.tutor;
+  if (!t || !live.isLinked() || !live.getMe()?.pawn || isMine(p) || !live.isAllowed('nachhilfe') || !p.name) return '';
+  const toggle = `<button type="button" class="act-btn tutor-toggle${tutorOpen ? ' on' : ''}" data-tutor-toggle aria-expanded="${tutorOpen}">📚 Nachhilfe geben</button>`;
+  let body = '';
+  if (tutorOpen) {
+    const list = tutorSkills(p);
+    const price = fmt(Number(t.price) || 0);
+    body = list.length
+      ? `<div class="tutor-box"><p class="small muted">Du unterrichtest ${esc(p.name)} für ${price} 🪙. Angezeigt: deine Stufe → Stufe von ${esc(p.name)}.</p>
+          <div class="tutor-skills">${list.map((k) => actBtn('nachhilfe', `${p.name} ${k.label}`, `${k.label} ${k.mine} → ${k.theirs}`,
+            { confirm: true, armedLabel: `${price} 🪙 – sicher?`, cls: 'tutor-skill', title: `${k.label}: ${price} Münzen` })).join('')}</div></div>`
+      : `<div class="tutor-box"><p class="small muted">Gerade passt keine Fertigkeit: Du brauchst mindestens Stufe ${fmt(Number(t.minLevel) || 0)} und ${fmt(Number(t.gap) || 0)} Stufen mehr als ${esc(p.name)}.</p></div>`;
+  }
+  return `<div class="tutor-row">${toggle}${body}</div>`;
+}
+
+// Tier-Paten
+let pateOpen = null, pateName = '';
+const PATE_RE = /^[\p{L}\p{N} '-]{2,16}$/u;
+let curAnimals = [];
+const normUser = (s) => String(s ?? '').replace(/^@/, '').trim().toLowerCase();
+const animalImg = (key) => live.artUrl('x', 0).replace(/\/api\/art\/.*$/, '/api/animalimg/' + encodeURIComponent(key));   // gleiche Basisadresse wie die Porträts
+
+function animalPic(a) {
+  return a.img
+    ? `<img class="an-img" src="${esc(animalImg(a.img))}" alt="${esc(a.kind)}" width="52" height="52" loading="lazy" data-animg>`
+    : '<span class="an-ph" aria-hidden="true">🐾</span>';
+}
+
+function canSponsor(a) {
+  if (a.sponsor || !a.id || !live.isLinked() || !live.isAllowed('pate')) return false;
+  const me = normUser(live.getMe()?.user);
+  return !!me && !curAnimals.some((x) => normUser(x.sponsor) === me);
+}
+
+function sponsorHtml(a) {
+  if (a.sponsor) {
+    const mine = normUser(a.sponsor) === normUser(live.getMe()?.user) && live.isLinked();
+    return `<div class="an-sponsor${mine ? ' mine' : ''}"><span class="ach" title="Pate dieses Tiers">Pate: @${esc(normUser(a.sponsor))}${mine ? ' (du)' : ''}</span></div>`;
+  }
+  if (!canSponsor(a)) return '';
+  const price = Number(gameInfo?.sponsorPrice) || 0;
+  const open = pateOpen === a.id;
+  const btn = `<button type="button" class="act-btn pate-open${open ? ' on' : ''}" data-pate-open="${esc(a.id)}" aria-expanded="${open}">Pate werden${price ? ` · ${fmt(price)} 🪙` : ''}</button>`;
+  if (!open) return `<div class="an-pate">${btn}</div>`;
+  const nm = pateName.trim();
+  const ok = !nm || PATE_RE.test(nm);
+  const args = `#${a.id}${nm && ok ? ' ' + nm : ''}`;
+  return `<div class="an-pate">${btn}
+    <div class="pate-form">
+      <input class="search pate-in" type="text" maxlength="16" placeholder="Name für das Tier (optional)" value="${esc(pateName)}" data-pate-name aria-label="Name für das Tier">
+      <p class="small pate-hint" data-pate-hint${ok ? ' hidden' : ''}>2–16 Zeichen: Buchstaben, Ziffern, Leerzeichen, - und '</p>
+      ${actBtn('pate', args, `Patenschaft${price ? ` · ${fmt(price)} 🪙` : ''}`, { confirm: true, armedLabel: price ? `${fmt(price)} 🪙 – sicher?` : 'Sicher?', cls: 'pate-go', title: 'Pate dieses Tiers werden' }).replace('<button ', ok ? '<button ' : '<button disabled ')}
+    </div></div>`;
+}
+
+/** Klicks im Tier-Bereich (Pate); true = behandelt. */
+function pateClick(e, redraw) {
+  const o = e.target.closest('[data-pate-open]');
+  if (!o) return false;
+  const id = o.dataset.pateOpen;
+  pateOpen = pateOpen === id ? null : id;
+  pateName = '';
+  redraw();
+  return true;
+}
+
+/** Namensfeld: Argumente des Knopfes direkt nachführen (kein Neuzeichnen, Fokus bleibt). */
+function pateInput(e) {
+  const inp = e.target.closest('[data-pate-name]');
+  if (!inp) return;
+  pateName = inp.value.replace(/\s+/g, ' ').trimStart();
+  const ok = !pateName.trim() || PATE_RE.test(pateName.trim());
+  const form = inp.closest('.pate-form');
+  const go = form?.querySelector('[data-act="pate"]');
+  if (go) { go.dataset.args = `#${pateOpen}${pateName.trim() && ok ? ' ' + pateName.trim() : ''}`; go.disabled = !ok; }
+  const hint = form?.querySelector('[data-pate-hint]');
+  if (hint) hint.hidden = ok;
 }
 
 // ---------- Quirk-Angebote: eigene leichte Abfrage von /api/game, solange „Ziele“ offen ist ----------
@@ -1337,7 +1540,7 @@ function socialActsHtml(p) {
 }
 
 function characterHtml(p) {
-  return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${duelHtml(p)}${socialActsHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${tabPanelHtml(p)}</div></div>`;
+  return `<div class="ch" data-key="${esc(p.id || p.user)}">${heroHtml(p)}${duelHtml(p)}${socialActsHtml(p)}${tutorHtml(p)}${subsHtml(p)}<div class="ch-panel card" role="tabpanel">${tabPanelHtml(p)}</div></div>`;
 }
 
 /** Hintergrundabfragen, die nur zum gerade offenen Unterreiter gehören. */
@@ -1676,6 +1879,7 @@ function afterPaint(host) {
   startStylePoll(host);
   startGoalsPoll(host);
   ensureBadgeLog(host);
+  startInterPoll(host);
   refreshBadges(host);
   if (host._pawn && activeArea(host._pawn) === 'isekai') ensureTrees(host);
   if (host._pawn && activeArea(host._pawn) === 'ideo') ensureIdeos(host);
@@ -1693,6 +1897,29 @@ function repaint(host) {
   if (!p || !panel) return;
   morph(panel, tabPanelHtml(p));
   afterPaint(host);
+}
+
+function fullRepaint(host) {
+  if (!host._pawn) return;
+  morph(host, characterHtml(host._pawn));
+  afterPaint(host);
+}
+
+/** GameInfo (Lob-Zähler, Nachhilfe, Preise) für die Charakterseite: alle 15 s, nur solange sie offen ist. */
+function startInterPoll(host) {
+  if (host._interPoll) return;
+  host._interPoll = true;
+  let last = interKey(gameInfo);
+  live.poll({
+    path: '/api/game', every: 15000,
+    alive: () => { const ok = host.isConnected; if (!ok) host._interPoll = false; return ok; },
+    onResult: (r) => {
+      if (r.status !== 200 || !r.data) return;
+      noteGame(r.data);
+      const k = interKey(r.data);
+      if (k !== last) { last = k; fullRepaint(host); }
+    },
+  });
 }
 
 function mountCharacter(host, p) {
@@ -1719,7 +1946,9 @@ function mountCharacter(host, p) {
     const nd = e.target.closest('[data-node]');
     const az = e.target.closest('[data-art-zoom]');
     if (az) { artBig = !artBig; if (host._pawn) morph(host, characterHtml(host._pawn)); afterPaint(host); return; }
-    if (pawn && ab) { runAct(host, ab); return; }
+    if (pawn && e.target.closest('[data-tutor-toggle]')) { tutorOpen = !tutorOpen; fullRepaint(host); return; }
+    // Knöpfe außerhalb des Panels (Kopf, Herausfordern, Nachhilfe …) brauchen ein Neuzeichnen des Ganzen für „Sicher?“/„…“
+    if (pawn && ab) { runAct(host, ab, ab.closest('.ch-panel') ? undefined : () => fullRepaint(host)); return; }
     const pv = e.target.closest('[data-psyv]');
     if (pawn && pv) { psyView = pv.dataset.psyv; lsSet(PSYV_KEY, psyView); openTrait = null; repaint(host); return; }
     if (pawn && e.target.closest('[data-psyallp]')) { psyAllP = !psyAllP; repaint(host); return; }
@@ -1884,20 +2113,37 @@ export function kolonieView() {
 const openKinds = new Set();
 const genderSym = (g) => (/^(w|f)/i.test(g || '') ? '♀' : /^m/i.test(g || '') ? '♂' : '');
 
+function animalChips(a) {
+  const conds = (Array.isArray(a.conditions) ? a.conditions : []).map((c) => (typeof c === 'string' ? { label: c } : c)).filter((c) => c && c.label);
+  conds.sort((x, y) => (y.bleeding ? 1 : 0) - (x.bleeding ? 1 : 0) || (y.bad ? 1 : 0) - (x.bad ? 1 : 0));
+  const shown = conds.slice(0, 4);
+  let out = shown.map((c) => `<span class="an-chip${c.bleeding ? ' bleed' : c.bad ? ' bad' : ''}" title="${esc(c.part ? `${c.label} · ${c.part}` : c.label)}">${c.bleeding ? '🩸 ' : ''}${esc(c.label)}</span>`).join('');
+  if (conds.length > shown.length) out += `<span class="an-chip">+${conds.length - shown.length}</span>`;
+  if (a.bleeding && !conds.some((c) => c.bleeding)) out = '<span class="an-chip bleed">🩸 blutet</span>' + out;
+  return out ? `<div class="an-chips">${out}</div>` : '';
+}
+
 function animalRow(a) {
   const name = a.name ? esc(a.name) : esc(a.kind);
   const age = a.age != null ? `${fmt(Math.round(Number(a.age) * 10) / 10)} J.` : '';
   const meta = [genderSym(a.gender), age].filter(Boolean).join(' ');
-  return `<div class="an${a.bond ? ' bonded' : ''}">
-    <div class="an-top"><b class="an-name">${name}</b>${a.name ? `<span class="small muted">${esc(a.kind)}</span>` : ''}<span class="small muted an-meta">${esc(meta)}</span></div>
-    ${bar(a.healthPct)}
-    ${a.bond ? `<div class="an-bond"><span class="heart" aria-hidden="true">♥</span> gebunden an <b>${esc(a.bond)}</b></div>` : ''}
-    ${a.master ? `<div class="small muted">Meister: ${esc(a.master)}</div>` : ''}
+  const pain = Number(a.pain) > 0 ? `<div class="an-pain" title="Schmerz ${Math.round(clamp(a.pain))} %"><span class="small muted">Schmerz</span>${bar(clamp(a.pain), 'low')}</div>` : '';
+  return `<div class="an an-row${a.bond ? ' bonded' : ''}">
+    <div class="an-pic">${animalPic(a)}</div>
+    <div class="an-body">
+      <div class="an-top"><b class="an-name">${name}</b>${a.name ? `<span class="small muted">${esc(a.kind)}</span>` : ''}<span class="small muted an-meta">${esc(meta)}</span></div>
+      ${bar(a.healthPct)}
+      ${pain}${animalChips(a)}
+      ${a.bond ? `<div class="an-bond"><span class="heart" aria-hidden="true">♥</span> gebunden an <b>${esc(a.bond)}</b></div>` : ''}
+      ${a.master ? `<div class="small muted">Meister: ${esc(a.master)}</div>` : ''}
+      ${sponsorHtml(a)}
+    </div>
   </div>`;
 }
 
 function animalsHtml(list) {
   if (!Array.isArray(list)) return '';
+  curAnimals = list;
   if (!list.length) return '<p class="muted small" style="margin:0">Keine Tiere in der Kolonie.</p>';
   const bonded = list.filter((a) => a.bond);
   const rest = list.filter((a) => !a.bond);
@@ -1909,9 +2155,13 @@ function animalsHtml(list) {
     if (arr.length === 1) { out += animalRow(arr[0]); continue; }
     const open = openKinds.has(kind);
     const worst = Math.min(...arr.map((a) => Number(a.healthPct) || 0));
-    out += `<button type="button" class="an an-group" data-kind="${esc(kind)}" aria-expanded="${open}">
-      <div class="an-top"><b class="an-name">${esc(kind)} ×${arr.length}</b><span class="small muted an-meta">${open ? '▾' : '▸'}</span></div>
-      ${bar(worst)}<div class="small muted">schwächstes Tier: ${Math.round(worst)} %</div></button>`;
+    const hurt = arr.filter((a) => Number(a.pain) > 0 || (Array.isArray(a.conditions) && a.conditions.some((c) => c?.bad || c?.bleeding))).length;
+    out += `<button type="button" class="an an-group an-row" data-kind="${esc(kind)}" aria-expanded="${open}">
+      <div class="an-pic">${animalPic(arr[0])}</div>
+      <div class="an-body">
+        <div class="an-top"><b class="an-name">${esc(kind)} ×${arr.length}</b><span class="small muted an-meta">${open ? '▾' : '▸'}</span></div>
+        ${bar(worst)}<div class="small muted">schwächstes Tier: ${Math.round(worst)} %${hurt ? ` · ${hurt} verletzt/krank` : ''}</div>
+      </div></button>`;
     if (open) out += `<div class="an-sub">${arr.map(animalRow).join('')}</div>`;
   }
   return out;
@@ -1926,13 +2176,17 @@ const RANK_CATS = [
 
 function ranksHtml(list) {
   if (!list.length) return '';
-  const cards = RANK_CATS.map((c) => {
-    const rows = list.filter((p) => Number(p[c.key]) > 0).sort((a, b) => Number(b[c.key]) - Number(a[c.key])).slice(0, 5);
+  const cats = [...RANK_CATS];
+  const pr = gameInfo?.praise;
+  if (pr && typeof pr === 'object') cats.push({ key: '__praise', title: 'Beliebteste', val: (v) => `👏 ${fmt(v)}`, get: (p) => Number(pr[p.id || p.user]) || 0 });
+  const cards = cats.map((c) => {
+    const get = c.get || ((p) => Number(p[c.key]));
+    const rows = list.filter((p) => get(p) > 0).sort((a, b) => get(b) - get(a)).slice(0, 5);
     const body = rows.length
       ? `<ol class="rank-list">${rows.map((p, i) => `<li><a class="rank-row" href="#/kolonie/${encodeURIComponent(p.id || p.user)}">
           <span class="rank-pos">${i + 1}.</span>
           <span class="rank-name">${esc(p.name)}${p.user ? ` <span class="small muted">@${esc(p.displayName || p.user)}</span>` : ''}</span>
-          <span class="rank-val">${esc(c.val(p[c.key]))}</span></a></li>`).join('')}</ol>`
+          <span class="rank-val">${esc(c.val(get(p)))}</span></a></li>`).join('')}</ol>`
       : '<p class="muted small" style="margin:0">Noch keine Werte.</p>';
     return `<section class="card ch-sec"><h4>${esc(c.title)}</h4>${body}</section>`;
   }).join('');
@@ -1953,6 +2207,7 @@ let kolSub = loadSub('ys-kol-sub', 'pawns', KOL_SUBS.map((x) => x[0]));
 function colonyList() {
   const html = `<div class="live-page">
     <div class="kol-head"><h2 class="section-title" style="margin:0">Die Kolonie</h2><span class="small muted" id="kol-count"></span></div>
+    <div id="kol-duel"></div>
     <div id="kol-subs">${subTabsHtml(KOL_SUBS, kolSub, 'kolsub')}</div>
     <div id="kol-grid" class="kol-grid" data-sub="pawns"><div class="empty" style="grid-column:1/-1">Lade …</div></div>
     <div id="kol-ranks" data-sub="ranks"></div>
@@ -1972,7 +2227,8 @@ function colonyList() {
       if (!b || b.dataset.kolsub === kolSub) return;
       kolSub = b.dataset.kolsub; saveSub('ys-kol-sub', kolSub); showSub();
     });
-    let last = '';
+    let last = '', plist = [];
+    const drawRanks = () => morph(ranks, ranksHtml(plist));
     const draw = (data) => {
       const list = Array.isArray(data?.pawns) ? data.pawns : [];
       const me = live.getMe()?.user;
@@ -1982,30 +2238,54 @@ function colonyList() {
       count.textContent = list.length ? `${fmt(list.length)} Kolonist${list.length === 1 ? '' : 'en'}` : '';
       morph(grid, list.length ? list.map((p) => colonyCard(p, me)).join('')
         : `<div class="empty" style="grid-column:1/-1">Noch keine Kolonisten zu sehen. Mit <code>${esc(live.prefix())}join</code> im Chat kannst du die Erste oder der Erste sein.</div>`);
-      morph(ranks, ranksHtml(list));
+      plist = list;
+      drawRanks();
     };
     live.poll({
       path: '/api/colony', every: 2000, alive: () => grid.isConnected,
       onResult: (r) => { if (r.status === 200 && !r.unchanged) draw(r.data); },
     });
-    whileMounted(grid, [['me', () => { last = ''; }]]);
+    whileMounted(grid, [['me', () => { last = ''; drawDuel(); drawAnimals(true); }], ['change', () => { drawDuel(); drawAnimals(true); }]]);
 
     // Tiere: eigene 5-s-Abfrage von /api/game, solange diese Ansicht sichtbar ist
     const sec = root.querySelector('#tiere-sec'), box = root.querySelector('#tiere'), tcount = root.querySelector('#tiere-count');
     let animals = null, alast = '';
     const drawAnimals = (force) => {
       if (!Array.isArray(animals)) return;
-      const key = JSON.stringify(animals);
+      const key = JSON.stringify([animals, pateOpen]);
       if (!force && key === alast) return;
       alast = key;
       tcount.textContent = animals.length ? `${fmt(animals.length)} Tier${animals.length === 1 ? '' : 'e'}` : '';
       morph(box, animalsHtml(animals));
     };
+    // Duell-Karte oben (Wetten), Daten aus derselben /api/game-Abfrage
+    const duelBox = root.querySelector('#kol-duel');
+    let dlast = '';
+    const drawDuel = (force) => {
+      const html = duelCardHtml(gameInfo);
+      if (!force && html === dlast) return;
+      dlast = html;
+      morph(duelBox, html);
+    };
     live.poll({
       path: '/api/game', every: 5000, alive: () => grid.isConnected,
-      onResult: (r) => { if (r.status === 200 && r.data && !r.unchanged) { animals = r.data.animalList; drawAnimals(false); } },
+      onResult: (r) => {
+        if (r.status === 200 && r.data && !r.unchanged) {
+          noteGame(r.data); noteDuel(r.data);
+          animals = r.data.animalList; drawAnimals(false); drawDuel(); drawRanks();
+        }
+      },
     });
+    duelBox.addEventListener('click', (e) => {
+      if (betPick(e, () => drawDuel(true))) return;
+      const ab = e.target.closest('[data-act]');
+      if (ab) runAct(duelBox, ab, () => drawDuel(true));
+    });
+    box.addEventListener('input', pateInput);
     box.addEventListener('click', (e) => {
+      const ab = e.target.closest('[data-act]');
+      if (ab) { runAct(box, ab, () => drawAnimals(true)); return; }
+      if (pateClick(e, () => drawAnimals(true))) return;
       const g = e.target.closest('[data-kind]');
       if (!g) return;
       const k = g.dataset.kind;
@@ -2207,7 +2487,7 @@ function spielHtml(g, res) {
   else if (spielSub === 'stock') body = `<section class="card ch-sec"><h4>Vorräte</h4>${stockHtml(g.stock)}</section>`;
   else if (spielSub === 'factions') body = `<div class="grid cols-2"><section class="card ch-sec"><h4>Fraktionen</h4>${factionsHtml(g.factions)}</section>${visitorsHtml(g.visitors)}</div>`;
   else if (spielSub === 'history') body = `<section class="card ch-sec"><h4>Koloniewert-Verlauf</h4>${wealthHtml(g.wealthHistory)}</section>`;
-  else body = `<div class="gstats">${stats}</div>
+  else body = `${duelCardHtml(g)}<div class="gstats">${stats}</div>
     <div class="grid cols-2" style="margin-top:12px">
       <section class="card ch-sec"><h4>Gerade los</h4>${conds}</section>
       <section class="card ch-sec"><h4>Was zuletzt passiert ist</h4>${evs}</section>
@@ -2234,6 +2514,7 @@ export function spielView() {
       onResult: (r) => {
         if (r.unchanged || r.status !== 200 || !r.data) return;
         game = r.data;
+        noteGame(game); noteDuel(game);
         draw(false);
       },
     });
@@ -2250,8 +2531,9 @@ export function spielView() {
     });
     // Knopf „Anschieben“: Wartezeit/Verknüpfung kommen mit /api/me
     let boostKey = '';
-    whileMounted(host, [['me', () => { const k = `${live.isLinked()}|${live.getMe()?.researchWaitHours}`; if (k !== boostKey) { boostKey = k; draw(true); } }], ['change', () => draw(true)]]);
+    whileMounted(host, [['me', () => { const k = `${live.isLinked()}|${live.getMe()?.researchWaitHours}|${live.getMe()?.pawn?.id}`; if (k !== boostKey) { boostKey = k; draw(true); } }], ['change', () => draw(true)]]);
     host.addEventListener('click', (e) => {
+      if (betPick(e, () => draw(true))) return;
       const ab = e.target.closest('[data-act]');
       if (ab) { runAct(host, ab, () => draw(true)); return; }
       const sb = e.target.closest('[data-spsub]');
