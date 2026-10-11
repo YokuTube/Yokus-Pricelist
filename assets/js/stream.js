@@ -112,10 +112,17 @@ function initChatResizer() {
     const b = wrap.getBoundingClientRect();
     return document.body.classList.contains('stream-chat-left') ? x - b.left - 8 : b.right - x - 8;
   };
+  // Gesamtbreite der Spalte bleibt gleich (die Seite daneben ändert sich nicht): Chat breiter = Video schmaler
+  const VIDEO_MIN_W = SIDE_MIN_W;   // gleiche Untergrenze wie applyLayout (clampW), sonst springt die Breite zurück
+  const curSide = () => parseInt(getComputedStyle(document.documentElement).getPropertyValue('--side-w'), 10) || SIDE_DEFAULT_W;
+  let total = 0;
   const setCW = (w, save) => {
-    const v = clampCW(w);
+    if (!total) total = curSide() + chatW();
+    const v = Math.min(total - VIDEO_MIN_W, clampCW(w));
+    const side = total - v;
     document.documentElement.style.setProperty('--chat-w', `${v}px`);
-    if (save) { const p = getStreamPrefs(); p.cw = v; setStreamPrefs(p); }
+    document.documentElement.style.setProperty('--side-w', `${side}px`);
+    if (save) { const p = getStreamPrefs(); p.cw = v; p.w = side; setStreamPrefs(p); total = 0; }
   };
   rz.addEventListener('pointerdown', (e) => {
     dragging = true; try { rz.setPointerCapture(e.pointerId); } catch { /* egal */ }
