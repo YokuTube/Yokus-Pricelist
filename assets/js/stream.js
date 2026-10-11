@@ -22,7 +22,8 @@ export function getStreamPrefs() {
     pos: POS.includes(p?.pos) ? p.pos : null,                 // null = Zuschauer hat nie gewählt → Automatik
     w: Number.isFinite(p?.w) ? p.w : null,
     h: Number.isFinite(p?.h) ? p.h : null,                     // Höhe der Leiste in Lage „Unten“
-    chatSide: ['below', 'left', 'right'].includes(p?.chatSide) ? p.chatSide : 'below',
+    chatSide: ['below', 'above', 'left', 'right'].includes(p?.chatSide) ? p.chatSide : 'below',
+    vh: Number.isFinite(p?.vh) ? p.vh : null,                   // Videohöhe, wenn Chat über/unter dem Video steht (ziehbar)
     cw: Number.isFinite(p?.cw) ? p.cw : null,                   // Chat-Breite, wenn er neben dem Video steht   // Seitenlage: Chat unter/neben dem Video
   };
 }
@@ -35,6 +36,7 @@ const botDefaultVh = () => (window.innerWidth < 700 ? 0.6 : 0.38);   // Handy: V
 const clampH = (h) => Math.min(Math.floor(window.innerHeight * 0.75), Math.max(BOT_MIN_H, Math.round(h)));
 const SIDE_MIN_VIEW = 1200;   // darunter immer Oben
 const SIDE_MIN_W = 320, SIDE_DEFAULT_W = 440;
+const VID_MIN_H = 90;
 const CHAT_W = 340, CHAT_MIN_W = 260;   // Chat-Spalte, wenn der Chat neben dem Video steht (volle Höhe, ziehbar)
 const clampCW = (w) => Math.min(Math.max(CHAT_MIN_W, Math.floor(window.innerWidth * 0.4)), Math.max(CHAT_MIN_W, Math.round(w)));
 const chatW = () => parseInt(getComputedStyle(document.documentElement).getPropertyValue('--chat-w'), 10) || CHAT_W;
@@ -67,7 +69,14 @@ function applyLayout() {
   b.classList.toggle('stream-side-right', side && pos === 'right');
   wrap.classList.toggle('side-nochat', side && !p.chat);
   // Chat neben dem Video (volle Höhe): Video kann wachsen, ohne dass der Chat schrumpft
-  const beside = side && p.chat && p.player && p.chatSide !== 'below';
+  const beside = side && p.chat && p.player && (p.chatSide === 'left' || p.chatSide === 'right');
+  // Übereinander (Seitenlage mit Chat oben/unten, Handy oben/unten): Grenze Video|Chat ziehbar → Video kleiner, Chat größer
+  const phoneStack = window.innerWidth < 700 && (pos === 'top' || pos === 'bottom') && shown;
+  const stacked = p.chat && p.player && ((side && !beside) || phoneStack);
+  b.classList.toggle('stream-stacked', stacked);
+  b.classList.toggle('stream-chat-above', stacked && p.chatSide === 'above');
+  if (p.vh) document.documentElement.style.setProperty('--vid-h', `${Math.max(VID_MIN_H, p.vh)}px`);
+  else document.documentElement.style.removeProperty('--vid-h');
   b.classList.toggle('stream-beside', beside);
   b.classList.toggle('stream-chat-left', beside && p.chatSide === 'left');
   b.classList.toggle('stream-chat-right', beside && p.chatSide === 'right');
@@ -99,6 +108,43 @@ function applyLayout() {
   }
   // Reiterleiste neu messen (--tabs-h), falls sich die Breite des Inhalts geändert hat
   window.dispatchEvent(new Event('ys-layout'));
+}
+
+// Waagerechte Grenze zwischen Video und Chat (übereinander): Videohöhe ziehen; der Chat füllt den Rest
+function initSplit() {
+  const sp = $('stream-split');
+  if (!sp || sp.dataset.bound) return;
+  sp.dataset.bound = '1';
+  let dragging = false;
+  const player = () => document.querySelector('.stream-player');
+  const maxH = () => Math.round((player()?.parentElement?.getBoundingClientRect().width || 400) * 9 / 16);
+  const setVH = (h, save) => {
+    const v = Math.min(maxH(), Math.max(VID_MIN_H, Math.round(h)));
+    document.documentElement.style.setProperty('--vid-h', `${v}px`);
+    if (save) { const p = getStreamPrefs(); p.vh = v >= maxH() - 2 ? null : v; setStreamPrefs(p); }
+  };
+  const fromY = (y) => {
+    const r = player().getBoundingClientRect();
+    return document.body.classList.contains('stream-chat-above') ? r.bottom - y : y - r.top;
+  };
+  sp.addEventListener('pointerdown', (e) => {
+    dragging = true; try { sp.setPointerCapture(e.pointerId); } catch { /* egal */ }
+    document.body.classList.add('stream-dragging', 'stream-dragging-v'); e.preventDefault();
+  });
+  sp.addEventListener('pointermove', (e) => { if (dragging) setVH(fromY(e.clientY), false); });
+  const end = (e) => {
+    if (!dragging) return;
+    dragging = false; document.body.classList.remove('stream-dragging', 'stream-dragging-v');
+    setVH(fromY(e.clientY), true);
+  };
+  sp.addEventListener('pointerup', end);
+  sp.addEventListener('pointercancel', () => { dragging = false; document.body.classList.remove('stream-dragging', 'stream-dragging-v'); });
+  sp.addEventListener('dblclick', () => { const p = getStreamPrefs(); p.vh = null; setStreamPrefs(p); applyLayout(); });
+  sp.addEventListener('keydown', (e) => {
+    const cur = player()?.getBoundingClientRect().height || 200;
+    const up = document.body.classList.contains('stream-chat-above') ? 'ArrowDown' : 'ArrowUp';
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { setVH(cur + (e.key === up ? -20 : 20), true); e.preventDefault(); }
+  });
 }
 
 // Zweiter Griff auf der Grenze Video|Chat: nur die Chat-Breite ändern
@@ -227,6 +273,7 @@ export function syncStreamDock() {
   syncInner();
   initResizer();
   initChatResizer();
+  initSplit();
   applyLayout();
 }
 
@@ -306,6 +353,8 @@ function build(d) {
         <button type="button" class="stream-mini-btn" data-stream-stop title="Stream beenden" aria-label="Stream beenden">✕</button>
       </div>
     </div>
+    <div class="stream-split" id="stream-split" role="separator" aria-orientation="horizontal" tabindex="0"
+      aria-label="Grenze zwischen Stream und Chat verschieben" title="Ziehen: Stream kleiner/größer, Chat größer/kleiner (Doppelklick: zurücksetzen)"></div>
     <div class="stream-chat">
       <div class="stream-chat-frame"></div>
     </div>`;

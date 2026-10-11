@@ -231,3 +231,17 @@ body.stream-bottom .stream-resizer { height: 12px; top: 2px; }
 }
 /* Hinweise (Toasts) nie über Stream/Chat: bei „Unten“ oberhalb der Leiste */
 body.stream-bottom .toast { bottom: calc(var(--bot-h) + 16px); }
+
+/* ---------- Video und Chat übereinander: waagerechte Grenze ziehbar (Video kleiner → Chat größer) ----------
+   Der Griff ist ein eigenes Element im Fluss zwischen Video und Chat – liegt nie über einem iframe. */
+.stream-split { display: none; }
+body.stream-stacked .stream-split {
+  display: block; flex: none; height: 14px; margin: -4px 0; cursor: row-resize; touch-action: none; position: relative;
+}
+body.stream-stacked .stream-split::after { content: ""; position: absolute; left: 50%; top: 5px; width: 48px; height: 4px; margin-left: -24px; border-radius: 2px; background: var(--border); }
+body.stream-stacked .stream-split:hover::after, body.stream-stacked .stream-split:focus-visible::after { background: var(--accent); }
+body.stream-stacked .stream-dock, body.stream-stacked .stream-dock.has-player.has-chat { display: flex; flex-direction: column; }
+body.stream-stacked .stream-player { width: 100%; max-width: calc(var(--vid-h, 9999px) * 16 / 9); margin-left: auto; margin-right: auto; height: auto; aspect-ratio: 16 / 9; flex: none; }
+body.stream-chat-above .stream-dock .stream-chat { order: -2; }
+body.stream-chat-above .stream-dock .stream-split { order: -1; }
+body.stream-dragging-v { cursor: row-resize; }
