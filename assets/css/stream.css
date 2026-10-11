@@ -199,3 +199,35 @@ body.stream-bottom.stream-dragging .stream-dock iframe { pointer-events: none; }
 }
 .stream-chat-resizer[hidden] { display: none !important; }
 @media (pointer: coarse) { body.stream-beside .stream-chat-resizer { width: 24px; } }
+
+/* Seitenlage: <body> scrollt selbst und lässt die Spalte per Rand frei – die Bildlaufleiste des Stores sitzt damit
+   direkt neben dem Store statt außen neben Stream/Chat (Nutzerwunsch). Klasse setzt stream.js an <html>. */
+@media (min-width: 1200px) {
+  html.stream-side-scroll { overflow: hidden; height: 100%; }
+  html.stream-side-scroll body { height: 100vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
+  html.stream-side-scroll body.stream-side-left { padding-left: 0; margin-left: var(--side-w); }
+  html.stream-side-scroll body.stream-side-right { padding-right: 0; margin-right: var(--side-w); }
+  html.stream-side-scroll body.stream-side-left.stream-beside { padding-left: 0; margin-left: calc(var(--side-w) + var(--chat-w)); }
+  html.stream-side-scroll body.stream-side-right.stream-beside { padding-right: 0; margin-right: calc(var(--side-w) + var(--chat-w)); }
+}
+
+/* ---------- Twitch sperrt den Chat für Kanaleigentümer/Mods, sobald IRGENDETWAS das Chat-iframe überdeckt ----------
+   Daher liegen beide Ziehgriffe in eigenen Lücken (Polsterung bzw. Abstand), nie über Video oder Chat. */
+@media (min-width: 1200px) {
+  body.stream-side-left { --wl: 8px; --wr: 16px; }
+  body.stream-side-right { --wl: 16px; --wr: 8px; }
+  body.stream-side .stream-dock-wrap { padding: 8px var(--wr) 8px var(--wl); }
+  body.stream-side .stream-resizer { width: 12px; }
+  body.stream-side-left .stream-resizer { right: 2px; }
+  body.stream-side-right .stream-resizer { left: 2px; }
+  body.stream-beside .stream-dock, body.stream-beside .stream-dock.has-player.has-chat { gap: 16px; }
+  body.stream-chat-right .stream-chat-resizer { right: calc(var(--wr) + var(--chat-w) - 8px + 2px); left: auto; }
+  body.stream-chat-left .stream-chat-resizer { left: calc(var(--wl) + var(--chat-w) - 8px + 2px); right: auto; }
+}
+body.stream-bottom .stream-dock-wrap { padding-top: 16px; }
+body.stream-bottom .stream-resizer { height: 12px; top: 2px; }
+@media (pointer: coarse) {
+  body.stream-side .stream-resizer, body.stream-beside .stream-chat-resizer { width: 12px; }
+}
+/* Hinweise (Toasts) nie über Stream/Chat: bei „Unten“ oberhalb der Leiste */
+body.stream-bottom .toast { bottom: calc(var(--bot-h) + 16px); }

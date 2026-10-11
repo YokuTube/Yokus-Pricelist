@@ -2,6 +2,10 @@
 import { esc, rich, plain, cap, slug, fmt, debounce, cmdBtn, pickBtn, karmaBadge, karmaInfo, days, KARMA, makeMatcher } from './util.js';
 import { EVENT_TYPES } from './data.js';
 import { icon } from './icons.js';
+import * as vb from './visual-b.js';   // Paket B: Symbole statt Text
+import * as vbl from './live-visual-b.js';   // Spielsymbole (nur mit laufender Live-Mod)
+import * as live from './live.js';
+import { introCardsHtml, itemTeaserHtml, fillTeasers } from './live-visual-a.js';
 
 const PAGE = 48;
 const norm = (s) => plain(s).toLowerCase();
@@ -123,6 +127,11 @@ export function startView(data) {
     items: data.items.length, events: data.events.length, weather: data.weather.length,
     traits: data.traits.length, races: data.races.length, commands: data.commands.list.length,
   };
+  const sold = data.items.filter((i) => i.enabled);
+  const pickDefs = ['Steel', 'MedicineIndustrial', 'Silver', 'WoodLog', 'ComponentIndustrial', 'Beer'];
+  const teaserItems = pickDefs.map((d) => sold.find((i) => i.defName === d)).filter(Boolean);
+  sold.forEach((i) => { if (teaserItems.length < 6 && !teaserItems.includes(i)) teaserItems.push(i); });
+  const teaser = sold.length ? `<h2 style="margin:22px 0 10px;font-size:1.15rem">Im Angebot</h2>${itemTeaserHtml(teaserItems, sold.length)}` : '';
   const html = `
     <section class="card uni">
       <label for="u-search" class="uni-label">Was willst du tun? Einfach suchen:</label>
@@ -133,15 +142,11 @@ export function startView(data) {
     <p id="welcome-show" class="small" style="margin:10px 0 0" hidden><button type="button" class="linklike" id="welcome-show-btn">Einführung wieder anzeigen</button></p>
     <section class="card hero" id="welcome" style="margin-top:14px">
       <div class="ev-top"><h2>Willkommen im Yokus Store</h2><button type="button" class="btn small-btn" id="welcome-hide" title="Blendet die Einführung aus. Du kannst sie jederzeit wieder einblenden.">Ausblenden</button></div>
-      <p class="intro" style="margin:0">Hier siehst du, was du im Stream mit deinen Coins machen kannst: Items kaufen, Events und Wetter auslösen und deinen eigenen Kolonisten steuern. Du musst nichts auswendig lernen – tippe einfach auf einen Befehl, er wird kopiert, und du fügst ihn im Twitch-Chat ein.</p>
-      <ol class="steps">
-        <li><div><strong>Tritt der Kolonie bei.</strong> Schreibe als Erstes <code>!join</code> in den Chat. Damit stellst du dich in die Warteschlange für einen eigenen Kolonisten, den nur du steuerst. Mit <code>!queuestatus</code> siehst du deinen Platz. Wird dir im Chat ein Pawn angeboten, bestätigst du mit <code>!acceptpawn</code>.</div></li>
-        <li><div><strong>Sammle Coins.</strong> Du bekommst sie, indem du im Chat dabei bist. Mit <code>!bal</code> siehst du, wie viele du hast. Was Pawns der verschiedenen <a href="#/rassen">Rassen</a> kosten, steht unter Rassen.</div></li>
-        <li><div><strong>Stöbere.</strong> Unter <a href="#/items">Items</a>, <a href="#/events">Events</a>, <a href="#/wetter">Wetter</a> und <a href="#/traits">Traits</a> steht alles mit Preis. Unter <a href="#/befehle">Befehle</a> ist jeder Befehl erklärt.</div></li>
-        <li><div><strong>Kopieren und abschicken.</strong> Tippe auf einen Befehl-Knopf, füge ihn im Chat ein und sende ihn ab. Fertig.</div></li>
-      </ol>
+      <p class="intro" style="margin:0">Hier siehst du, was du im Stream mit deinen Coins machen kannst: Items kaufen, Events und Wetter auslösen und deinen eigenen Kolonisten steuern. Nichts auswendig lernen – vier Schritte genügen:</p>
+      ${introCardsHtml()}
     </section>
 
+    ${teaser}
     <h2 style="margin:22px 0 10px;font-size:1.15rem">Die wichtigsten Befehle</h2>
     <div class="cmd-row">
       ${['!join', '!bal', '!mypawn', '!mypawn needs', '!lookup item steel', '!event list', '!commands'].map((c) => cmdBtn(c)).join('')}
@@ -163,6 +168,7 @@ export function startView(data) {
   `;
   function bind(root) {
     bindQuantity(root); // Menge im Schaufenster
+    fillTeasers();      // Spielsymbole im Item-Streifen, wenn die Live-Mod erreichbar ist
     // Einführung ausblendbar (wird im Browser gemerkt)
     const welcome = root.querySelector('#welcome'), showLink = root.querySelector('#welcome-show');
     const setWelcome = (visible, remember) => {
@@ -245,7 +251,9 @@ function cmdCard(c, data) {
   if (c.perm && c.perm !== 'everyone') tags.push(`<span class="chip accent">nur ${esc(c.permLabel)}</span>`);
   if (c.requires) tags.push(`<span class="chip">braucht ${esc(c.requires)}</span>`);
   if (SRC[c.src] && c.src !== 'rics') tags.push(`<span class="chip">${esc(SRC[c.src])}</span>`);
-  if (c.cooldown >= 30) tags.push(`<span class="chip" title="So lange musst du nach der Nutzung warten">Pause ${c.cooldown} s</span>`);
+  if (c.cooldown >= 30) tags.push(`<span class="chip">${vb.clock(c.cooldown >= 120 ? `${Math.round(c.cooldown / 60)} min` : `${c.cooldown} s`, 'So lange musst du nach der Nutzung warten')}</span>`);
+  if (c.cost > 0) tags.push(`<span class="chip">${vb.coin(c.cost)}</span>`);
+  const grp = (data.commands.groups || []).find((g) => g.id === c.group);
 
   const usage = (c.usage || []).map((u) => `
     <div class="usage-item">${cmdBtn(u.syntax.startsWith('!') || /^\d/.test(u.syntax) ? u.syntax : '!' + u.syntax)}${u.note ? `<div class="note">${esc(u.note)}</div>` : ''}</div>`).join('');
@@ -257,7 +265,7 @@ function cmdCard(c, data) {
   return `
     <details class="card cmd-card ${dim}" data-cmd="${esc(c.cmd)}">
       <summary>
-        <div class="cmd-head"><span class="cmd-name">!${esc(shown)}</span>${aliasTxt}</div>
+        <div class="cmd-head"><span class="cmd-ico" aria-hidden="true">${vb.cmdIcon(c.cmd, grp?.title, c.group)}</span><span class="cmd-name">!${esc(shown)}</span>${aliasTxt}</div>
         <div class="tags" style="grid-column:1;grid-row:2">${tags.join('')}</div>
         <div class="cmd-sum">${esc(c.summary)}</div>
       </summary>
@@ -276,9 +284,9 @@ export function commandsView(data) {
     <p class="intro"><strong>Tippe auf einen Befehl</strong>, um ihn aufzuklappen. Jede Eingabe ist ein Knopf: antippen kopiert sie. Eckige Klammern <code>[ ]</code> sind optional, spitze <code>&lt; &gt;</code> musst du ersetzen.</p>
     <div class="toolbar">
       <input class="search" type="search" id="c-search" placeholder="Befehl suchen, z. B. kaufen, heilen, duel …" autocomplete="off" enterkeyhint="search">
-      <div class="filters-row scroll-x" id="c-groups" role="group" aria-label="Bereich">
-        <button type="button" class="chip-btn" data-g="" aria-pressed="true">Alle</button>
-        ${groups.map((g) => `<button type="button" class="chip-btn" data-g="${esc(g.id)}" aria-pressed="false">${esc(g.title)}</button>`).join('')}
+      <div class="cat-bar" id="c-groups" role="group" aria-label="Bereich">
+        <button type="button" class="cat-btn" data-g="" aria-pressed="true" title="Alle"><span class="cb-i" aria-hidden="true">☰</span><span class="cb-l">Alle</span></button>
+        ${groups.map((g) => `<button type="button" class="cat-btn" data-g="${esc(g.id)}" aria-pressed="false" title="${esc(g.title)}"><span class="cb-i" aria-hidden="true">${vb.groupIcon(g.title, g.id)}</span><span class="cb-l">${esc(g.title)}</span><b>${list.filter((c) => c.group === g.id && (c.enabled || false)).length}</b></button>`).join('')}
       </div>
       <div class="filters-row">
         <label class="small muted"><input type="checkbox" id="c-off"> ausgeschaltete Befehle anzeigen</label>
@@ -310,7 +318,7 @@ export function commandsView(data) {
     $('#c-groups').addEventListener('click', (e) => {
       const b = e.target.closest('[data-g]'); if (!b) return;
       group = b.dataset.g;
-      root.querySelectorAll('#c-groups .chip-btn').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      root.querySelectorAll('#c-groups .cat-btn').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
       draw();
     });
     $('#c-off').addEventListener('change', (e) => { showOff = e.target.checked; draw(); });
@@ -348,19 +356,21 @@ function itemRow(i) {
       <span class="sum small muted"></span>
     </div>`;
   return `
-    <article class="card item-row" data-price="${i.price}">
+    <article class="card item-row item-detail" data-price="${i.price}" data-for="${esc(i.defName)}">
       <div>
         <h3>${esc(i.name)}</h3>
         <div class="meta"><span class="chip accent">${esc(i.category)}</span>${i.mod !== 'RimWorld' ? `<span class="chip">${esc(i.mod)}</span>` : ''}${limit}
         ${i.usable ? '<span class="chip">benutzbar</span>' : ''}${i.equippable ? '<span class="chip">ausrüstbar</span>' : ''}${i.wearable ? '<span class="chip">anziehbar</span>' : ''}</div>
       </div>
-      <div class="price">${fmt(i.price)}</div>
+      <div class="it-d-price">${vb.coin(i.price, 'big')}</div>
       <div class="acts">${!i.available ? '<span class="chip" style="background:var(--doom);color:#fff;justify-self:start" title="Der Streamer hat dieses Item in RICS ausgeschaltet">gerade nicht im Store</span>' : `${hasQty ? qty : ''}<div class="cmd-row">${acts.join('')}</div>`}</div>
     </article>`;
 }
 
 /** Menge pro Item-Zeile: passt Befehle und Summe live an. */
 function bindQuantity(root) {
+  if (root._qtyBound) return;   // #view bleibt zwischen Ansichten dieselbe: Handler nicht mehrfach anhängen
+  root._qtyBound = true;
   const sync = (row, fix) => {
     const inp = row.querySelector('.qty');
     const max = Number(inp.max) || 9999;
@@ -387,6 +397,31 @@ function bindQuantity(root) {
   });
 }
 
+/** Kachel: Spielsymbol (nur mit Live-Mod, sonst Symbol der Art), Name, Preis-Plakette. */
+function itemTile(i) {
+  const emo = vb.catIcon(i.category);
+  return `<button type="button" class="it-tile${i.available ? '' : ' off'}" data-item="${esc(i.defName)}" aria-expanded="false" title="${esc(i.name)}${i.available ? '' : ' – gerade nicht im Store'}">
+    <span class="it-ico" data-def="${esc(i.defName)}" data-emo="${emo}"><i class="it-emo" aria-hidden="true">${emo}</i></span>
+    <span class="it-name">${esc(i.name)}</span>
+    <span class="it-price">${vb.coin(i.price)}</span>
+  </button>`;
+}
+
+/** Spielsymbole /api/img/t_<DefName> einsetzen (nur wenn die Live-Mod online ist); fehlt ein Bild, bleibt das Symbol der Art stehen. */
+function fillIcons(host) {
+  if (!host || !live.isLive()) return;
+  host.querySelectorAll('.it-ico:not([data-img])').forEach((el) => {
+    const src = vbl.imgUrl('t_' + el.dataset.def);
+    if (!src) return;
+    el.dataset.img = '1';
+    const img = new Image();
+    img.className = 'it-img'; img.alt = ''; img.width = 56; img.height = 56;
+    img.addEventListener('load', () => { el.replaceChildren(img); }, { once: true });
+    img.addEventListener('error', () => { el.dataset.img = 'x'; }, { once: true });
+    img.src = src;
+  });
+}
+
 export function itemsView(data) {
   const items = data.items;
   const sold = items.filter((i) => i.available);
@@ -407,7 +442,6 @@ export function itemsView(data) {
       <input class="search" type="search" id="i-search" placeholder="Item suchen …" autocomplete="off" enterkeyhint="search">
       ${filterPanel(`
       <div class="filters-row">
-        <select class="select" id="i-cat" aria-label="Kategorie">${options(catList, cats, 'Alle Kategorien')}</select>
         <select class="select" id="i-mod" aria-label="Herkunft">${options(uniqSorted([...mods.keys()]), mods, 'Alle Herkünfte')}</select>
         <select class="select" id="i-sort" aria-label="Sortierung">
           <option value="name">Name A–Z</option><option value="price-asc">Preis ↑</option><option value="price-desc">Preis ↓</option>
@@ -420,16 +454,20 @@ export function itemsView(data) {
         <button type="button" class="chip-btn" data-flag="__all" aria-pressed="false" title="Auch Items zeigen, die der Streamer in RICS ausgeschaltet hat">auch nicht verkaufte</button>
       </div>`)}
     </div>
+    <div class="cat-bar" id="i-cats" role="group" aria-label="Art des Items">
+      <button type="button" class="cat-btn" data-cat="" aria-pressed="true" title="Alle"><span class="cb-i" aria-hidden="true">☰</span><span class="cb-l">Alle</span><b>${sold.length}</b></button>
+      ${catList.map((c) => `<button type="button" class="cat-btn" data-cat="${esc(c)}" aria-pressed="false" title="${esc(c)}"><span class="cb-i" aria-hidden="true">${vb.catIcon(c)}</span><span class="cb-l">${esc(c)}</span><b>${cats.get(c)}</b></button>`).join('')}
+    </div>
     <div id="i-count" class="result-count"></div>
     <div id="i-hint"></div>
-    <div id="i-list" class="grid cols-2"></div>`;
+    <div id="i-list" class="grid it-grid"></div>`;
 
   function bind(root) {
     const $ = (s) => root.querySelector(s);
     const flags = new Set();
-    let redraw;
+    let redraw, cat = '';
     const apply = () => {
-      const q = norm($('#i-search').value), cat = $('#i-cat').value, mod = $('#i-mod').value, sort = $('#i-sort').value;
+      const q = norm($('#i-search').value), mod = $('#i-mod').value, sort = $('#i-sort').value;
       const m = makeMatcher(q);
       const showAll = flags.has('__all');
       const filterFlags = [...flags].filter((f) => f !== '__all');
@@ -444,15 +482,46 @@ export function itemsView(data) {
       list.sort(sort === 'price-asc' ? (a, b) => a.price - b.price || a.name.localeCompare(b.name, 'de')
         : sort === 'price-desc' ? (a, b) => b.price - a.price || a.name.localeCompare(b.name, 'de')
           : (a, b) => a.name.localeCompare(b.name, 'de'));
-      redraw = pager($('#i-list'), $('#i-count'), list, itemRow, 'Nichts gefunden. Probier einen anderen Suchbegriff oder Filter.');
+      redraw = pager($('#i-list'), $('#i-count'), list, itemTile, 'Nichts gefunden. Probier einen anderen Suchbegriff oder Filter.');
+      fillIcons($('#i-list'));
     };
     // pager hängt Klick-Handler an; deshalb Liste bei jedem Filter neu aufbauen
     const rebuild = () => {
       const old = $('#i-list'); const fresh = old.cloneNode(false); old.replaceWith(fresh); apply();
     };
     takeQuery($('#i-search')); openPanels(root); bindQuantity(root);
+    // Spielsymbole nachladen, sobald die Live-Mod online ist; neue Kacheln („Mehr anzeigen“) bekommen ihre Symbole ebenfalls
+    // #view bleibt zwischen Ansichten dieselbe: alte Beobachter/Handler vorher abbauen
+    root._itObs?.disconnect(); root._itOff?.(); if (root._itClick) root.removeEventListener('click', root._itClick);
+    root._itObs = new MutationObserver(() => { const l = root.querySelector('#i-list'); if (l) fillIcons(l); });
+    root._itObs.observe(root, { childList: true, subtree: true });
+    root._itOff = live.on('change', () => { const l = root.querySelector('#i-list'); if (l) fillIcons(l); });
+    $('#i-cats').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-cat]'); if (!b) return;
+      cat = b.dataset.cat;
+      root.querySelectorAll('#i-cats .cat-btn').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      rebuild();
+    });
+    // Antippen einer Kachel klappt Menge/Befehl/Kaufen als Zeile unter der Kachelreihe auf
+    root._itClick = (e) => {
+      const t = e.target.closest('.it-tile'); if (!t) return;
+      const host = $('#i-list');
+      const open = host.querySelector('.item-detail');
+      const same = open && open.dataset.for === t.dataset.item;
+      if (open) { host.querySelector(`.it-tile[data-item="${CSS.escape(open.dataset.for)}"]`)?.setAttribute('aria-expanded', 'false'); open.remove(); }
+      if (same) return;
+      const it = items.find((x) => x.defName === t.dataset.item); if (!it) return;
+      const tiles = [...host.querySelectorAll('.it-tile')];
+      const cols = Math.max(1, getComputedStyle(host).gridTemplateColumns.split(' ').length);
+      const idx = tiles.indexOf(t);
+      const last = tiles[Math.min(tiles.length - 1, idx - (idx % cols) + cols - 1)];
+      last.insertAdjacentHTML('afterend', itemRow(it));
+      t.setAttribute('aria-expanded', 'true');
+      host.querySelector('.item-detail')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    };
+    root.addEventListener('click', root._itClick);
     $('#i-search').addEventListener('input', debounce(rebuild));
-    ['#i-cat', '#i-mod', '#i-sort'].forEach((s) => $(s).addEventListener('change', rebuild));
+    ['#i-mod', '#i-sort'].forEach((s) => $(s).addEventListener('change', rebuild));
     root.querySelectorAll('[data-flag]').forEach((b) => b.addEventListener('click', () => {
       const f = b.dataset.flag; flags.has(f) ? flags.delete(f) : flags.add(f);
       b.setAttribute('aria-pressed', String(flags.has(f))); rebuild();
@@ -468,21 +537,25 @@ export function itemsView(data) {
 function eventCard(e, cmdName) {
   const title = cap(plain(e.label));
   const de = e.de && norm(e.de) !== norm(title) ? `<div class="sub">${esc(e.de)}</div>` : '';
-  const pause = e.cooldownDays > 0 ? `<span class="chip" title="So lange muss gewartet werden, bevor es wieder geht (Spieltage)">Pause ${days(e.cooldownDays)}</span>` : '';
+  const pause = e.cooldownDays > 0 ? vb.clock(`${e.cooldownDays} d`, `Pause: ${days(e.cooldownDays)} (Spieltage) warten, bevor es wieder geht`) : '';
   const type = e.type && e.type !== 'weather' && e.type !== 'misc' ? `<span class="chip accent">${esc(EVENT_TYPES[e.type] || '')}</span>` : '';
+  let text = vb.stripModTail(e.text, e.mod);   // Mod-Name steht schon als Badge
+  if (vb.looksEnglish(text)) text = '';        // englischer Mod-Text ohne Übersetzung: weglassen
   return `
-    <article class="card ev-card">
-      <div class="ev-top"><div><h3>${richCap(e.label)}</h3>${de}</div>${karmaBadge(e.karma)}</div>
-      ${e.text ? `<p>${esc(e.text)}</p>` : ''}
+    <article class="card ev-card kar-${vb.kar(e.karma).cls}">
+      <div class="ev-top"><div><h3>${richCap(e.label)}</h3>${de}</div>${vb.karSym(e.karma)}</div>
+      ${text ? `<p>${esc(text)}</p>` : ''}
       <div class="meta">${type}${e.mod !== 'RimWorld' ? `<span class="chip">${esc(e.mod)}</span>` : ''}${pause}</div>
-      <div class="ev-top" style="align-items:center"><div class="cmd-row">${cmdBtn(`!${cmdName} ${e.cmdName || e.defName}`)}</div><div class="price">${fmt(e.cost)}</div></div>
+      <div class="ev-top" style="align-items:center"><div class="cmd-row">${cmdBtn(`!${cmdName} ${e.cmdName || e.defName}`)}</div>${vb.coin(e.cost, 'big')}</div>
     </article>`;
 }
 
-function karmaChips(idPrefix) {
-  return `<div class="filters-row scroll-x" id="${idPrefix}-karma" role="group" aria-label="Wirkung">
-    <button type="button" class="chip-btn" data-k="" aria-pressed="true">Alle</button>
-    ${['Good', 'Neutral', 'Bad', 'Doom'].map((k) => `<button type="button" class="chip-btn" data-k="${k}" aria-pressed="false" title="${esc(KARMA[k].hint)}">${esc(KARMA[k].label)}</button>`).join('')}
+/** Filter nach Wirkung: vier Symbol-Knöpfe mit Zähler (umbrechen statt aus dem Bild zu laufen). */
+function karmaChips(idPrefix, list = []) {
+  const cnt = countBy(list, (e) => e.karma);
+  return `<div class="filters-row kar-filter" id="${idPrefix}-karma" role="group" aria-label="Wirkung">
+    <button type="button" class="chip-btn kar-btn" data-k="" aria-pressed="true" title="Alle"><span class="kb-sym" aria-hidden="true">☰</span><b>${list.length}</b></button>
+    ${['Good', 'Neutral', 'Bad', 'Doom'].map((k) => `<button type="button" class="chip-btn kar-btn k-${vb.kar(k).cls}" data-k="${k}" aria-pressed="false" title="${esc(vb.kar(k).label)} – ${esc(vb.kar(k).hint)}" aria-label="${esc(vb.kar(k).label)}: ${cnt.get(k) || 0}"><span class="kb-sym" aria-hidden="true">${vb.kar(k).sym}</span><b>${cnt.get(k) || 0}</b></button>`).join('')}
   </div>`;
 }
 
@@ -491,7 +564,7 @@ export function eventsView(data) {
   const mods = countBy(ev, (e) => e.mod);
   const types = countBy(ev, (e) => e.type);
   const html = `
-    <details class="help-box" open>
+    <details class="help-box">
       <summary>So funktionieren Events</summary>
       <ul>
         <li>Tippe auf den Befehl-Knopf (z. B. <code>!event aurora</code>), füge ihn im Chat ein – das Event passiert im Spiel, und die Coins werden abgezogen.</li>
@@ -502,7 +575,7 @@ export function eventsView(data) {
     </details>
     <div class="toolbar">
       <input class="search" type="search" id="e-search" placeholder="Event suchen …" autocomplete="off" enterkeyhint="search">
-      ${karmaChips('e')}
+      ${karmaChips('e', ev)}
       ${filterPanel(`<div class="filters-row">
         <select class="select" id="e-type" aria-label="Art">${`<option value="">Alle Arten</option>` + Object.entries(EVENT_TYPES).filter(([k]) => types.has(k)).map(([k, v]) => `<option value="${k}">${esc(v)} (${types.get(k)})</option>`).join('')}</select>
         <select class="select" id="e-mod" aria-label="Herkunft">${options(uniqSorted([...mods.keys()]), mods, 'Alle Herkünfte')}</select>
@@ -543,14 +616,14 @@ export function weatherView(data) {
   const w = data.weather;
   const mods = countBy(w, (e) => e.mod);
   const html = `
-    <details class="help-box" open>
+    <details class="help-box">
       <summary>So änderst du das Wetter</summary>
       <ul><li>Tippe auf den Befehl-Knopf (z. B. <code>!weather rain</code>) und füge ihn im Chat ein. Das Wetter wechselt, die Coins werden abgezogen.</li>
       <li>Teile des Namens reichen: „rain“ findet auch „foggy rain“. Gefährliche Wetterlagen sind als „Schlecht“ oder „Katastrophe“ markiert.</li></ul>
     </details>
     <div class="toolbar">
       <input class="search" type="search" id="w-search" placeholder="Wetter suchen …" autocomplete="off" enterkeyhint="search">
-      ${karmaChips('w')}
+      ${karmaChips('w', w)}
       <div class="filters-row"><select class="select" id="w-mod" aria-label="Herkunft">${options(uniqSorted([...mods.keys()]), mods, 'Alle Herkünfte')}</select></div>
     </div>
     <div id="w-count" class="result-count"></div>
@@ -583,17 +656,19 @@ export function weatherView(data) {
 // TRAITS
 // =====================================================================
 function traitCard(t) {
+  const tone = t.tone || vb.traitTone(t);
   const stats = t.stats.length ? `<div><div class="small muted">Wirkung</div><ul style="margin:4px 0 0;padding-left:18px">${t.stats.map((s) => `<li>${rich(s)}</li>`).join('')}</ul></div>` : '';
   const conf = t.conflicts.length ? `<div class="small muted">Verträgt sich nicht mit: ${t.conflicts.map((c) => rich(c)).join(', ')}</div>` : '';
   const slugName = slug(t.name) || slug(t.defName);
+  const price = (ok, v) => (ok ? vb.coin(v) : '<span class="muted" title="nicht möglich">–</span>');
   return `
-    <article class="card ev-card">
-      <div class="ev-top"><h3>${rich(t.name)}</h3>${t.mod !== 'RimWorld' ? `<span class="chip">${esc(t.mod)}</span>` : ''}</div>
+    <article class="card ev-card tr-card tone-${tone}${t.legacy ? ' legacy' : ''}">
+      <div class="ev-top"><h3><span class="tr-sym" role="img" aria-label="${esc(vb.TRAIT_LABEL[tone])}" title="${esc(vb.TRAIT_LABEL[tone])}">${vb.TRAIT_SYM[tone]}</span> ${rich(t.name)}</h3>${t.mod !== 'RimWorld' ? `<span class="chip">${esc(t.mod)}</span>` : ''}${t.legacy ? '<span class="chip" title="Aus einer früheren Mod-Version – wird beim ersten Laden umgewandelt">veraltet</span>' : ''}</div>
       <div class="rt small"><p>${rich(t.description)}</p></div>
       ${stats}${conf}
-      <div class="kv">
-        <span>Hinzufügen: ${t.canAdd ? `<b class="price">${fmt(t.addPrice)}</b>` : '<span class="muted">nicht möglich</span>'}</span>
-        <span>Entfernen: ${t.canRemove ? `<b class="price">${fmt(t.removePrice)}</b>` : '<span class="muted">nicht möglich</span>'}</span>
+      <div class="kv tr-prices">
+        <span title="Hinzufügen">＋ ${price(t.canAdd, t.addPrice)}</span>
+        <span title="Entfernen">－ ${price(t.canRemove, t.removePrice)}</span>
       </div>
       <div class="cmd-row">${t.canAdd ? cmdBtn('!addtrait ' + slugName) : ''}${t.canRemove ? cmdBtn('!removetrait ' + slugName) : ''}</div>
     </article>`;
@@ -601,6 +676,7 @@ function traitCard(t) {
 
 export function traitsView(data) {
   const tr = data.traits;
+  tr.forEach((t) => { t.tone = vb.traitTone(t); t.legacy = vb.traitLegacy(t); });
   const html = `
     <details class="help-box">
       <summary>So änderst du die Eigenschaften deines Pawns</summary>
@@ -612,6 +688,10 @@ export function traitsView(data) {
     </details>
     <div class="toolbar">
       <input class="search" type="search" id="t-search" placeholder="Eigenschaft suchen …" autocomplete="off" enterkeyhint="search">
+      <div class="filters-row kar-filter" id="t-tone" role="group" aria-label="Wirkung">
+        <button type="button" class="chip-btn kar-btn" data-tone="" aria-pressed="true" title="Alle"><span class="kb-sym" aria-hidden="true">☰</span><b>${tr.length}</b></button>
+        ${['good', 'neutral', 'bad'].map((k) => `<button type="button" class="chip-btn kar-btn k-${k}" data-tone="${k}" aria-pressed="false" title="${esc(vb.TRAIT_LABEL[k])}" aria-label="${esc(vb.TRAIT_LABEL[k])}"><span class="kb-sym" aria-hidden="true">${vb.TRAIT_SYM[k]}</span><b>${tr.filter((t) => t.tone === k).length}</b></button>`).join('')}
+      </div>
       <div class="filters-row">
         <button type="button" class="chip-btn" data-f="canAdd" aria-pressed="false">kann man hinzufügen</button>
         <button type="button" class="chip-btn" data-f="canRemove" aria-pressed="false">kann man entfernen</button>
@@ -623,18 +703,27 @@ export function traitsView(data) {
   function bind(root) {
     const $ = (s) => root.querySelector(s);
     const flags = new Set();
+    let tone = '';
     const apply = () => {
       const q = norm($('#t-search').value), sort = $('#t-sort').value;
-      const list = tr.filter((t) => [...flags].every((f) => t[f]) && (!q || norm(`${t.name} ${t.defName} ${t.description} ${t.stats.join(' ')}`).includes(q)));
+      const list = tr.filter((t) => (!tone || t.tone === tone) && [...flags].every((f) => t[f]) && (!q || norm(`${t.name} ${t.defName} ${t.description} ${t.stats.join(' ')}`).includes(q)));
       list.sort(sort === 'add' ? (a, b) => (a.canAdd ? a.addPrice : 1e12) - (b.canAdd ? b.addPrice : 1e12)
         : sort === 'remove' ? (a, b) => (a.canRemove ? a.removePrice : 1e12) - (b.canRemove ? b.removePrice : 1e12)
           : (a, b) => plain(a.name).localeCompare(plain(b.name), 'de'));
-      pager($('#t-list'), $('#t-count'), list, traitCard, 'Nichts gefunden.');
+      // veraltete/abgelegte Eigenschaften ans Ende (Reihenfolge sonst unverändert)
+      const sorted = [...list.filter((t) => !t.legacy), ...list.filter((t) => t.legacy)];
+      pager($('#t-list'), $('#t-count'), sorted, traitCard, 'Nichts gefunden.');
     };
     const rebuild = () => { const o = $('#t-list'); const f = o.cloneNode(false); o.replaceWith(f); apply(); };
     takeQuery($('#t-search'));
     $('#t-search').addEventListener('input', debounce(rebuild));
     $('#t-sort').addEventListener('change', rebuild);
+    $('#t-tone').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-tone]'); if (!b) return;
+      tone = b.dataset.tone;
+      root.querySelectorAll('#t-tone .chip-btn').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      rebuild();
+    });
     root.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => {
       const f = b.dataset.f; flags.has(f) ? flags.delete(f) : flags.add(f);
       b.setAttribute('aria-pressed', String(flags.has(f))); rebuild();
@@ -649,7 +738,7 @@ export function traitsView(data) {
 // =====================================================================
 export function racesView(data) {
   const html = `
-    <details class="help-box" open>
+    <details class="help-box">
       <summary>So kommst du an einen Pawn</summary>
       <ul>
         <li>Der Einstieg ist <code>!join</code> (Warteschlange). Nur falls dir im Chat ein Pawn angeboten wird, bestätigst du mit <code>!acceptpawn</code>.</li>
@@ -666,11 +755,10 @@ export function racesView(data) {
         return `
         <article class="card race-card">
           <button type="button" class="race-head" data-copy="!pawn ${esc(rk)}" title="Kopiert: !pawn ${esc(rk)}">
-            <span class="ev-top"><h3>${esc(r.name)}</h3><span class="price">${fmt(r.price)}</span></span>
-            <span class="kv"><span>Alter <b>${r.minAge}–${r.maxAge ?? '∞'}</b></span>${g ? `<span>Geschlecht <b>${g}</b></span>` : ''}${r.xenos.length ? `<span><b>${r.xenos.length}</b> Xenotypen</span>` : ''}</span>
-            <span class="small muted">Antippen kopiert: <code>!pawn ${esc(rk)}</code></span>
+            <span class="ev-top"><h3>${esc(r.name)}</h3>${vb.coin(r.price, 'big')}</span>
+            <span class="kv race-kv"><span title="Alter">⏳ <b>${r.minAge}–${r.maxAge ?? '∞'}</b></span>${g ? `<span title="Geschlecht"><b>${g}</b></span>` : ''}${r.xenos.length ? `<span title="Xenotypen">🧬 <b>${r.xenos.length}</b></span>` : ''}<span class="race-copy" aria-hidden="true">⧉</span></span>
           </button>
-          ${r.xenos.length ? `<div class="xeno-grid">${r.xenos.map((x) => `<button type="button" class="xeno" data-copy="!pawn ${esc(rk)} ${esc(slug(x.name))}" title="Kopiert: !pawn ${esc(rk)} ${esc(slug(x.name))}"><span>${esc(x.name)}</span><span class="price">${fmt(x.price)}</span></button>`).join('')}</div>` : ''}
+          ${r.xenos.length ? `<div class="xeno-grid">${r.xenos.map((x) => `<button type="button" class="xeno" data-copy="!pawn ${esc(rk)} ${esc(slug(x.name))}" title="Kopiert: !pawn ${esc(rk)} ${esc(slug(x.name))}"><span>${esc(x.name)}</span>${vb.coin(x.price)}</button>`).join('')}</div>` : ''}
         </article>`;
       }).join('') : '<div class="empty">Keine Rassen freigeschaltet.</div>'}
     </div>`;

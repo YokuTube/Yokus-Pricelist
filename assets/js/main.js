@@ -1,5 +1,5 @@
 import { loadAll } from './data.js';
-import { copyText, esc, fmt } from './util.js';
+import { copyText, esc, fmt, scrollPageTo, scrollTopNow } from './util.js';
 import { startView, commandsView, itemsView, eventsView, weatherView, traitsView, racesView, modsView } from './views.js';
 import { icon } from './icons.js';
 import { initChat, renderSlot, offerSend, handleSlotClick } from './chat.js';
@@ -63,7 +63,7 @@ function renderTabs() {
   const cur = currentTab();
   document.getElementById('tabs').innerHTML = tabList().map((t) => {
     const n = DATA && t.count ? `<span class="count">${fmt(t.count(DATA))}</span>` : '';
-    return `<a class="tab" role="tab" href="#/${t.id}" aria-selected="${t.id === cur}">${icon(t.id)}<span>${esc(t.label)}</span> ${n}</a>`;
+    return `<a class="tab" role="tab" href="#/${t.id}" title="${esc(t.label)}" aria-selected="${t.id === cur}">${icon(t.id)}<span>${esc(t.label)}</span> ${n}</a>`;
   }).join('');
   // Handy: aktiven Reiter ins Bild holen und zeigen, ob links/rechts noch mehr kommt
   const nav = document.getElementById('tabs');
@@ -114,7 +114,7 @@ function renderView() {
   v.bind(main);
   document.title = (tab.id === 'start' ? 'Yokus Store' : `${tab.label} – Yokus Store`);
   // Nur bei echtem Wechsel der Adresse nach oben; ein Neuzeichnen derselben Ansicht (z. B. Live an/aus) behält die Scrollposition
-  if (renderedHash !== location.hash && !location.hash.split('/')[2]) window.scrollTo({ top: 0 });
+  if (renderedHash !== location.hash && !location.hash.split('/')[2]) scrollPageTo({ top: 0 });
   renderedHash = location.hash;
 }
 
@@ -142,8 +142,8 @@ async function boot() {
 
   // Nach-oben-Knopf und Tastenkürzel "/" für die Suche
   const top = document.getElementById('to-top');
-  top.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  window.addEventListener('scroll', () => top.classList.toggle('show', window.scrollY > 700), { passive: true });
+  top.addEventListener('click', () => scrollPageTo({ top: 0, behavior: 'smooth' }));
+  document.addEventListener('scroll', () => top.classList.toggle('show', scrollTopNow() > 700), { passive: true, capture: true });
   document.addEventListener('keydown', (e) => {
     if (e.key !== '/' || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName)) return;
     const s = document.querySelector('#view input.search');

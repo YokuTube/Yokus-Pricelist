@@ -16,7 +16,9 @@ export function getStreamPrefs() {
   let p = null;
   try { p = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { /* egal */ }
   return {
-    player: p?.player !== false, chat: p?.chat !== false, collapsed: p?.collapsed === true,
+    player: p?.player !== false, chat: p?.chat !== false,
+    // Handy (< 700 px), noch keine eigene Wahl: Stream & Chat zunächst eingeklappt
+    collapsed: typeof p?.collapsed === 'boolean' ? p.collapsed : window.innerWidth < 700,
     pos: POS.includes(p?.pos) ? p.pos : null,                 // null = Zuschauer hat nie gewählt → Automatik
     w: Number.isFinite(p?.w) ? p.w : null,
     h: Number.isFinite(p?.h) ? p.h : null,                     // Höhe der Leiste in Lage „Unten“
@@ -60,6 +62,7 @@ function applyLayout() {
   wrap.classList.toggle('bottom-nochat', bottom && !p.chat);
   document.documentElement.style.setProperty('--bot-h', `${clampH(p.h ?? window.innerHeight * botDefaultVh())}px`);
   b.classList.toggle('stream-side', side);
+  document.documentElement.classList.toggle('stream-side-scroll', side && window.innerWidth >= SIDE_MIN_VIEW);
   b.classList.toggle('stream-side-left', side && pos === 'left');
   b.classList.toggle('stream-side-right', side && pos === 'right');
   wrap.classList.toggle('side-nochat', side && !p.chat);

@@ -800,7 +800,7 @@ class H(BaseHTTPRequestHandler):
                           {"label": "Erntemeister", "desc": "Spezialist für die Ernte.", "holders": []}],
                 "rituals": [{"label": "Sonnenfest", "desc": "Ein Fest zur Sommersonnenwende."}]}]})
         if p == "/api/events":
-            return self.js(200, {"events": EVENTS, "social": [{"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "1 Stunde", "pawns": [{"id": "yoku", "name": "Kira"}, {"id": "mira_spielt", "name": "Mira"}], "kind": "Chitchat", "good": True, "icon": "i_Chitchat"}, {"text": "Luna hat Eddi ein Geschenk gemacht.", "ago": "3 Stunden", "kind": "Gift", "good": True, "icon": None}, {"text": "Eddi hat Kira beleidigt.", "ago": "2 Tage", "kind": "Insult", "good": False, "icon": "i_Insult"}, {"text": "Mira hat versucht, ein Tier zu zähmen.", "ago": "3 Tage", "kind": "TameAttempt", "good": None, "icon": None}]})
+            return self.js(200, {"events": EVENTS, "social": [{"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "1 Stunde", "pawns": [{"id": "yoku", "name": "Kira"}, {"id": "mira_spielt", "name": "Mira"}], "kind": "Chitchat", "good": True, "icon": "i_Chitchat"}, {"text": "Luna hat Eddi ein Geschenk gemacht.", "ago": "3 Stunden", "pawns": [{"id": "luna_88", "name": "Luna"}, {"id": "eddi", "name": "Eddi"}], "kind": "Gift", "good": True, "icon": None}, {"text": "Eddi hat Kira beleidigt.", "ago": "2 Tage", "pawns": [{"id": "eddi", "name": "Eddi"}, {"id": "yoku", "name": "Kira"}], "kind": "Insult", "good": False, "icon": "i_Insult"}, {"text": "Mira hat versucht, ein Tier zu zähmen.", "ago": "3 Tage", "pawns": [{"id": "mira_spielt", "name": "Mira"}], "kind": "TameAttempt", "good": None, "icon": None}]})
         if p == "/api/colony":
             return self.js(200, {"pawns": [summary(x) for x in PAWNS.values()]})
         if p.startswith("/api/log/"):
@@ -814,9 +814,9 @@ class H(BaseHTTPRequestHandler):
                           "hairOptions": [["Bob", "Bob"], ["Braids", "Zöpfe"], ["Mohawk", "Irokese"], ["Pigtails", "Rattenschwänze"], ["Shaved", "Rasiert"]],
                           "beard": None, "beardLabel": None, "beardOptions": None},
                 "social": [
-                    {"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "2 Stunden", "kind": "Chitchat", "good": True, "icon": "i_Chitchat"},
-                    {"text": "Kira hat Eddi beleidigt.", "ago": "5 Stunden", "kind": "Insult", "good": False, "icon": "i_Insult"},
-                    {"text": "Luna hat Kira ein tiefes Gespräch über das Leben angeboten.", "ago": "1 Tag", "kind": "DeepTalk", "good": True, "icon": None},
+                    {"text": "Kira hat mit Mira über Kochrezepte geplaudert.", "ago": "2 Stunden", "pawns": [{"id": "yoku", "name": "Kira"}, {"id": "mira_spielt", "name": "Mira"}], "kind": "Chitchat", "good": True, "icon": "i_Chitchat"},
+                    {"text": "Kira hat Eddi beleidigt.", "ago": "5 Stunden", "pawns": [{"id": "yoku", "name": "Kira"}, {"id": "eddi", "name": "Eddi"}], "kind": "Insult", "good": False, "icon": "i_Insult"},
+                    {"text": "Luna hat Kira ein tiefes Gespräch über das Leben angeboten.", "ago": "1 Tag", "pawns": [{"id": "luna_88", "name": "Luna"}, {"id": "yoku", "name": "Kira"}], "kind": "DeepTalk", "good": True, "icon": None},
                 ],
                 "combat": [
                     {"text": "Kira hat einen Plünderer mit dem Revolver in den Kopf getroffen.", "ago": "3 Stunden"},

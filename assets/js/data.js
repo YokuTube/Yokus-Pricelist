@@ -1,5 +1,6 @@
 // Lädt die JSON-Dateien aus data/ und bringt sie in eine einheitliche Form.
 import { plain, cap } from './util.js';
+import { catDe } from './visual-b.js';
 
 const MODS_CORE = new Set(['Core', 'RimWorld']);
 export const modName = (m) => (!m || MODS_CORE.has(m) ? 'RimWorld' : m);
@@ -69,7 +70,7 @@ function processItems(raw, game = {}) {
     // Spielname (Deutsch) zuerst: RICS findet Items auch über den aktuellen Spielnamen ohne Leerzeichen (!buy granitblöcke)
     name: cap(game[d.DefName || key] || d.CustomName || d.DefName || key),
     price: d.BasePrice || 0,
-    category: plain(d.Category) || 'Sonstiges',
+    category: catDe(plain(d.Category) || 'Sonstiges'),   // englische Kategorienamen (Apparel, Weapon …) auf Deutsch
     limit: d.HasQuantityLimit ? (d.QuantityLimit || 0) : 0,
     mod: modName(d.Mod),
     usable: !!d.IsUsable, equippable: !!d.IsEquippable, wearable: !!d.IsWearable,
@@ -156,6 +157,7 @@ function processTraits(raw) {
     PRON.forEach(([re, to]) => { desc = desc.replace(re, to); });
     return {
       defName: d.DefName || key,
+      degree: Number(d.Degree) || 0,
       name: d.Name || d.DefName || key,
       description: desc,
       stats: Array.isArray(d.Stats) ? d.Stats : [],

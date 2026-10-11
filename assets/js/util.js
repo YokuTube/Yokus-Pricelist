@@ -155,3 +155,8 @@ function morphNode(parent, x, y) {
   for (const { name } of [...x.attributes]) if (!y.hasAttribute(name)) x.removeAttribute(name);
   morphChildren(x, y);
 }
+
+// Seitenlage des Streams: dann scrollt <body> statt des Fensters (Bildlaufleiste direkt neben dem Store, nicht neben dem Stream)
+export const scrollBox = () => (document.documentElement.classList.contains('stream-side-scroll') ? document.body : window);
+export const scrollTopNow = () => Math.max(window.scrollY || 0, document.body.scrollTop || 0);
+export const scrollPageTo = (opts) => scrollBox().scrollTo(opts);
