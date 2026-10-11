@@ -102,6 +102,7 @@ export function poll({ path, every, auth = false, alive = () => true, onResult }
         }
       }
     } catch (e) {
+      if (!e?.net) console.warn('[live] Fehler bei', path, e);   // z. B. Fehler beim Zeichnen – sonst unsichtbar
       if (!stopped) fail();
     } finally {
       running = false;

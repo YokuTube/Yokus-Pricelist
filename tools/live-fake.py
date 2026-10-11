@@ -361,7 +361,13 @@ def an(id_, name, kind, gender, age, health, bond=None, master=None, img="", spo
     conditions = conditions or []
     return {"id": id_, "name": name, "kind": kind, "gender": gender, "age": age, "healthPct": health, "bond": bond, "master": master,
             "img": img or None, "sponsor": sponsor, "conditions": conditions, "pain": pain,
-            "bleeding": any(c["bleeding"] for c in conditions)}
+            "bleeding": any(c["bleeding"] for c in conditions),
+            "bondId": FAKE_IDS.get(bond), "masterId": FAKE_IDS.get(master),
+            "needs": [{"label": "Hunger", "pct": (sum(map(ord, id_)) * 37) % 100}, {"label": "Ruhe", "pct": (sum(map(ord, id_)) * 53) % 100},
+                      {"label": "Freude", "pct": (sum(map(ord, id_)) * 71) % 100}]}
+
+
+FAKE_IDS = {"Kira": "yoku", "Mira": "mira_spielt", "Eddi": "eddi_tv", "Luna": "luna_88"}
 
 
 ANIMALS = [

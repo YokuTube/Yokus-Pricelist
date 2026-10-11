@@ -2335,21 +2335,28 @@ function animalChips(a) {
   return out ? `<div class="an-chips">${out}</div>` : '';
 }
 
+// Querverweis: Name eines Kolonisten als Link auf seine Seite (ohne id nur Text)
+const pawnLink = (name, id) => (id ? `<a class="xref" href="#/kolonie/${encodeURIComponent(id)}">${esc(name)}</a>` : `<b>${esc(name)}</b>`);
+
+// Kleine Balkenzeile in der Tierkachel: Name · Balken (Farbe nach Zustand) · Prozent
+const anBar = (label, pct, tn) => `<div class="an-bar"><span>${esc(label)}</span>${bar(clamp(pct), tn)}<span class="an-pct">${Math.round(clamp(pct))} %</span></div>`;
+
 function animalRow(a) {
   const name = a.name ? esc(a.name) : esc(a.kind);
   const age = a.age != null ? `${fmt(Math.round(Number(a.age) * 10) / 10)} J.` : '';
-  const meta = [genderSym(a.gender), age].filter(Boolean).join(' ');
-  const pain = Number(a.pain) > 0 ? `<div class="an-pain" title="Schmerz ${Math.round(clamp(a.pain))} %"><span class="small muted">Schmerz</span>${bar(clamp(a.pain), 'low')}</div>` : '';
+  const meta = [a.name ? a.kind : '', genderSym(a.gender), age].filter(Boolean).join(' · ');
+  const needs = (Array.isArray(a.needs) ? a.needs : []).filter((n) => n && n.label && n.pct != null);
+  const bars = anBar('Gesundheit', a.healthPct)
+    + needs.map((n) => anBar(n.label, n.pct)).join('')
+    + (Number(a.pain) > 0 ? anBar('Schmerz', a.pain, Number(a.pain) >= 30 ? 'low' : 'mid') : '');
   return `<div class="an an-row${a.bond ? ' bonded' : ''}">
-    <div class="an-pic">${animalPic(a)}</div>
-    <div class="an-body">
-      <div class="an-top"><b class="an-name">${name}</b>${a.name ? `<span class="small muted">${esc(a.kind)}</span>` : ''}<span class="small muted an-meta">${esc(meta)}</span></div>
-      ${bar(a.healthPct)}
-      ${pain}${animalChips(a)}
-      ${a.bond ? `<div class="an-bond"><span class="heart" aria-hidden="true">♥</span> gebunden an <b>${esc(a.bond)}</b></div>` : ''}
-      ${a.master ? `<div class="small muted">Meister: ${esc(a.master)}</div>` : ''}
-      ${sponsorHtml(a)}
-    </div>
+    <div class="an-head"><div class="an-pic">${animalPic(a)}</div>
+      <div class="an-title"><b class="an-name">${name}</b><span class="small muted">${esc(meta)}</span></div></div>
+    <div class="an-bars">${bars}</div>
+    ${animalChips(a)}
+    ${a.bond ? `<div class="an-bond"><span class="heart" aria-hidden="true">♥</span> gebunden an ${pawnLink(a.bond, a.bondId)}</div>` : ''}
+    ${a.master ? `<div class="small muted">Meister: ${pawnLink(a.master, a.masterId)}</div>` : ''}
+    ${sponsorHtml(a)}
   </div>`;
 }
 
@@ -2368,12 +2375,14 @@ function animalsHtml(list) {
     const open = openKinds.has(kind);
     const worst = Math.min(...arr.map((a) => Number(a.healthPct) || 0));
     const hurt = arr.filter((a) => Number(a.pain) > 0 || (Array.isArray(a.conditions) && a.conditions.some((c) => c?.bad || c?.bleeding))).length;
+    // Gruppe: schlechtester Wert je Bedürfnis (Hunger usw.), damit man Probleme ohne Aufklappen sieht
+    const needMin = new Map();
+    arr.forEach((x) => (Array.isArray(x.needs) ? x.needs : []).forEach((n) => { if (n?.label && n.pct != null) needMin.set(n.label, Math.min(needMin.get(n.label) ?? 100, Number(n.pct))); }));
     out += `<button type="button" class="an an-group an-row" data-kind="${esc(kind)}" aria-expanded="${open}">
-      <div class="an-pic">${animalPic(arr[0])}</div>
-      <div class="an-body">
-        <div class="an-top"><b class="an-name">${esc(kind)} ×${arr.length}</b><span class="small muted an-meta">${open ? '▾' : '▸'}</span></div>
-        ${bar(worst)}<div class="small muted">schwächstes Tier: ${Math.round(worst)} %${hurt ? ` · ${hurt} verletzt/krank` : ''}</div>
-      </div></button>`;
+      <div class="an-head"><div class="an-pic">${animalPic(arr[0])}</div>
+        <div class="an-title"><b class="an-name">${esc(kind)} ×${arr.length}</b><span class="small muted">${open ? '▾ zuklappen' : '▸ alle zeigen'}</span></div></div>
+      <div class="an-bars">${anBar('Gesundheit', worst)}${[...needMin].map(([l, v]) => anBar(l, v)).join('')}</div>
+      <div class="small muted">schwächste Werte der Gruppe${hurt ? ` · ${hurt} verletzt/krank` : ''}</div></button>`;
     if (open) out += `<div class="an-sub">${arr.map(animalRow).join('')}</div>`;
   }
   return out;
