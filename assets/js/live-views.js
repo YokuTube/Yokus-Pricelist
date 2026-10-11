@@ -1135,7 +1135,11 @@ function relRow(p, r) {
   const lines = r.dead ? '' : `<div class="rel-lines small">
       <div><span class="rel-op ${relTone(a)}">${relSign(a)}</span> ${esc(relSentence(me, r.name, a, mine))}</div>
       <div><span class="rel-op ${relTone(b)}">${relSign(b)}</span> ${esc(relSentence(r.name, mine ? 'dich' : p.name, b, false))}</div></div>`;
-  return `<li class="rel-row"><div class="rel-main"><b class="rel-name">${esc(r.name)}</b>${who}<span class="rel-badges">${fam}${status}</span></div>${lines}</li>`;
+  // Porträt links (nur Kolonisten haben eins); Name führt zum Kolonisten, wenn er in der Kolonie lebt
+  const pic = portraitHtml({ name: r.name, id: r.id, portrait: r.portrait }, 'rel-portrait');
+  const name = r.colonist && r.id && !r.dead
+    ? `<a class="rel-name" href="#/kolonie/${encodeURIComponent(r.id)}">${esc(r.name)}</a>` : `<b class="rel-name">${esc(r.name)}</b>`;
+  return `<li class="rel-row">${pic}<div class="rel-body"><div class="rel-main">${name}${who}<span class="rel-badges">${fam}${status}</span></div>${lines}</div></li>`;
 }
 
 function relHtml(p, data) {

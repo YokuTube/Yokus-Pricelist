@@ -477,6 +477,10 @@ footer { border-top: 1px solid var(--border); padding: 20px 0 40px; color: var(-
 .kol-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .kol-portrait { width: 64px; height: 64px; }
 .kol-portrait.ph { font-size: 1.5rem; }
+.rel-portrait { width: 48px; height: 48px; }
+.rel-portrait.ph { font-size: 1.1rem; }
+.rel-body { display: grid; gap: 4px; min-width: 0; }
+a.rel-name { font-weight: 700; color: var(--text); }
 .kol-name { overflow-wrap: anywhere; }
 .kol-user { overflow-wrap: anywhere; margin-bottom: 4px; }
 .kol-bars { grid-column: 1 / -1; display: grid; gap: 0; }
@@ -819,7 +823,7 @@ button.an-group:hover { border-color: var(--accent); }
 
 /* Beziehungen (Charakter-Unterreiter) */
 .rel-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.rel-row { display: grid; gap: 4px; padding: 10px 12px; min-height: 44px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
+.rel-row { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: start; gap: 4px 12px; padding: 10px 12px; min-height: 44px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
 .rel-main { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
 .rel-name { overflow-wrap: anywhere; }
 .rel-ops { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .9rem; font-variant-numeric: tabular-nums; }

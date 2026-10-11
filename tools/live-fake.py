@@ -266,7 +266,7 @@ for _p in PAWNS.values():
 
 # ---------- Beziehungen (Log: relations) ----------
 def rel(name, user, rels, op, theirs, dead=False, animal=False):
-    return {"name": name, "user": user, "relations": rels, "opinion": op, "theirs": theirs,
+    return {"name": name, "id": user or name, "portrait": 1 if user else 0, "user": user, "relations": rels, "opinion": op, "theirs": theirs,
             "colonist": user is not None, "dead": dead, "animal": animal}
 
 
