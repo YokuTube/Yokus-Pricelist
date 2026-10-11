@@ -485,7 +485,7 @@ def game_info():
     t = int(time.time())
     return {
         "giftPrice": 150,
-        "slots": {"minBet": 10, "maxBet": 200, "jackpot": 250, "cooldownHours": 6},
+        "slots": {"minBet": 10, "maxBet": 200, "cooldownHours": 6},
         "duel": duel_fight(t),
         "praise": {"yoku": 12, "mira_spielt": 7, "luna_88": 3, "eddi_tv": 0},
         "tutor": {"price": 100, "minLevel": 6, "gap": 2},

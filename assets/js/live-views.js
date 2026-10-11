@@ -1011,14 +1011,12 @@ function duelCardHtml(g) {
 
 // Spielautomat (RICS Extras !slots): nur, wenn im Spiel einer mit Strom steht (GameInfo.slots)
 let slotBet = 0;
-const SLOT_PAY = [['🍒', '×6'], ['🍋', '×8'], ['🔔', '×20'], ['💎', '×50'], ['7️⃣', null]];
 
 function slotsCardHtml(g) {
   const sl = g?.slots;
   if (!sl || !live.isAllowed('slots')) return '';
   const amounts = [...new Set([sl.minBet, 25, 50, 100, sl.maxBet].filter((v) => v >= sl.minBet && v <= sl.maxBet))].sort((a, b) => a - b);
   if (!amounts.includes(slotBet)) slotBet = amounts[0];
-  const pay = SLOT_PAY.map(([e, m]) => `<span class="slot-pay"><b>${e}${e}${e}</b>${m || `×${fmt(sl.jackpot)}`}</span>`).join('');
   let ctl;
   if (!live.isLinked()) ctl = `<p class="small muted" style="margin:0">Verbinde dich oben, um per Knopf zu spielen – oder schreib <code>${esc(live.prefix())}slots Einsatz</code> in den Chat.</p>`;
   else {
@@ -1029,7 +1027,7 @@ function slotsCardHtml(g) {
   return `<section class="card slot-card" aria-label="Spielautomat">
     <img class="slot-img" src="assets/img/slot-machine.png" alt="" width="96" height="96">
     <div class="slot-body"><div class="slot-head"><b>Spielautomat</b><span class="small muted">Pause: ${fmt(sl.cooldownHours)} Spielstunden</span></div>
-      <div class="slot-pays">${pay}<span class="slot-pay"><b>2× 🔔💎7️⃣</b>Einsatz zurück</span></div>
+      <p class="small muted" style="margin:0">Drei Walzen – meistens verlierst du, manchmal gewinnst du richtig.</p>
       ${ctl}</div>
   </section>`;
 }
