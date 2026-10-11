@@ -53,12 +53,20 @@ export function syncStreamDock() {
   }
   const p = getStreamPrefs();
   if (!p.player) playing = false;
-  wrap.hidden = !(p.player || p.chat);
-  if (wrap.hidden) {
+  wrap.hidden = false;
+  if (!(p.player || p.chat)) {
+    // Beides geschlossen: schmale Zeile bleibt stehen, damit man es wiederfindet (Nutzerwunsch)
     if (d.dataset.ready) { d.innerHTML = ''; delete d.dataset.ready; }
     chatLoaded = false; d.hidden = true;
+    bind(wrap, d);
+    wrap.classList.add('collapsed');
+    $('stream-toolbar').hidden = true;
+    $('stream-strip').hidden = false;
+    $('stream-strip').dataset.restore = '1';
+    $('stream-strip').querySelector('.stream-strip-text').textContent = '▶ Stream & Chat zeigen';
     return;
   }
+  delete $('stream-strip').dataset.restore;
   if (!d.dataset.ready) build(d);
   bind(wrap, d);
 
@@ -84,8 +92,11 @@ export function syncStreamDock() {
   $('stream-strip').hidden = open;
   $('stream-strip').querySelector('.stream-strip-text').innerHTML =
     playing ? '<i class="stream-dot" aria-hidden="true"></i>Stream läuft – aufklappen' : 'Stream – aufklappen';
-  wrap.querySelector('[data-stream-chat-close]').hidden = !p.chat;
-  wrap.querySelector('[data-stream-player-close]').hidden = !p.player;
+  // Umschalter: geschlossenes lässt sich direkt in der Leiste wieder zeigen
+  const cb = wrap.querySelector('[data-stream-chat-close]'), pb = wrap.querySelector('[data-stream-player-close]');
+  cb.textContent = p.chat ? 'Chat ✕' : 'Chat zeigen'; cb.title = p.chat ? 'Chat schließen' : 'Chat wieder zeigen';
+  pb.textContent = p.player ? 'Stream ✕' : 'Stream zeigen'; pb.title = p.player ? 'Stream schließen' : 'Stream wieder zeigen';
+  cb.classList.toggle('off', !p.chat); pb.classList.toggle('off', !p.player);
   wrap.querySelector('.stream-popout').hidden = !p.chat;
 }
 
@@ -126,11 +137,13 @@ function bind(wrap, d) {
     } else if (t('[data-stream-stop]')) {
       playing = false; syncStreamDock();
     } else if (t('[data-stream-player-close]')) {
-      update((p) => { p.player = false; });
+      update((p) => { p.player = !p.player; });
     } else if (t('[data-stream-chat-close]')) {
-      update((p) => { p.chat = false; });
+      update((p) => { p.chat = !p.chat; });
     } else if (t('[data-stream-collapse]')) {
       update((p) => { p.collapsed = true; });
+    } else if (t('#stream-strip') && $('stream-strip').dataset.restore) {
+      update((p) => { p.player = true; p.chat = true; p.collapsed = false; });
     } else if (t('[data-stream-expand]') || t('#stream-strip')) {
       update((p) => { p.collapsed = false; });
     }
