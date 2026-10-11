@@ -57659,6 +57659,21 @@
       "Category": "Schatztruhen",
       "Enabled": false,
       "modactive": true
+    },
+    "RICSExtras_SlotMachine": {
+      "DefName": "RICSExtras_SlotMachine",
+      "CustomName": "Spielautomat",
+      "HasQuantityLimit": true,
+      "QuantityLimit": 1,
+      "LimitMode": "OneStack",
+      "IsUsable": false,
+      "IsEquippable": false,
+      "IsWearable": false,
+      "Mod": "RICS Extras",
+      "BasePrice": 235,
+      "Category": "Entspannung",
+      "Enabled": true,
+      "modactive": true
     }
   }
 }
