@@ -19,16 +19,22 @@ export function getStreamPrefs() {
     player: p?.player !== false, chat: p?.chat !== false, collapsed: p?.collapsed === true,
     pos: POS.includes(p?.pos) ? p.pos : null,                 // null = Zuschauer hat nie gewählt → Automatik
     w: Number.isFinite(p?.w) ? p.w : null,
+    h: Number.isFinite(p?.h) ? p.h : null,                     // Höhe der Leiste in Lage „Unten“
   };
 }
 
-// ---- Position: Oben (Leiste über der Seite) | Links | Rechts (feste Spalte neben der Seite) ----
-const POS = ['top', 'left', 'right'];
+// ---- Position: Oben (Leiste über der Seite) | Unten (feste Leiste am unteren Rand, auch Handy)
+//      | Links | Rechts (feste Spalte neben der Seite, nur breite Fenster) ----
+const POS = ['top', 'bottom', 'left', 'right'];
+const BOT_MIN_H = 160;
+const botDefaultVh = () => (window.innerWidth < 700 ? 0.6 : 0.38);   // Handy: Video + Chat übereinander brauchen mehr Höhe
+const clampH = (h) => Math.min(Math.floor(window.innerHeight * 0.75), Math.max(BOT_MIN_H, Math.round(h)));
 const SIDE_MIN_VIEW = 1200;   // darunter immer Oben
 const SIDE_MIN_W = 320, SIDE_DEFAULT_W = 440;
 const sideMax = () => Math.max(SIDE_MIN_W, Math.floor(window.innerWidth * 0.5));
 const clampW = (w) => Math.min(sideMax(), Math.max(SIDE_MIN_W, Math.round(w)));
 function effectivePos(p) {
+  if (p.pos === 'bottom') return 'bottom';
   if (window.innerWidth < SIDE_MIN_VIEW) return 'top';
   if (p.pos) return p.pos;
   return window.innerWidth >= 1400 && window.innerWidth / window.innerHeight > 1.34 ? 'right' : 'top';
@@ -40,19 +46,26 @@ function applyLayout() {
   if (!wrap) return;
   const p = getStreamPrefs();
   const pos = effectivePos(p);
-  const side = !wrap.hidden && pos !== 'top' && (p.player || p.chat) && !p.collapsed;
+  const shown = !wrap.hidden && (p.player || p.chat) && !p.collapsed;
+  const side = shown && (pos === 'left' || pos === 'right');
+  const bottom = shown && pos === 'bottom';
   const b = document.body;
+  b.classList.toggle('stream-bottom', bottom);
+  wrap.classList.toggle('bottom-nochat', bottom && !p.chat);
+  document.documentElement.style.setProperty('--bot-h', `${clampH(p.h ?? window.innerHeight * botDefaultVh())}px`);
   b.classList.toggle('stream-side', side);
   b.classList.toggle('stream-side-left', side && pos === 'left');
   b.classList.toggle('stream-side-right', side && pos === 'right');
   wrap.classList.toggle('side-nochat', side && !p.chat);
   document.documentElement.style.setProperty('--side-w', `${clampW(p.w ?? SIDE_DEFAULT_W)}px`);
   const rz = $('stream-resizer');
-  if (rz) rz.hidden = !side;
+  if (rz) rz.hidden = !(side || bottom);
   const grp = $('stream-pos');
   if (grp) {
-    grp.hidden = window.innerWidth < SIDE_MIN_VIEW;
+    grp.hidden = false;
+    const narrow = window.innerWidth < SIDE_MIN_VIEW;   // Links/Rechts nur auf breiten Fenstern
     grp.querySelectorAll('[data-stream-pos]').forEach((btn) => {
+      if (btn.dataset.streamPos === 'left' || btn.dataset.streamPos === 'right') btn.hidden = narrow;
       const on = btn.dataset.streamPos === pos;
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
       btn.classList.toggle('active', on);
@@ -68,6 +81,13 @@ function initResizer() {
   rz.dataset.bound = '1';
   let dragging = false;
   const widthFrom = (x) => (document.body.classList.contains('stream-side-left') ? x : window.innerWidth - x);
+  const isBottom = () => document.body.classList.contains('stream-bottom');
+  const setH = (h, save) => {
+    const v = clampH(h);
+    document.documentElement.style.setProperty('--bot-h', `${v}px`);
+    if (save) { const p = getStreamPrefs(); p.h = v; setStreamPrefs(p); }
+    return v;
+  };
   const setW = (w, save) => {
     const v = clampW(w);
     document.documentElement.style.setProperty('--side-w', `${v}px`);
@@ -79,17 +99,25 @@ function initResizer() {
     document.body.classList.add('stream-dragging');   // iframes schlucken sonst die Mausbewegung
     e.preventDefault();
   });
-  rz.addEventListener('pointermove', (e) => { if (dragging) setW(widthFrom(e.clientX), false); });
+  rz.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    if (isBottom()) setH(window.innerHeight - e.clientY, false); else setW(widthFrom(e.clientX), false);
+  });
   const end = (e) => {
     if (!dragging) return;
     dragging = false; document.body.classList.remove('stream-dragging');
-    setW(widthFrom(e.clientX), true);
+    if (isBottom()) setH(window.innerHeight - e.clientY, true); else setW(widthFrom(e.clientX), true);
     window.dispatchEvent(new Event('ys-layout'));
   };
   rz.addEventListener('pointerup', end);
   rz.addEventListener('pointercancel', () => { dragging = false; document.body.classList.remove('stream-dragging'); applyLayout(); });
-  rz.addEventListener('dblclick', () => { setW(SIDE_DEFAULT_W, true); });
+  rz.addEventListener('dblclick', () => { if (isBottom()) setH(window.innerHeight * botDefaultVh(), true); else setW(SIDE_DEFAULT_W, true); });
   rz.addEventListener('keydown', (e) => {
+    if (isBottom()) {
+      const cur = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bot-h'), 10) || 300;
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { setH(cur + (e.key === 'ArrowUp' ? 20 : -20), true); e.preventDefault(); }
+      return;
+    }
     const left = document.body.classList.contains('stream-side-left');
     const cur = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--side-w'), 10) || SIDE_DEFAULT_W;
     const grow = e.key === (left ? 'ArrowRight' : 'ArrowLeft'), shrink = e.key === (left ? 'ArrowLeft' : 'ArrowRight');

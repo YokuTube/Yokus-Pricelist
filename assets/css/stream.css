@@ -108,7 +108,8 @@
   body.stream-side .stream-dock { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }
   body.stream-side .stream-dock[hidden] { display: none; }
   body.stream-side .stream-player { flex: none; }
-  body.stream-side .stream-dock .stream-chat { flex: 1; height: auto; min-height: 0; }
+  body.stream-side .stream-dock, body.stream-side .stream-dock.has-player.has-chat { align-items: stretch; }
+  body.stream-side .stream-dock .stream-chat, body.stream-side .stream-dock.has-player.has-chat .stream-chat { flex: 1; height: auto; min-height: 0; width: 100%; }
   body.stream-side .stream-resizer {
     display: block; position: absolute; top: 0; bottom: 0; width: 12px; cursor: col-resize; z-index: 5; touch-action: none;
   }
@@ -132,6 +133,40 @@
 }
 /* Schmale Spalte: Beschriftung der Positionsknöpfe nur als Symbol */
 .stream-pos-btn span { margin-left: 2px; }
-@media (max-width: 699px) { .stream-pos { display: none; } }
+@media (max-width: 699px) { .stream-pos { flex: 1 1 100%; order: 0; } .stream-pos-btn { flex: 1 1 0; } }
+.stream-pos-btn[hidden] { display: none; }
 @media print { body.stream-side-left { padding-left: 0; } body.stream-side-right { padding-right: 0; } }
 @media print { .stream-dock-wrap, .stream-dock.mini { display: none; } }
+
+/* ---------- Lage „Unten“ (alle Bildschirme, auch Handy): feste Leiste am unteren Rand, Höhe --bot-h (ziehbar) ----------
+   Video links (16:9, so hoch wie die Leiste), Chat füllt den Rest rechts daneben. Seite bekommt unten Platz. */
+body.stream-bottom { padding-bottom: var(--bot-h); }
+body.stream-bottom .stream-dock-wrap {
+  position: fixed; left: 0; right: 0; bottom: 0; top: auto; height: var(--bot-h); max-width: none; margin: 0; z-index: 30;
+  padding: 14px 8px 8px; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--border); border-bottom: 0;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, .35); box-sizing: border-box;
+}
+body.stream-bottom .stream-dock-wrap.bottom-nochat .stream-player { margin: 0 auto; }
+body.stream-bottom .stream-toolbar { margin: 0; flex: none; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; }
+body.stream-bottom .stream-note, body.stream-bottom .stream-popout { display: none; }
+body.stream-bottom .stream-tool { min-height: 32px; flex: none; }
+body.stream-bottom .stream-pos { flex: none; margin-right: auto; order: 0; }
+body.stream-bottom .stream-pos-btn { flex: none; }
+body.stream-bottom .stream-dock, body.stream-bottom .stream-dock.has-player.has-chat { display: flex; flex-direction: row; gap: 8px; flex: 1; min-height: 0; align-items: stretch; }
+body.stream-bottom .stream-dock[hidden] { display: none; }
+body.stream-bottom .stream-player { flex: none; height: 100%; width: auto; max-width: 64%; aspect-ratio: 16 / 9; }
+body.stream-bottom .stream-dock .stream-chat, body.stream-bottom .stream-dock.has-player.has-chat .stream-chat { flex: 1; height: auto; min-height: 0; min-width: 0; }
+body.stream-bottom .stream-resizer { display: block; position: absolute; left: 0; right: 0; top: 0; height: 12px; width: auto; cursor: row-resize; z-index: 5; touch-action: none; }
+body.stream-bottom .stream-resizer::after { content: ""; position: absolute; left: 50%; top: 4px; width: 48px; height: 4px; margin-left: -24px; border-radius: 2px; background: var(--border); }
+body.stream-bottom .stream-resizer:hover::after { background: var(--accent); }
+body.stream-bottom .vote-card, body.stream-bottom .vote-card.min, body.stream-bottom .to-top { bottom: calc(var(--bot-h) + 16px); }
+body.stream-bottom.stream-dragging { user-select: none; cursor: row-resize; }
+body.stream-bottom.stream-dragging .stream-dock iframe { pointer-events: none; }
+@media (max-width: 699px) {
+  /* Handy: übereinander – Video volle Breite, Chat darunter */
+  body.stream-bottom .stream-dock, body.stream-bottom .stream-dock.has-player.has-chat { flex-direction: column; }
+  body.stream-bottom .stream-player { height: auto; width: 100%; max-width: none; }
+  body.stream-bottom .stream-tool { padding: 0 8px; font-size: .78rem; }
+  body.stream-bottom .stream-pos-btn span { display: none; }
+}
+@media print { body.stream-bottom { padding-bottom: 0; } }
