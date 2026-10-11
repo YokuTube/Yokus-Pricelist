@@ -69,6 +69,10 @@ def make_pawn(user, display, name, full, gender, age, race, xeno, state, state_l
         "childhood": child, "adulthood": adult, "location": "Kolonie", "moodLabel": mood_label,
         "childhoodDesc": "Als Kind wuchs sie in den Gassen einer Glitzerwelt-Stadt auf und lernte früh, für sich selbst zu sorgen.",
         "adulthoodDesc": "Später kochte sie in einer Raumhafen-Kantine – schnell, laut und immer mit einem Lied auf den Lippen.",
+        "psyche": {"personality": {"Rimpsyche_Sociability": 0.72, "Rimpsyche_Tension": -0.45, "Rimpsyche_Diligence": 0.31, "Rimpsyche_Openness": -0.12, "Rimpsyche_Aggressiveness": 0.05, "Rimpsyche_Compassion": 0.88, "Rimpsyche_Imagination": 0.5, "Rimpsyche_Playfulness": -0.66, "Rimpsyche_Humbleness": 0.2, "Rimpsyche_Bravery": 0.4},
+                   "interests": {"Cooking": 88, "Music": 74, "Animals": 61, "Combat": 12, "Art": 55, "Science": 30, "Nature": 47},
+                   "sexuality": {"orientation": "Bisexuell", "orientationDesc": "Fühlt sich zu mehreren Geschlechtern hingezogen.", "kinsey": 3, "drive": 0.64, "attraction": 0.41},
+                   "body": {"fat": 18.5, "muscle": 31.2, "muscleGoal": 38, "exhaustion": 12, "fatigue": [10, 55, 80, 20, 35, 5, 0, 65, 40]}} if user == "yoku" else None,
         "expertise": {"owned": [{"id": "VSE_Chef", "level": 4}], "available": ["Precision"]} if user == "yoku" else {"owned": [], "available": []},
         "psycasts": {"level": 3, "xp": 120, "xpNext": 300, "points": 1, "paths": ["VPE_Conflagrator"], "learned": ["VPE_Fireball"], "learnable": ["VPE_FireBeam"], "learnablePaths": ["VPE_Empath"]} if user == "yoku" else None,
         "ideo": {"id": 1, "name": "Sonnenpfad", "certainty": 82, "role": "Moralführer" if user == "yoku" else None},
@@ -622,6 +626,19 @@ class H(BaseHTTPRequestHandler):
             return self.js(200, isekai_info())
         if p == "/api/vote":
             return self.js(200, vote_state())
+        if p == "/api/psyche":
+            pers = [("Rimpsyche_Sociability", "Geselligkeit", "verschlossen", "gesellig"), ("Rimpsyche_Tension", "Anspannung", "gelassen", "angespannt"),
+                    ("Rimpsyche_Diligence", "Fleiß", "nachlässig", "fleißig"), ("Rimpsyche_Openness", "Offenheit", "traditionell", "offen"),
+                    ("Rimpsyche_Aggressiveness", "Aggressivität", "friedlich", "aggressiv"), ("Rimpsyche_Compassion", "Mitgefühl", "kaltherzig", "mitfühlend"),
+                    ("Rimpsyche_Imagination", "Fantasie", "nüchtern", "fantasievoll"), ("Rimpsyche_Playfulness", "Verspieltheit", "ernst", "verspielt"),
+                    ("Rimpsyche_Humbleness", "Bescheidenheit", "eitel", "bescheiden"), ("Rimpsyche_Bravery", "Mut", "ängstlich", "mutig")]
+            ints = [("Cooking", "Kochen"), ("Music", "Musik"), ("Animals", "Tiere"), ("Combat", "Kampf"), ("Art", "Kunst"), ("Science", "Wissenschaft"), ("Nature", "Natur")]
+            parts = ["Schultern", "Brust", "Bizeps", "Trizeps", "Rücken", "Rumpf", "Gesäß", "Oberschenkel vorn", "Oberschenkel hinten"]
+            ids = ["shoulder", "chest", "biceps", "triceps", "back", "core", "glutes", "quads", "hams"]
+            return self.js(200, {"personalities": [{"id": i, "label": l, "low": lo, "high": hi, "lowDesc": "Ist eher %s." % lo, "highDesc": "Ist eher %s." % hi} for i, l, lo, hi in pers],
+                                 "interests": [{"id": i, "label": l, "desc": "Redet gern über %s." % l} for i, l in ints],
+                                 "body": {"max": 50, "fatThin": 15, "fatFat": 35, "muscleThin": 15, "muscleHulk": 35,
+                                          "parts": [{"id": i, "label": l} for i, l in zip(ids, parts)]}})
         if p == "/api/expertise":
             e = lambda i, l, d, eff: {"id": i, "label": l, "desc": d, "effects": eff}
             return self.js(200, {"skills": [

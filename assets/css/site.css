@@ -1071,3 +1071,54 @@ button.sty-chip:hover { border-color: var(--accent); }
 /* Forschung anschieben */
 .rs-boost { display: grid; gap: 8px; margin: 10px 0 4px; padding: 10px 12px; border: 1px dashed var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
 .rs-boost .act-btn { justify-self: start; }
+
+/* Psyche: Persönlichkeit als Regler zwischen zwei Polen */
+.ps-list { display: grid; gap: 4px; }
+.pslider { display: grid; grid-template-columns: minmax(0, 1fr) minmax(90px, 2fr) minmax(0, 1fr); align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 4px 6px; border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--muted); font: inherit; font-size: .85rem; cursor: pointer; text-align: left; }
+.pslider:hover { border-color: var(--border); background: var(--surface); }
+.pslider .ps-lo { text-align: right; }
+.pslider .on { color: var(--text); font-weight: 600; }
+.pslider.weak .on { font-weight: 400; color: var(--muted); }
+.ps-track { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); }
+.ps-mid { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--muted); opacity: .6; }
+.ps-fill { position: absolute; top: 0; bottom: 0; background: var(--accent); opacity: .55; border-radius: 3px; }
+.pslider.strong .ps-fill { opacity: .9; }
+.ps-dot { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.pslider + .trait-desc { margin: 0 6px 6px; }
+/* Interessen */
+.pi-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 4px 24px; }
+.pint { display: grid; grid-template-columns: minmax(0, 1fr) minmax(80px, 1.3fr); gap: 10px; align-items: center; width: 100%; min-height: 38px; padding: 2px 4px; border: 0; background: none; color: var(--text); font: inherit; font-size: .9rem; text-align: left; cursor: pointer; border-radius: var(--radius); }
+.pint:hover { background: var(--surface); }
+.pi-bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.pi-bar i { display: block; height: 100%; background: var(--accent); }
+/* Liebe */
+.love-head { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 14px; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent-soft); color: var(--text); font: inherit; font-size: 1rem; cursor: pointer; }
+.love-ico { color: var(--bad); }
+.kinsey { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; max-width: 360px; margin: 14px 0 2px; }
+.kinsey i { display: grid; place-items: center; height: 28px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); font-style: normal; font-size: .8rem; color: var(--muted); }
+.kinsey i.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 700; }
+.kinsey-legend { display: flex; justify-content: space-between; max-width: 360px; }
+.love-meters { margin-top: 12px; max-width: 420px; }
+/* Körperbau */
+.body-wrap { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px 24px; align-items: start; }
+.bfigs { display: flex; gap: 6px; }
+.bfig { margin: 0; text-align: center; }
+.bfig svg { width: 92px; height: auto; display: block; }
+.bf-out { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+.bf-leg { display: flex; align-items: center; gap: 4px; margin: 4px 0 0; flex-wrap: wrap; }
+.bf-sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-left: 4px; }
+.bscales { display: grid; gap: 14px; }
+.bscale .bs-top { display: flex; justify-content: space-between; font-size: .9rem; }
+.bs-track { position: relative; height: 10px; margin-top: 4px; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--border); }
+.bs-zone { position: absolute; top: 0; bottom: 0; background: var(--border); opacity: .7; }
+.bs-zone.lo { left: 0; border-radius: 4px 0 0 4px; }
+.bs-zone.hi { border-radius: 0 4px 4px 0; }
+.bs-dot { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.bs-goal { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--good); }
+.bs-leg { display: flex; justify-content: space-between; margin-top: 2px; }
+@media (max-width: 640px) {
+  .pslider { grid-template-columns: minmax(0, 1fr) minmax(70px, 1.4fr) minmax(0, 1fr); gap: 6px; font-size: .78rem; }
+  .body-wrap { grid-template-columns: 1fr; }
+  .bfigs { justify-content: center; }
+}
+@media (max-width: 640px) { .bscales .brow, .love-meters .brow { grid-template-columns: minmax(0, 12ch) minmax(0, 1fr) minmax(4ch, auto); } }

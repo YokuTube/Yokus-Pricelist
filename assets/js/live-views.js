@@ -654,6 +654,7 @@ const SUBS = [
   { id: 'health', label: 'Gesundheit' },
   { id: 'gear', label: 'Ausrüstung' },
   { id: 'style', label: 'Aussehen' },
+  { id: 'psyche', label: 'Psyche' },
   { id: 'ideo', label: 'Glaube' },
   { id: 'psy', label: 'Psycasts' },
   { id: 'work', label: 'Arbeit' },
@@ -670,7 +671,7 @@ let openTrait = null;
 
 const STATE_BADGE = { ok: 'good', sleeping: 'neutral', away: 'neutral', downed: 'bad', mental: 'doom', dead: 'doom' };
 const hasGoals = (p) => p.wants != null || p.quirks != null || p.aspirations != null;
-const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'ideo' || !!p.ideo) && (s.id !== 'psy' || !!p.psycasts) && (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null) && (s.id !== 'work' || Array.isArray(p.work)));
+const visibleSubs = (p) => SUBS.filter((s) => (s.id !== 'ideo' || !!p.ideo) && (s.id !== 'psy' || !!p.psycasts) && (s.id !== 'psyche' || !!(p.psyche && (p.psyche.personality || p.psyche.interests || p.psyche.sexuality))) && (s.id !== 'goals' || hasGoals(p)) && (s.id !== 'mood' || Array.isArray(p.thoughts)) && (s.id !== 'isekai' || p.isekai != null) && (s.id !== 'work' || Array.isArray(p.work)));
 
 function portraitHtml(p, cls) {
   const ini = esc((p.name || p.displayName || '?').trim().charAt(0).toUpperCase() || '?');
@@ -804,6 +805,7 @@ function panelHealth(p) {
     : '<div class="ch-ok">Kerngesund – keine Verletzungen oder Krankheiten.</div>');
   html += section('Schmerz', barRow('Schmerz', p.pain, `${Math.round(clamp(p.pain))} %`, tone(100 - clamp(p.pain))));
   if ((p.capacities || []).length) html += section('Fähigkeiten des Körpers', `<div class="bgrid">${p.capacities.map((c) => barRow(c.label, c.pct)).join('')}</div>`);
+  html += bodyHtml(p);
   return html;
 }
 
@@ -1272,7 +1274,7 @@ async function applyWork(host) {
   repaint(host);
 }
 
-const PANELS = { psy: panelPsy, ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
+const PANELS = { psyche: panelPsyche, psy: panelPsy, ideo: panelIdeo, style: panelStyle, overview: panelOverview, mood: panelMood, log: panelLog, relations: panelRelations, story: panelStory, work: panelWork, isekai: panelIsekai, skills: panelSkills, health: panelHealth, gear: panelGear, goals: panelGoals, origin: panelOrigin };
 
 function subsHtml(p) {
   const vis = visibleSubs(p);
@@ -1464,6 +1466,145 @@ function panelPsy(p) {
   return head + section('Pfade', `<div class="log-switch psy-paths">${chips}</div>${toggle}`) + body;
 }
 
+// =====================================================================
+// Psyche (RimPsyche): Persönlichkeit als Regler zwischen zwei Polen, Interessen als Balken,
+// Liebe (Orientierung, Kinsey-Skala, Libido). Körperbau (Rimbody) steht bei „Gesundheit“.
+// Nur Werte aus dem Spiel; Beschreibungen erst beim Antippen.
+// =====================================================================
+let pchData = null, pchLoading = false, pchHost = null, psyAllP = false;
+const PSYV_KEY = 'ys-psyche-view';
+let psyView = lsGet(PSYV_KEY) || 'pers';
+
+function ensurePch() {
+  if (pchData || pchLoading || !pchHost) return;
+  pchLoading = true;
+  const host = pchHost;
+  live.getJson('/api/psyche').then((r) => { if (r?.status === 200 && r.data) pchData = r.data; })
+    .catch(() => {}).finally(() => { pchLoading = false; if (host.isConnected) repaint(host); });
+}
+
+function persHtml(ps) {
+  const defs = pchData.personalities || [];
+  const rows = defs.filter((d) => ps.personality[d.id] != null)
+    .map((d) => ({ d, v: Number(ps.personality[d.id]) }))
+    .sort((a, b) => Math.abs(b.v) - Math.abs(a.v));
+  if (!rows.length) return '<div class="empty">Keine Persönlichkeitswerte.</div>';
+  const shown = psyAllP ? rows : rows.slice(0, 8);
+  const html = shown.map(({ d, v }) => {
+    const key = 'pp:' + d.id, open = openTrait === key;
+    const pos = clamp((v + 1) * 50);
+    const hi = v >= 0;
+    const strong = Math.abs(v) >= 0.6 ? ' strong' : Math.abs(v) < 0.2 ? ' weak' : '';
+    const desc = hi ? d.highDesc : d.lowDesc;
+    const fill = hi ? `left:50%;width:${(pos - 50).toFixed(1)}%` : `left:${pos.toFixed(1)}%;width:${(50 - pos).toFixed(1)}%`;
+    return `<button type="button" class="pslider${strong}" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(desc)}">
+      <span class="ps-lo${hi ? '' : ' on'}">${esc(d.low)}</span>
+      <span class="ps-track"><i class="ps-mid"></i><i class="ps-fill" style="${fill}"></i><i class="ps-dot" style="left:${pos.toFixed(1)}%"></i></span>
+      <span class="ps-hi${hi ? ' on' : ''}">${esc(d.high)}</span></button>
+      ${open && desc ? `<div class="trait-desc">${esc(desc)}</div>` : ''}`;
+  }).join('');
+  const more = rows.length > 8 ? `<button type="button" class="linklike" data-psyallp>${psyAllP ? 'Nur die stärksten zeigen' : `Alle ${rows.length} anzeigen`}</button>` : '';
+  return `<div class="ps-list">${html}</div>${more}<p class="small muted trait-hint">Je weiter der Punkt außen, desto ausgeprägter. Antippen erklärt es.</p>`;
+}
+
+function interestsHtml(ps) {
+  const defs = new Map((pchData.interests || []).map((i) => [i.id, i]));
+  const rows = Object.entries(ps.interests || {}).map(([id, v]) => ({ i: defs.get(id) || { id, label: id }, v: Number(v) }))
+    .sort((a, b) => b.v - a.v);
+  if (!rows.length) return '<div class="empty">Keine Interessen erfasst.</div>';
+  const one = (x) => {
+    const key = 'pi:' + x.i.id, open = openTrait === key;
+    return `<button type="button" class="pint" data-trait="${esc(key)}" aria-expanded="${open}" title="${esc(x.i.desc || '')}">
+      <span class="pi-l">${esc(x.i.label)}</span><span class="pi-bar"><i style="width:${clamp(x.v).toFixed(0)}%"></i></span></button>
+      ${open && x.i.desc ? `<div class="trait-desc">${esc(x.i.desc)}</div>` : ''}`;
+  };
+  const top = rows.slice(0, 5), low = rows.length > 5 ? rows.slice(-3).reverse() : [];
+  return `<div class="pi-cols"><div><h5 class="sub-h">Mag am liebsten</h5>${top.map(one).join('')}</div>
+    ${low.length ? `<div><h5 class="sub-h">Interessiert sich kaum für</h5>${low.map(one).join('')}</div>` : ''}</div>`;
+}
+
+function loveHtml(ps) {
+  const sx = ps.sexuality;
+  if (!sx) return '<div class="empty">Zur Liebe zeigt das Spiel hier nichts an.</div>';
+  const k = sx.kinsey;
+  const kin = k == null ? '' : `<div class="kinsey" title="Kinsey-Skala: 0 = nur anderes Geschlecht, 6 = nur gleiches Geschlecht">
+    ${[0, 1, 2, 3, 4, 5, 6].map((n) => `<i class="${n === k ? 'on' : ''}">${n}</i>`).join('')}</div>
+    <div class="kinsey-legend small muted"><span>anderes Geschlecht</span><span>gleiches Geschlecht</span></div>`;
+  const meter = (label, v) => (v == null ? '' : barRow(label, clamp(Number(v) * 100), `${Math.round(Number(v) * 100)} %`, 'acc', 'wide'));
+  const key = 'lv:o', open = openTrait === key;
+  return `<button type="button" class="love-head" data-trait="${esc(key)}" aria-expanded="${open}"><span class="love-ico" aria-hidden="true">♥</span><b>${esc(sx.orientation || 'Orientierung')}</b></button>
+    ${open && sx.orientationDesc ? `<div class="trait-desc">${esc(sx.orientationDesc)}</div>` : ''}
+    ${kin}<div class="bgrid love-meters">${meter('Libido', sx.drive)}${meter('Anziehung', sx.attraction)}</div>`;
+}
+
+function panelPsyche(p) {
+  const ps = p.psyche;
+  if (!ps) return '<div class="empty">Keine Psyche-Daten.</div>';
+  if (!pchData) { ensurePch(); return '<div class="empty">Lade …</div>'; }
+  const views = [['pers', 'Persönlichkeit', !!ps.personality], ['int', 'Interessen', !!ps.interests], ['love', 'Liebe', !!ps.sexuality]].filter((v) => v[2]);
+  if (!views.length) return '<div class="empty">Keine Psyche-Daten.</div>';
+  if (!views.some((v) => v[0] === psyView)) psyView = views[0][0];
+  const sw = views.length > 1 ? `<div class="log-switch page-subs">${views.map(([k, l]) => `<button type="button" class="seg${psyView === k ? ' on' : ''}" data-psyv="${k}" aria-pressed="${psyView === k}">${l}</button>`).join('')}</div>` : '';
+  const body = psyView === 'int' ? interestsHtml(ps) : psyView === 'love' ? loveHtml(ps) : persHtml(ps);
+  return `<div class="psyche">${sw}${body}</div>`;
+}
+
+// ---------- Körperbau (Rimbody) – Teil von „Gesundheit“ ----------
+// Figur vorne/hinten; jede Muskelgruppe färbt sich nach Ermüdung (grün = frisch, rot = ermüdet)
+const BODY_SHAPES = {
+  front: [['shoulder', 'M38 50 q-12 2 -14 14 l10 4 q2 -10 8 -12z M82 50 q12 2 14 14 l-10 4 q-2 -10 -8 -12z'],
+    ['chest', 'M44 52 h32 q2 14 -4 20 h-24 q-6 -6 -4 -20z'],
+    ['biceps', 'M24 68 l10 4 l-3 22 l-9 -2z M96 68 l-10 4 l3 22 l9 -2z'],
+    ['core', 'M48 74 h24 l-2 34 h-20z'],
+    ['quads', 'M47 114 h12 l-2 44 h-10z M61 114 h12 l0 44 h-10z']],
+  back: [['shoulder', 'M38 50 q-12 2 -14 14 l10 4 q2 -10 8 -12z M82 50 q12 2 14 14 l-10 4 q-2 -10 -8 -12z'],
+    ['back', 'M44 52 h32 l-4 50 h-24z'],
+    ['triceps', 'M24 68 l10 4 l-3 22 l-9 -2z M96 68 l-10 4 l3 22 l9 -2z'],
+    ['glutes', 'M47 104 h26 l2 14 h-30z'],
+    ['hams', 'M47 120 h12 l-2 40 h-10z M61 120 h12 l0 40 h-10z']],
+};
+const BODY_OUTLINE = 'M60 18 a12 12 0 1 1 -0.1 0z M38 48 h44 q16 2 18 18 l-6 34 l-10 -2 l2 -26 l-4 -2 l-2 40 l4 6 l-2 44 l-14 0 l-6 -40 l-6 40 l-14 0 l-2 -44 l4 -6 l-2 -40 l-4 2 l2 26 l-10 2 l-6 -34 q2 -16 18 -18z';
+
+function fatigueColor(v) {
+  const t = clamp(Number(v) || 0) / 100;
+  return `hsl(${Math.round(120 - 120 * t)} 65% 45%)`;
+}
+
+function bodyFigure(b, side) {
+  const parts = pchData.body.parts.map((x) => x.id);
+  const val = (id) => (Array.isArray(b.fatigue) ? b.fatigue[parts.indexOf(id)] : null);
+  const label = (id) => pchData.body.parts.find((x) => x.id === id)?.label || id;
+  const shapes = BODY_SHAPES[side].map(([id, d]) => {
+    const v = val(id);
+    return `<path d="${d}" fill="${v == null ? 'var(--surface-2)' : fatigueColor(v)}"><title>${esc(label(id))}: ${v == null ? '–' : Math.round(v) + ' % ermüdet'}</title></path>`;
+  }).join('');
+  return `<figure class="bfig"><svg viewBox="0 0 120 170" role="img" aria-label="Muskelgruppen ${side === 'front' ? 'vorne' : 'hinten'}"><path class="bf-out" d="${BODY_OUTLINE}"/>${shapes}</svg><figcaption class="small muted">${side === 'front' ? 'vorne' : 'hinten'}</figcaption></figure>`;
+}
+
+function scaleHtml(label, v, goal, lo, hi, max, loL, hiL) {
+  const P = (x) => clamp((Number(x) / max) * 100);
+  return `<div class="bscale"><div class="bs-top"><span>${esc(label)}</span><b>${fmt(Math.round(v))}</b></div>
+    <div class="bs-track"><i class="bs-zone lo" style="width:${P(lo).toFixed(1)}%"></i><i class="bs-zone hi" style="left:${P(hi).toFixed(1)}%;width:${(100 - P(hi)).toFixed(1)}%"></i>
+      ${goal != null ? `<i class="bs-goal" style="left:${P(goal).toFixed(1)}%" title="Ziel: ${fmt(Math.round(goal))}"></i>` : ''}<i class="bs-dot" style="left:${P(v).toFixed(1)}%"></i></div>
+    <div class="bs-leg small muted"><span>${esc(loL)}</span><span>${esc(hiL)}</span></div></div>`;
+}
+
+function bodyHtml(p) {
+  const b = p.psyche?.body;
+  if (!b) return '';
+  if (!pchData) { ensurePch(); return ''; }
+  if (!pchData.body) return '';
+  const B = pchData.body;
+  const scales = scaleHtml('Körperfett', b.fat, b.fatGoal, B.fatThin, B.fatFat, B.max, 'schlank', 'füllig')
+    + scaleHtml('Muskelmasse', b.muscle, b.muscleGoal, B.muscleThin, B.muscleHulk, B.max, 'schmächtig', 'muskulös');
+  const ex = b.exhaustion != null && b.exhaustion > 0 ? barRow('Erschöpfung', clamp(b.exhaustion), `${Math.round(b.exhaustion)} %`, b.exhaustion > 60 ? 'low' : 'acc', 'wide') : '';
+  const figs = Array.isArray(b.fatigue) && b.fatigue.length
+    ? `<div class="bfigs">${bodyFigure(b, 'front')}${bodyFigure(b, 'back')}</div>`
+    : '';
+  const leg = figs ? `<p class="small muted bf-leg"><i class="bf-sw" style="background:${fatigueColor(0)}"></i>frisch <i class="bf-sw" style="background:${fatigueColor(100)}"></i>ermüdet (nach Training)</p>` : '';
+  return section('Körperbau', `<div class="body-wrap">${figs ? `<div>${figs}${leg}</div>` : ''}<div class="bscales">${scales}${ex}</div></div>`);
+}
+
 // Expertise (Vanilla Skills Expanded): alle möglichen Expertisen je Fertigkeit zum Nachlesen, eigene hervorgehoben.
 // Vergeben tut sie der Streamer – hier nur lesen.
 let expData = null, expLoading = false;
@@ -1510,6 +1651,7 @@ function afterPaint(host) {
   if (host._pawn && activeSub(host._pawn) === 'ideo') ensureIdeos(host);
   if (host._pawn && activeSub(host._pawn) === 'psy') ensurePsy(host);
   expHost = host;
+  pchHost = host;
   if (host._pawn && activeSub(host._pawn) === 'skills' && host._pawn.expertise) ensureExp(host);
 }
 
@@ -1547,6 +1689,9 @@ function mountCharacter(host, p) {
     const az = e.target.closest('[data-art-zoom]');
     if (az) { artBig = !artBig; if (host._pawn) morph(host, characterHtml(host._pawn)); afterPaint(host); return; }
     if (pawn && ab) { runAct(host, ab); return; }
+    const pv = e.target.closest('[data-psyv]');
+    if (pawn && pv) { psyView = pv.dataset.psyv; lsSet(PSYV_KEY, psyView); openTrait = null; repaint(host); return; }
+    if (pawn && e.target.closest('[data-psyallp]')) { psyAllP = !psyAllP; repaint(host); return; }
     const pp = e.target.closest('[data-psypath]');
     if (pawn && pp) { psySel = pp.dataset.psypath; openTrait = null; repaint(host); return; }
     if (pawn && e.target.closest('[data-psyall]')) { psyAll = !psyAll; repaint(host); return; }
