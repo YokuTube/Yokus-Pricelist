@@ -11,6 +11,8 @@ const good = new Map();   // key -> url, die funktioniert hat
 const bad = new Set();    // urls, die fehlgeschlagen sind
 
 export function setIcons(map) { known = map && typeof map === 'object' ? map : {}; }
+/** Gibt es ein exportiertes Symbol (data/icons) für den Schlüssel? */
+export const hasStaticPic = (key) => known[key] !== undefined;
 
 /** Mögliche Adressen in Reihenfolge der Vorzugs. */
 function candidates(key) {

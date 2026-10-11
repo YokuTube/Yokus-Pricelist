@@ -5,7 +5,7 @@ import { icon } from './icons.js';
 import * as vb from './visual-b.js';   // Paket B: Symbole statt Text
 import * as vbl from './live-visual-b.js';   // Spielsymbole (nur mit laufender Live-Mod)
 import * as live from './live.js';
-import { setIcons, fillAll as fillPics, hue } from './pics.js';
+import { setIcons, fillAll as fillPics, hue, hasStaticPic } from './pics.js';
 import { introCardsHtml, itemTeaserHtml, fillTeasers } from './live-visual-a.js';
 
 const PAGE = 48;
@@ -399,6 +399,14 @@ function bindQuantity(root) {
   });
 }
 
+/** Typisches Item einer Kategorie, dessen Spielsymbol es gibt (bevorzugte Liste, sonst das teuerste verkaufte mit Symbol). */
+function catRep(c, items) {
+  const pool = items.filter((i) => i.category === c);
+  for (const d of vb.CAT_REP[c] || []) if (pool.some((i) => i.defName === d) && hasStaticPic('t_' + d)) return d;
+  const withPic = pool.filter((i) => hasStaticPic('t_' + i.defName)).sort((a, b) => b.price - a.price);
+  return withPic[0]?.defName || '';
+}
+
 /** Kachel: Spielsymbol (nur mit Live-Mod, sonst Symbol der Art), Name, Preis-Plakette. */
 function itemTile(i) {
   const emo = vb.catIcon(i.category);
@@ -447,7 +455,7 @@ export function itemsView(data) {
     </div>
     <div class="cat-bar" id="i-cats" role="group" aria-label="Art des Items">
       <button type="button" class="cat-btn" data-cat="" aria-pressed="true" title="Alle"><span class="cb-i" aria-hidden="true">☰</span><span class="cb-l">Alle</span><b>${sold.length}</b></button>
-      ${catList.map((c) => `<button type="button" class="cat-btn" data-cat="${esc(c)}" aria-pressed="false" title="${esc(c)}"><span class="cb-i" aria-hidden="true">${vb.catIcon(c)}</span><span class="cb-l">${esc(c)}</span><b>${cats.get(c)}</b></button>`).join('')}
+      ${catList.map((c) => `<button type="button" class="cat-btn" data-cat="${esc(c)}" aria-pressed="false" title="${esc(c)}"><span class="cb-i" aria-hidden="true"${catRep(c, sold) ? ` data-pickey="t_${esc(catRep(c, sold))}" data-pcls="cb-img" data-psize="22"` : ''}>${vb.catIcon(c)}</span><span class="cb-l">${esc(c)}</span><b>${cats.get(c)}</b></button>`).join('')}
     </div>
     <div id="i-count" class="result-count"></div>
     <div id="i-hint"></div>
@@ -475,6 +483,7 @@ export function itemsView(data) {
           : (a, b) => a.name.localeCompare(b.name, 'de'));
       redraw = pager($('#i-list'), $('#i-count'), list, itemTile, 'Nichts gefunden. Probier einen anderen Suchbegriff oder Filter.');
       fillIcons($('#i-list'));
+      fillIcons($('#i-cats'));   // Kategorie-Knöpfe: Spielsymbol eines typischen Items
     };
     // pager hängt Klick-Handler an; deshalb Liste bei jedem Filter neu aufbauen
     const rebuild = () => {

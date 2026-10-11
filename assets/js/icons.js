@@ -13,7 +13,7 @@ const P = {
   spiel: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   ereignisse: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
   gedenken: '<path d="M6 21V10a6 6 0 0 1 12 0v11z"/><path d="M4 21h16M12 8v6M9.500 10.500h5"/>',
-  mods: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.900 4.900l2.100 2.100M17 17l2.100 2.100M19.100 4.900L17 7M7 17l-2.100 2.100"/>',
+  mods: '<path d="M10 3h4v2.500a1.500 1.500 0 1 0 3 0V3h4v7h-2.500a1.500 1.500 0 1 0 0 3H21v8h-7v-2.500a1.500 1.500 0 1 0-3 0V21H3v-8h2.500a1.500 1.500 0 1 0 0-3H3V3h7z"/>',
 };
 
 export function icon(name, size = 18) {

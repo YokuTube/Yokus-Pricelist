@@ -2,6 +2,9 @@
 import { plain, cap } from './util.js';
 import { catDe } from './visual-b.js';
 
+// RICS ordnet einzelne Dinge falsch ein (z. B. Holz als „Weapon“, weil man Holzstämme schwingen kann) – hier geradeziehen
+const CAT_FIX = { WoodLog: 'Rohstoffe' };
+
 const MODS_CORE = new Set(['Core', 'RimWorld']);
 export const modName = (m) => (!m || MODS_CORE.has(m) ? 'RimWorld' : m);
 
@@ -71,7 +74,7 @@ function processItems(raw, game = {}) {
     // Spielname (Deutsch) zuerst: RICS findet Items auch über den aktuellen Spielnamen ohne Leerzeichen (!buy granitblöcke)
     name: cap(game[d.DefName || key] || d.CustomName || d.DefName || key),
     price: d.BasePrice || 0,
-    category: catDe(plain(d.Category) || 'Sonstiges'),   // englische Kategorienamen (Apparel, Weapon …) auf Deutsch
+    category: CAT_FIX[d.DefName] || catDe(plain(d.Category) || 'Sonstiges'),   // englische Kategorienamen (Apparel, Weapon …) auf Deutsch
     limit: d.HasQuantityLimit ? (d.QuantityLimit || 0) : 0,
     mod: modName(d.Mod),
     usable: !!d.IsUsable, equippable: !!d.IsEquippable, wearable: !!d.IsWearable,

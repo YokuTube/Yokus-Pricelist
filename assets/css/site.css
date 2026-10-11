@@ -1649,3 +1649,6 @@ body.stream-side-right.stream-beside .duel-strip { right: calc(var(--side-w) + v
 .rc-detail[hidden] { display: none; }
 .rc-desc { margin: 0; font-size: .85rem; line-height: 1.35; color: var(--muted); text-align: left; }
 .rc-detail .cmd { max-width: 100%; }
+
+/* Kategorie-Knöpfe: echtes Spielsymbol eines typischen Items */
+.cat-btn .cb-i .cb-img { width: 22px; height: 22px; object-fit: contain; image-rendering: auto; vertical-align: middle; }

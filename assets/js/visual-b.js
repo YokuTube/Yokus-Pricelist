@@ -27,13 +27,19 @@ const CAT_DE = {
 export const catDe = (c) => CAT_DE[c] || c;
 
 const CAT_ICON = [
-  [/waffe|munition|mörser|granat/i, '🔫'], [/kinderkleid/i, '🧒'], [/kleidung|rüstung|textil|wolle|stoff/i, '👕'], [/mahlzeit|nahrung|vegetar|pflanzlich|speise|essen/i, '🍽'],
+  [/rohstoff|metall|erz/i, '⛏'], [/waffe|munition|mörser|granat/i, '🔫'], [/kinderkleid/i, '🧒'], [/kleidung|rüstung|textil|wolle|\bstoff/i, '👕'], [/mahlzeit|nahrung|vegetar|pflanzlich|speise|essen/i, '🍽'],
   [/fleisch|monsterfleisch/i, '🥩'], [/^ei\b|eier|ei \(/i, '🥚'], [/fisch/i, '🐟'], [/medizin|booster|hygiene/i, '💊'], [/droge|entspann/i, '🌿'],
   [/tier/i, '🐾'], [/möbel|temperatur|sicherheit|strom|fabrik|produktion|trainingsger/i, '🪑'], [/stein|edelstein|juwel|facetten/i, '🪨'],
-  [/rohstoff|metall|erz/i, '⛏'], [/leder/i, '🧶'], [/psytrainer|psy/i, '🧠'], [/fertigkeit|buch|bücher|forschung|techpl/i, '📚'], [/beute|schatz|truhe|kiste/i, '🎁'],
+  [/leder/i, '🧶'], [/psytrainer|psy/i, '🧠'], [/fertigkeit|buch|bücher|forschung|techpl/i, '📚'], [/beute|schatz|truhe|kiste/i, '🎁'],
   [/hergestellt|produkt/i, '🏭'], [/bionisch|prothet|implantat|android|hybrid|archotech|mechtech|körperteil|teratogen/i, '🦾'], [/gen|archit|xeno|proben|wachstum/i, '🧬'],
   [/kunst|artefakt|reliquie|runen|talisman|schicksal/i, '🎨'], [/saat|samen|pflanz/i, '🌱'], [/mech/i, '🤖'], [/ghul/i, '🧟'], [/diverses|sonstiges|objekte|spezial|unfertig|abfall/i, '📦'],
 ];
+// Typisches Item je Kategorie: sein echtes Spielsymbol wird zum Kategorie-Symbol (data/icons/t_<Def>.png)
+export const CAT_REP = {
+  Fertigkeitstrainer: ['Neurotrainer_Shooting', 'Neurotrainer_Melee'], Psytrainer: [], Rohstoffe: ['Steel', 'Silver', 'WoodLog'], Waffen: ['Gun_AssaultRifle', 'Gun_Revolver', 'MeleeWeapon_LongSword'],
+  Kleidung: ['Apparel_Parka', 'Apparel_CollarShirt'], Medizin: ['MedicineIndustrial', 'MedicineHerbal'], Drogen: ['Beer', 'SmokeleafJoint'], Tiere: [], Textilien: ['Cloth'],
+  Bücher: ['Novel', 'TextBook'], Mahlzeiten: ['MealSimple', 'MealFine'], Hergestellt: ['ComponentIndustrial'], Edelsteine: ['Jade'], Steinblöcke: ['BlocksGranite'],
+};
 export const catIcon = (c) => { for (const [re, e] of CAT_ICON) if (re.test(c || '')) return e; return '📦'; };
 
 // ---------- Eigenschaften (Traits): gut / schlecht / neutral ----------
