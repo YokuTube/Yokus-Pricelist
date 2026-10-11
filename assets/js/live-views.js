@@ -1,7 +1,9 @@
 // RICS Live – Oberfläche: Live-Leiste, Verbinden-Dialog, Kauf-Dialog, Tabs „Ich“ und „Kolonie“, Charakter-Ansicht.
 // Alle Texte aus der Schnittstelle sind Zuschauernamen/Spielinhalte und werden mit esc() entschärft.
-import { esc, fmt, copyText, toast, cmdBtn, morph } from './util.js';
+import { esc as escRaw, fmt, copyText, toast, cmdBtn, morph } from './util.js';
 import * as live from './live.js';
+// Alle Anzeigetexte aus der Mod laufen durch esc(): erst Unity-Rich-Text (<color=..>, <b> …) entfernen, dann entschärfen.
+const esc = (s) => escRaw(live.stripTags(s));
 import { CHAT_POPOUT as CHAT_URL } from './stream.js';
 
 let DATA = null;
@@ -25,24 +27,30 @@ function barRow(label, pct, text, tn, cls = '') {
   return `<div class="brow ${cls}"><span class="bl">${esc(label)}</span>${bar(pct, tn)}<span class="bv">${esc(text ?? Math.round(clamp(pct)) + ' %')}</span></div>`;
 }
 
-// Stimmung als Skala 0–100 % mit den Zusammenbruch-Grenzen aus PawnDetail.breaks (Prozent; fehlt es → normaler Balken)
-const BREAK_NAMES = [['extreme', 'extremer Zusammenbruch'], ['major', 'größerer Zusammenbruch'], ['minor', 'kleiner Zusammenbruch']];
+// Stimmung als feste Skala 0–100 %: Balken füllt sich bis zur Stimmung, Farbe = Zustand (Zusammenbruch-Grenzen aus
+// PawnDetail.breaks in Prozent; fehlen sie → normaler Balken). Grenzen nur als dünne Striche, nichts wird gestaucht.
+const BREAK_NAMES = [['extreme', 'extremer Zusammenbruch'], ['major', 'großer Zusammenbruch'], ['minor', 'kleiner Zusammenbruch']];
 function moodRow(p, text, legend = false) {
-  const b = p.breaks;
-  const th = b && typeof b === 'object' ? BREAK_NAMES.filter(([k]) => b[k] != null && Number.isFinite(Number(b[k]))).map(([k, l]) => [k, l, Number(b[k])]) : [];
   if (p.moodPct == null) return '';
+  const b = p.breaks;
+  const th = b && typeof b === 'object' ? BREAK_NAMES.filter(([k]) => b[k] != null && Number.isFinite(Number(b[k]))).map(([k, l]) => [k, l, clamp(b[k])]) : [];
   if (!th.length) return barRow('Stimmung', p.moodPct, text);
   const v = clamp(p.moodPct);
-  const cuts = th.map(([k, l, x]) => [k, l, clamp(x)]).sort((x, y) => x[2] - y[2]);
-  const zone = { extreme: 'z-ext', major: 'z-maj', minor: 'z-min' };
-  // Zonen: von 0 bis zur ersten Grenze = tiefste Stufe usw.; darüber neutral
-  let from = 0, segs = '';
-  for (const [k, , x] of cuts) { if (x > from) segs += `<i class="${zone[k]}" style="left:${from}%;width:${x - from}%"></i>`; from = x; }
-  if (from < 100) segs += `<i class="z-ok" style="left:${from}%;width:${100 - from}%"></i>`;
-  const ticks = cuts.map(([, l, x]) => `<b class="mood-tick" style="left:${x}%" title="${esc(l)} ab unter ${Math.round(x)} %"></b>`).join('');
+  const cuts = th.slice().sort((x, y) => x[2] - y[2]);
+  // Zustand: unter der tiefsten Grenze = extrem, darunter gestaffelt; Grenzen können fehlen → dann greifen die vorhandenen
+  const hit = cuts.find(([, , x]) => v < x);
+  const st = hit ? hit[0] : 'ok';
+  const msg = { extreme: 'Gefahr: extremer Zusammenbruch', major: 'Gefahr: großer Zusammenbruch', minor: 'Gefahr: kleiner Zusammenbruch', ok: 'Stabil – kein Zusammenbruch' }[st];
+  const top = cuts[cuts.length - 1][2];
+  const ticks = cuts.map(([k, l, x]) => `<b class="mood-tick t-${k}" style="left:${x}%" title="${esc(l)} unter ${Math.round(x)} %"></b>`).join('');
   const title = `Stimmung ${Math.round(v)} % · ` + cuts.map(([, l, x]) => `${l} unter ${Math.round(x)} %`).join(' · ');
-  const leg = legend ? `<div class="mood-leg small muted" aria-hidden="true">${cuts.map(([k, l, x]) => `<span><i class="${zone[k]}"></i>${esc(l)} &lt; ${Math.round(x)} %</span>`).join('')}</div>` : '';
-  return `<div class="brow mood-row"><span class="bl">Stimmung</span><span class="mood-scale" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(v)}" aria-label="${esc(title)}" title="${esc(title)}">${segs}${ticks}<em class="mood-dot" style="left:${v}%"></em></span><span class="bv">${esc(text ?? Math.round(v) + ' %')}</span></div>${leg}`;
+  const leg = legend ? `<div class="mood-leg small muted" aria-hidden="true">${cuts.slice().reverse().map(([k, l, x]) => `<span><i class="t-${k}"></i>${esc(l)} &lt; ${Math.round(x)} %</span>`).join('')}</div>` : '';
+  const label = text && String(text).trim() && String(text).trim() !== `${Math.round(v)} %` ? esc(text) : '';
+  return `<div class="brow mood-row m-${st}"><span class="bl">Stimmung</span>`
+    + `<span class="mood-scale" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(v)}" aria-label="${esc(title)}" title="${esc(title)}">`
+    + `<i class="mood-zone" style="width:${top}%"></i><i class="mood-fill" style="width:${v}%"></i>${ticks}</span>`
+    + `<span class="bv mood-pct">${Math.round(v)} %</span>`
+    + `<span class="mood-state"><i class="mood-dot-s" aria-hidden="true"></i><span class="mood-txt">${label ? `<b>${label}</b> · ` : ''}${msg}</span></span></div>${leg}`;
 }
 
 // =====================================================================
@@ -536,7 +544,7 @@ let alertEl = null, alertTimer = null;
 function flashAlert(text, tone = 'bad') {
   if (!alertEl) return;
   alertEl.className = `live-alert ${tone}`;
-  alertEl.textContent = text;
+  alertEl.textContent = live.stripTags(text);
   alertEl.hidden = false;
   clearTimeout(alertTimer);
   alertTimer = setTimeout(() => { alertEl.hidden = true; }, 9000);
@@ -824,7 +832,7 @@ function panelOverview(p) {
 
 // Gedanken wie im Stimmungs-Reiter des Spiels; Antippen zeigt die Beschreibung (gleicher Mechanismus wie Eigenschaften)
 function panelMood(p) {
-  const head = p.moodPct == null ? '' : `<div class="bgrid">${moodRow(p, p.moodLabel || `${Math.round(p.moodPct)} %`, true)}</div>`;
+  const head = p.moodPct == null ? '' : `<div class="bgrid mood-wide">${moodRow(p, p.moodLabel || `${Math.round(p.moodPct)} %`, true)}</div>`;
   const list = [...(p.thoughts || [])].sort((a, b) => b.value - a.value);
   if (!list.length) return head + '<div class="empty">Gerade keine besonderen Gedanken.</div>';
   const sum = list.reduce((s, t) => s + (Number(t.value) || 0), 0);
@@ -917,7 +925,28 @@ function panelGear(p) {
   const g = p.gear || {};
   const list = (arr) => (arr && arr.length ? `<ul class="plain">${arr.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="muted small" style="margin:0">nichts</p>');
   return section('Waffe', g.weapon ? `<p style="margin:0">${esc(g.weapon)}</p>` : '<p class="muted small" style="margin:0">unbewaffnet</p>')
-    + section('Kleidung', list(g.apparel)) + section('Inventar', list(g.inventory));
+    + section('Kleidung', list(g.apparel)) + section('Inventar', inventoryHtml(p, g) || list(g.inventory));
+}
+
+// Inventar mit Knopf „Benutzen“ (nur eigener Kolonist, nur wenn !benutzen freigegeben/in RICS an) → !benutzen #t<id>
+const USE_VERB = { food: 'Essen', drug: 'Nehmen', apparel: 'Anziehen', weapon: 'Ausrüsten' };
+function inventoryHtml(p, g) {
+  const items = g.inventoryItems;
+  if (!Array.isArray(items)) return '';
+  if (!items.length) return '<p class="muted small" style="margin:0">nichts</p>';
+  const can = isMine(p) && live.isAllowed('benutzen');
+  const wait = Number(live.getMe()?.useWaitHours);
+  const waiting = can && wait > 0;
+  const rows = items.map((it) => {
+    const verb = USE_VERB[it.kind];
+    const img = it.icon ? `<img class="inv-ico" src="${esc(animalImg(it.icon))}" alt="" width="28" height="28" loading="lazy">` : '<span class="inv-ico" aria-hidden="true"></span>';
+    const btn = can && verb && !waiting
+      ? actBtn('benutzen', it.id, verb, { confirm: it.kind === 'drug', armedLabel: 'Wirklich?', title: it.kind === 'drug' ? 'Kann süchtig machen' : `${verb}: ${it.label}` })
+      : '';
+    return `<li class="inv-row">${img}<span class="inv-name">${esc(it.label)}${it.count > 1 ? ` <span class="muted">×${fmt(it.count)}</span>` : ''}</span>${btn}</li>`;
+  }).join('');
+  const note = waiting ? `<p class="muted small" style="margin:6px 0 0">Wieder benutzbar in ${wait < 1 ? 'weniger als 1' : Math.ceil(wait)} Spielstunde${Math.ceil(wait) === 1 || wait < 1 ? '' : 'n'}.</p>` : '';
+  return `<ul class="plain inv-list">${rows}</ul>${note}`;
 }
 
 // ---------- Aktions-Knöpfe (nur für den eigenen Kolonisten) ----------
@@ -2658,8 +2687,9 @@ function spielHtml(g, res) {
   const conds = (g.conditions || []).length
     ? `<ul class="plain">${g.conditions.map((c) => `<li class="gcond"><div><b>${esc(c.label)}</b>${c.desc ? `<div class="small muted">${esc(c.desc)}</div>` : ''}</div><span class="tag">${c.left ? esc(c.left) : 'dauerhaft'}</span></li>`).join('')}</ul>`
     : '<div class="ch-ok">Alles ruhig.</div>';
-  const evs = (g.events || []).length
-    ? `<ul class="gevents">${g.events.map((e) => `<li class="k-${KIND_LABEL[e.kind] ? esc(e.kind) : 'neutral'}"><span class="gdot" title="${esc(KIND_LABEL[e.kind] || 'Neutral')}"></span><span class="gl">${esc(e.label)}</span><span class="small muted ga">${esc(e.ago)}</span></li>`).join('')}</ul>`
+  const gEvs = (g.events || []).filter((e) => !isShopLetter(e));
+  const evs = gEvs.length
+    ? `<ul class="gevents">${gEvs.map((e) => `<li class="k-${KIND_LABEL[e.kind] ? esc(e.kind) : 'neutral'}"><span class="gdot" title="${esc(KIND_LABEL[e.kind] || 'Neutral')}"></span><span class="gl">${esc(e.label)}</span><span class="small muted ga">${esc(e.ago)}</span></li>`).join('')}</ul>`
     : '<p class="muted small" style="margin:0">Noch nichts passiert.</p>';
   const tabs = subTabsHtml(SPIEL_SUBS, spielSub, 'spsub');
   let body;
@@ -2759,6 +2789,8 @@ function eventsLiveHtml(list) {
   return views + eventsLettersHtml(list);
 }
 
+// Käufe/Lieferungen der Zuschauer (RICS-Briefe „Rimazon Delivery/Pet Delivery/Surgery …“, Rechnungstext mit „RIMAZON …“, „Customer:/Kunde:“) gehören nicht in den Kurier
+const isShopLetter = (e) => /rimazon/i.test(`${e?.label || ''} ${e?.text || ''}`) || /^\s*(Customer|Kunde)\s*:/im.test(e?.text || '');
 const EV_PRIO = { threat: 3, bad: 2, good: 1, neutral: 0 };
 let evStyle = lsGet('ys-ev-style') === 'list' ? 'list' : 'paper';   // 'paper' = Zeitung (Standard), 'list' = Zeitleiste
 const sentences = (t) => (String(t || '').replace(/\s+/g, ' ').trim().match(/[^.!?]+[.!?]+(?:["“”»«)]*)|[^.!?]+$/g) || []).map((x) => x.trim()).filter(Boolean);
@@ -2769,6 +2801,7 @@ function eventsLettersHtml(list) {
   const styles = `<div class="log-switch ev-style" role="group" aria-label="Darstellung">${[['paper', 'Zeitung'], ['list', 'Liste']].map(([k, l]) =>
     `<button type="button" class="seg${evStyle === k ? ' on' : ''}" data-evstyle="${k}" aria-pressed="${evStyle === k}">${l}</button>`).join('')}</div>`;
   const head = styles + filters;
+  list = list.filter((e) => !isShopLetter(e));
   if (!list.length) return `${head}<div class="empty">Noch keine Briefe aufgezeichnet.</div>`;
   const shown = list.filter((e) => evFilter === 'all' || e.kind === evFilter);
   if (!shown.length) return `${head}<div class="empty">Keine Ereignisse in dieser Art.</div>`;

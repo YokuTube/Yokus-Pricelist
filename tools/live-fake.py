@@ -41,7 +41,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 ORIGINS = {"https://yokutube.github.io", "http://localhost:8765", "http://127.0.0.1:8765"}
 RB_WAIT = [0]  # Spielstunden bis !forschung wieder geht (Test)
-ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "slots", "wette", "lob", "nachhilfe", "pate", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult"]
+ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "slots", "wette", "lob", "nachhilfe", "pate", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult", "benutzen"]
 ARGS_RE = re.compile(r"^[\w \-.'#@]{0,80}$", re.UNICODE)
 
 LOCK = threading.Lock()
@@ -118,7 +118,8 @@ PAWNS = {
          {"label": "Nachtaktiv", "desc": "Fühlt sich nachts am wohlsten und arbeitet dann besser."}],
         [cond("Narbe", "Linker Arm", bad=False), cond("Bionisches Bein", "Rechtes Bein", bad=False)],
         2, {"weapon": "Revolver (gut)", "apparel": ["Kochschürze (normal)", "Cowboyhut", "Lederstiefel (meisterhaft)"],
-            "inventory": ["Bier x3", "Verband x2", "Silber x120"]},
+            "inventory": ["Bier x3", "Verband x2", "Silber x120"],
+            "inventoryItems": [{"id": "#t9001", "label": "Einfache Mahlzeit", "count": 2, "kind": "food", "icon": None}, {"id": "#t9002", "label": "Bier", "count": 3, "kind": "drug", "icon": None}, {"id": "#t9003", "label": "Parka (gut)", "count": 1, "kind": "apparel", "icon": None}, {"id": "#t9004", "label": "Kurzschwert (normal)", "count": 1, "kind": "weapon", "icon": None}, {"id": "#t9005", "label": "Verband", "count": 2, "kind": "other", "icon": None}]},
         {"points": 40, "needed": 100, "list": [
             {"label": "Kochen bis Stufe 12", "desc": "Erreiche Stufe 12 in Kochen.", "reward": 20},
             {"label": "Ein Fest feiern", "desc": "Lade die Kolonie zu einem Fest ein.", "reward": 30}]},
@@ -239,6 +240,12 @@ def recompute_learnable(d):
     d["learnable"] = [n["id"] for n in t["nodes"] if n["id"] in out and cost[n["id"]] <= d["points"]]
 
 
+# Test: Stimmungen ueberschreiben, z. B. FAKE_MOODS="mira_spielt=3,luna_88=27,yoku=15"; Farb-Tags in Eigenschaft (Test fuer Rich-Text)
+for _kv in filter(None, os.environ.get("FAKE_MOODS", "").split(",")):
+    _u, _, _v = _kv.partition("=")
+    if _u in PAWNS:
+        PAWNS[_u]["moodPct"] = float(_v)
+PAWNS["yoku"]["traits"].append({"label": "<color=#66B3FF>Rang b</color>", "desc": "<b>Abenteurerrang</b>: <color=#66B3FF>Rang b</color> der Gilde."})
 PAWNS["yoku"]["isekai"] = isekai_data("krieger", 7, 340, 500, "D-Rang", 3, 2,
                                       {"str": 12, "dex": 9, "vit": 11, "int": 6, "wis": 7, "cha": 8},
                                       ["kr_start", "kr_a1", "kr_a2", "kr_a4"])
@@ -302,6 +309,8 @@ RELATIONS = {
 
 # ---------- Ereignisse (Chronik mit Text) ----------
 EVENTS = [
+    {"label": "🟡 Rimazon Delivery - Luna", "text": "RIMAZON INVOICE ==== Customer: luna_88 Item: 2x Bier Delivery: Locker Delivery. Thank you for shopping with Rimazon!", "kind": "neutral", "ago": "6 Stunden", "day": 37},
+    {"label": "Rimazon Pet Delivery - Eddi", "text": "Ein Tier wurde geliefert.", "kind": "good", "ago": "8 Stunden", "day": 37},
     {"img": {"type": "img", "img": "faction-pirates", "name": "Plünderer"}, "label": "Überfall: Plünderer", "text": "Fünf Plünderer sind über den Nordpass gekommen. Zwei wurden erledigt, die übrigen flohen.", "kind": "threat", "ago": "2 Stunden", "day": 37},
     {"img": {"type": "img", "img": "Steel", "name": "Stahl"}, "label": "Händler aus Fernost", "text": "Ein Händler hat drei Kisten Stahl gegen Reis getauscht.", "kind": "good", "ago": "7 Stunden", "day": 37},
     {"label": "Zwielicht am Himmel", "text": "Ein seltsames Licht stand über dem Tal. Danach war alles wie vorher.", "kind": "neutral", "ago": "9 Stunden", "day": 37},
@@ -764,7 +773,7 @@ class H(BaseHTTPRequestHandler):
             if pawn is not None:
                 pawn["duelIncoming"] = duel_state()
             return self.js(200, {"user": user, "displayName": ALLOWED_USERS.get(user, user), "coins": coins,
-                                 "karma": karma, "coinsPerMinute": 7.5, "earning": True, "activeMinutesLeft": 24, "researchWaitHours": RB_WAIT[0], "pawn": pawn})
+                                 "karma": karma, "coinsPerMinute": 7.5, "earning": True, "activeMinutesLeft": 24, "researchWaitHours": RB_WAIT[0], "useWaitHours": float(os.environ.get("FAKE_USE_WAIT", "0")), "pawn": pawn})
         if p.startswith("/api/art/"):
             user = unquote(p[9:]).lower()
             key = user if user in PAWNS else next((k for k, v in PAWNS.items() if v.get("id") == user), None)

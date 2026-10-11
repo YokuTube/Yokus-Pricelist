@@ -2,6 +2,10 @@
 // Alles hier läuft im Hintergrund und still: Ist die Mod nicht erreichbar, passiert nichts Sichtbares.
 // Ereignisse (on): 'change' (live/offline, verknüpft/abgemeldet), 'me' (neue Daten zu mir), 'notice' (Hinweistext).
 
+/** Unity-Rich-Text (<color=#..>, </color>, <b>, <i>, <size=..> usw.) aus Texten der Mod entfernen. */
+const RICH_TAG = /<\/?(?:color|b|i|u|s|size|material|sup|sub|mark|align|alpha|font|nobr|style|link|indent|line-height|lowercase|uppercase|smallcaps|space|voffset|width|pos|cspace|mspace|rotate|page|margin|gradient|noparse|sprite)(?:[=\s][^>]*)?>/gi;
+export const stripTags = (s) => (s == null ? s : String(s).replace(RICH_TAG, ''));
+
 const TOKEN_KEY = 'ys-live-token';
 const LIVE_JSON = 'https://api.github.com/repos/YokuTube/Yokus-Pricelist/contents/live.json?ref=live';
 const RETRY_FAILED_MS = 60000;   // Adresse war da, ist aber ausgefallen: höchstens jede Minute neu suchen
@@ -198,9 +202,10 @@ function startMe() {
 // Zuschauer bedeutungslos. Neue Mod-Versionen entfernen das schon; das hier fängt ältere ab: kurze Absätze
 // ohne Satzzeichen am Ende einer Beschreibung weg.
 function cleanDescs(o, depth = 0) {
-  if (!o || typeof o !== 'object' || depth > 8) return;
+  if (!o || typeof o !== 'object' || depth > 12) return;
   for (const k in o) {
-    const v = o[k];
+    let v = o[k];
+    if (typeof v === 'string' && v.includes('<')) { v = stripTags(v); o[k] = v; }   // Unity-Rich-Text überall weg (auch Schlüssel zum Aufklappen bleiben so stimmig)
     if (k === 'desc' && typeof v === 'string' && v.includes('\n\n')) {
       const parts = v.split('\n\n');
       while (parts.length > 1 && /^[^.!?:;…]{1,40}$/.test(parts[parts.length - 1].trim())) parts.pop();
@@ -284,7 +289,7 @@ export async function act(command, args) {
     try {
       const s = await api('/api/action/' + encodeURIComponent(id), { auth: true });
       if (s.status === 401) { dropToken(true); throw new Error('Die Verknüpfung ist abgelaufen. Bitte neu verbinden.'); }
-      if (s.ok && s.data?.state === 'done') { refreshMe(); return Array.isArray(s.data.messages) ? s.data.messages : []; }
+      if (s.ok && s.data?.state === 'done') { refreshMe(); return Array.isArray(s.data.messages) ? s.data.messages.map(stripTags) : []; }
     } catch (e) {
       if (!e.net) throw e;       // Netzfehler beim Abfragen: weiter versuchen, bis die Zeit um ist
     }
