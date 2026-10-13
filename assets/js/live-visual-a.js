@@ -291,7 +291,8 @@ const RK_CATS = [
 ];
 export function ranksHtml(list, praise) {
   if (!list.length) return '';
-  const cats = [...RK_CATS];
+  // Kategorien ohne Daten (z. B. Isekai-Stufe, wenn die Mod fehlt) ganz weglassen statt "Noch keine Werte"
+  const cats = RK_CATS.filter((c) => c.key !== 'isekaiLevel' || list.some((p) => p.isekaiLevel != null));
   if (praise && typeof praise === 'object') cats.push({ key: '__praise', title: 'Beliebteste', ico: '👏', unit: 'Lob', val: (v) => H.fmt(v), get: (p) => Number(praise[p.id || p.user]) || 0 });
   const cards = cats.map((c) => {
     const get = c.get || ((p) => Number(p[c.key]));

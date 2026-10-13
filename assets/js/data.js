@@ -45,7 +45,7 @@ export async function loadAll() {
     races: processRaces(out.races, labels),
     icons: labels.icons || {},
     mods: processMods(out.mods),
-    commands: processCommands(out.cmdDocs, out.cmdSettings),
+    commands: processCommands(out.cmdDocs, out.cmdSettings, out.mods),
     choices: out.choices || {},
     picks: out.picks || {},
   };
@@ -221,10 +221,18 @@ function processMods(raw) {
 // ---------- Befehle: gepflegte Beschreibung + Live-Einstellungen aus RICS ----------
 const PERM = { everyone: 'Alle', subscriber: 'Subs', vip: 'VIPs', moderator: 'Mods', broadcaster: 'Streamer' };
 
-function processCommands(docs, settings) {
+// Woher ein Befehl kommt -> Name der Mod in ActiveMods.json. Ist die Mod (oder die unter `requires` genannte) nicht aktiv,
+// verschwindet der Befehl von der Seite. RICS' CommandSettings.json behaelt Eintraege deaktivierter Mods, taugt dafuer also nicht.
+const SRC_MOD = { extras: 'RICS Extras', voting: 'RICS Voting', live: 'RICS Live', addon: 'Rimworld Interactive Chat Service - Addon' };
+const modKey = (n) => String(n || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+
+function processCommands(docs, settings, modsRaw) {
   if (!docs) return { groups: [], list: [] };
   const live = settings || {};
-  const list = (docs.commands || []).map((c) => {
+  const active = new Set((modsRaw?.mods || []).map((m) => modKey(m.name)));
+  // Ohne Modliste (Datei fehlt/leer) nichts ausblenden
+  const has = (name) => !active.size || !name || active.has(modKey(name));
+  const list = (docs.commands || []).filter((c) => has(SRC_MOD[c.src]) && has(c.requires)).map((c) => {
     const s = live[c.cmd];
     return {
       ...c,

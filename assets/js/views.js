@@ -118,8 +118,8 @@ function showcase(data) {
     .filter(([, c]) => on(c.trim().slice(1)));
   if (soc.length) out.push(card('Mit anderen Pawns', 'befehle', 'Plaudern, flirten, heiraten – oder zum Faustkampf herausfordern.',
     chips(soc.map(([l, c]) => pickBtn(l, c))), 'Soziales & Duelle ansehen'));
-  const team = [on('goal') ? ['!goal', '!goal'] : null, ['Abstimmung: einfach die Zahl schreiben', '2']].filter(Boolean);
-  out.push(card('Gemeinsam mit dem Chat', 'befehle', 'Abstimmen, welches Event als Nächstes kommt, und gemeinsame Ziele erreichen.',
+  const team = [on('goal') ? ['!goal', '!goal'] : null, on('vote') ? ['Abstimmung: einfach die Zahl schreiben', '2'] : null].filter(Boolean);
+  if (team.length) out.push(card('Gemeinsam mit dem Chat', 'befehle', 'Abstimmen, welches Event als Nächstes kommt, und gemeinsame Ziele erreichen.',
     chips(team.map(([l, c]) => pickBtn(l, c))), 'Mehr ansehen'));
   out.push(card('Rassen & Eigenschaften', 'rassen', `Such dir aus ${fmt(data.races.length)} Rasse(n) mit ihren Xenotypen deinen Pawn aus und gib ihm unter ${fmt(data.traits.length)} Eigenschaften die passende.`,
     chips([pickBtn('!join', '!join'), pickBtn('!races', '!races')]), 'Rassen ansehen'));

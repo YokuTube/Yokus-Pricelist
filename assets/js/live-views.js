@@ -1769,7 +1769,10 @@ function subsHtml(p) {
 function tabPanelHtml(p) {
   const as = tabAreas(p, activeTab(p)), cur = activeArea(p);
   const sw = as.length > 1 ? `<div class="log-switch page-subs">${as.map((a) => `<button type="button" class="seg${cur === a ? ' on' : ''}" data-area="${a}" aria-pressed="${cur === a}"><span aria-hidden="true">${AREA_ICO[a] || ''}</span> ${esc(AREA_LABEL[a])}</button>`).join('')}</div>` : '';
-  return sw + PANELS[cur](p);
+  // Ein Fehler in einem Bereich (z. B. unerwartete Daten einer Mod) darf nur diesen Bereich treffen, nie die ganze Ansicht
+  let body;
+  try { body = PANELS[cur](p); } catch (err) { console.warn('Bereich', cur, err); body = '<div class="empty">Dieser Bereich ist gerade nicht verfügbar.</div>'; }
+  return sw + body;
 }
 
 /** Zeichnet Hero + Unterreiter + Inhalt in `host`. Der gewählte Reiter bleibt beim Aktualisieren erhalten. */
@@ -1927,12 +1930,12 @@ function panelIdeo(p) {
   const i = (ideosData?.ideos || []).find((x) => x.id === p.ideo.id);
   const head = `<div class="bgrid">${barRow('Überzeugung', p.ideo.certainty)}</div>`;
   if (!i) return head + `<div class="empty">${ideosLd.gone ? 'Zu dieser Glaubensrichtung gibt es keine Angaben.' : 'Lade die Glaubensrichtung …'}</div>`;
-  const memes = section('Meme', `<div class="traits">${i.memes.map((m, n) => ideoItem('im:' + n, `${m.structure ? '✦ ' : ''}${esc(m.label)}`, m.desc)).join('')}</div>`);
-  const precepts = i.precepts.length ? section('Gebote', `<div class="ideo-precepts">${i.precepts.map((x, n) =>
+  const memes = section('Meme', `<div class="traits">${(i.memes || []).map((m, n) => ideoItem('im:' + n, `${m.structure ? '✦ ' : ''}${esc(m.label)}`, m.desc)).join('')}</div>`);
+  const precepts = i.precepts?.length ? section('Gebote', `<div class="ideo-precepts">${i.precepts.map((x, n) =>
     `<div class="ideo-pre imp-${esc(x.impact)}">${ideoItem('ip:' + n, `<span class="small muted">${esc(x.issue)}:</span> ${esc(x.label)}`, x.desc)}</div>`).join('')}</div>`) : '';
-  const roles = i.roles.length ? section('Rollen', i.roles.map((r, n) =>
-    `<div class="ideo-role">${ideoItem('ir:' + n, esc(r.label), r.desc, r.holders.length ? ` <span class="small muted">· ${r.holders.map((h, k) => { const id = r.holderIds?.[k] || null; return id && id !== (p.id || p.user) ? xrefHtml(h, id, true) : linkText(h, { span: true, skip: p.id || p.user }); }).join(', ')}</span>` : ' <span class="small muted">· unbesetzt</span>')}</div>`).join('')) : '';
-  const rituals = i.rituals.length ? section('Rituale', `<div class="traits">${i.rituals.map((r, n) => ideoItem('it:' + n, esc(r.label), r.desc)).join('')}</div>`) : '';
+  const roles = i.roles?.length ? section('Rollen', i.roles.map((r, n) =>
+    `<div class="ideo-role">${ideoItem('ir:' + n, esc(r.label), r.desc, r.holders?.length ? ` <span class="small muted">· ${r.holders.map((h, k) => { const id = r.holderIds?.[k] || null; return id && id !== (p.id || p.user) ? xrefHtml(h, id, true) : linkText(h, { span: true, skip: p.id || p.user }); }).join(', ')}</span>` : ' <span class="small muted">· unbesetzt</span>')}</div>`).join('')) : '';
+  const rituals = i.rituals?.length ? section('Rituale', `<div class="traits">${i.rituals.map((r, n) => ideoItem('it:' + n, esc(r.label), r.desc)).join('')}</div>`) : '';
   const about = `<p class="small muted" style="margin:6px 0 0">${esc(i.name)}${i.culture ? ` · Kultur: ${esc(i.culture)}` : ''} · ${fmt(i.followers)} Anhänger in der Kolonie${i.primary ? ' · Hauptglaube der Kolonie' : ''}</p>`;
   return head + about + (i.desc ? `<p class="ideo-desc">${esc(i.desc)}</p>` : '') + memes + precepts + roles + rituals
     + '<p class="small muted trait-hint">Tippe auf einen Eintrag für die Beschreibung.</p>';
@@ -2085,6 +2088,7 @@ function fatigueColor(v) {
 }
 
 function bodyFigure(b, side) {
+  if (!Array.isArray(pchData?.body?.parts)) return '';
   const parts = pchData.body.parts.map((x) => x.id);
   const val = (id) => (Array.isArray(b.fatigue) ? b.fatigue[parts.indexOf(id)] : null);
   const label = (id) => pchData.body.parts.find((x) => x.id === id)?.label || id;
@@ -2803,7 +2807,7 @@ function spielHtml(g, res) {
     <div class="grid cols-2" style="margin-top:12px">
       <section class="card ch-sec"><h4>Gerade los</h4>${A.conditionsHtml(g.conditions)}</section>
       <section class="card ch-sec"><h4>Was zuletzt passiert ist</h4>${A.recentEventsHtml(gEvs)}</section>
-      <section class="card ch-sec" style="grid-column:1/-1"><h4>Gemeinschaftsziele</h4>${goalsHtml(g.goals)}</section>
+      ${Array.isArray(g.goals) ? `<section class="card ch-sec" style="grid-column:1/-1"><h4>Gemeinschaftsziele</h4>${goalsHtml(g.goals)}</section>` : ''}
       <section class="card ch-sec"><h4>Erzähler</h4><p style="margin:0"><b>${esc(g.storyteller)}</b></p><p class="muted small" style="margin:4px 0 0">Schwierigkeit: ${esc(g.difficulty)}</p></section>
     </div>`;
   return tabs + body;

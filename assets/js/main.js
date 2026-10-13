@@ -114,9 +114,14 @@ function renderView() {
   renderTabs();
   if (!DATA) { main.innerHTML = '<div class="empty">Lade Daten …</div>'; return; }
   setIcons(DATA.icons); setEventIndex(DATA.events, DATA.weather);
-  const v = tab.view(DATA);
-  main.innerHTML = v.html;
-  v.bind(main);
+  try {
+    const v = tab.view(DATA);
+    main.innerHTML = v.html;
+    v.bind(main);
+  } catch (err) {
+    console.warn('Ansicht', tab.id, err);
+    main.innerHTML = '<div class="empty">Diese Ansicht ist gerade nicht verfügbar.</div>';
+  }
   fillPics(main);
   document.title = (tab.id === 'start' ? 'Yokus Store' : `${tab.label} – Yokus Store`);
   // Nur bei echtem Wechsel der Adresse nach oben; ein Neuzeichnen derselben Ansicht (z. B. Live an/aus) behält die Scrollposition
