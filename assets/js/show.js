@@ -6,7 +6,10 @@ import * as live from './live.js';
 const NS = 'http://www.w3.org/2000/svg';
 const CLIQUE_COLORS = ['#e0a653', '#6fb7d6', '#b38fd9', '#8fbf7a', '#e07a6b', '#d6cf6f'];
 const SUB_KEY = 'ys-show-sub';
-const SUBS = [['buehne', 'Bühne'], ['netz', 'Netz'], ['feuer', 'Feuer'], ['zeit', 'Zeitleiste'], ['rat', 'Rat']];
+// Dritter Eintrag: nur anzeigen, wenn es etwas zu sehen gibt (Gedenkwand/Beichtstuhl sind anfangs leer)
+const SUBS = [['buehne', 'Bühne'], ['netz', 'Netz'], ['feuer', 'Feuer'], ['zeit', 'Zeitleiste'], ['rat', 'Rat'],
+  ['gedenken', 'Gedenkwand', (d) => (d?.memorial || []).length > 0], ['beichte', 'Beichtstuhl', (d) => (d?.confessions || []).length > 0]];
+const subsNow = () => SUBS.filter((x) => !x[2] || x[2](showData));
 
 // ---------- kleine DOM-Helfer (Text nur als Textknoten) ----------
 function build(make, props, kids) {
@@ -304,6 +307,29 @@ function viewRat() {
   return root;
 }
 
+// ---------- Gedenkwand und Beichtstuhl (Daten aus Baustein 4.6; Texte sind schon gesäubert, hier nur textContent) ----------
+function goneAvatar(g) {
+  const a = avatar(g.id, 52, 'gone');
+  const l = a.querySelector('.sh-av-l');
+  if (l) l.textContent = ((g.name || '?').trim()[0] || '?').toUpperCase();
+  return a;
+}
+function viewGedenken() {
+  const list = (showData.memorial || []).slice().reverse();
+  return h('div', { class: 'sh-wall' }, list.map((g) => h('article', { class: 'sh-memo' },
+    h('div', { class: 'sh-memo-h' }, goneAvatar(g), h('div', {}, h('b', {}, g.name || '?'),
+      h('div', { class: 'muted small' }, (g.kind === 'tot' ? 'nach ' : '') + (g.days || 0) + (g.days === 1 ? ' Tag' : ' Tagen') + (g.kind === 'tot' ? ' gestorben' : ' ausgeschieden')),
+      g.viewer ? h('div', { class: 'sh-viewer' }, '@' + g.viewer + ' kann sich neu anstellen') : null)),
+    Array.isArray(g.memories) && g.memories.length ? h('ul', { class: 'sh-memos' }, g.memories.map((m) => h('li', {}, String(m)))) : null)));
+}
+
+function viewBeichte() {
+  const list = showData.confessions || [];
+  return h('div', { class: 'sh-confs' }, list.map((c) => h('div', { class: 'sh-conf' },
+    h('div', { class: 'sh-conf-q' }, h('span', { class: 'muted small' }, 'Tag ' + (c.day || '?') + (c.viewer ? ' · @' + c.viewer + ' fragt ' : ' · Frage an ') ), nameBtn(c.pawn, 'inline'), h('div', {}, '„' + (c.question || '') + '“')),
+    h('div', { class: 'sh-conf-a' }, avatar(c.pawn, 36), h('div', { class: 'sh-bub' }, c.answer || '')))));
+}
+
 // ---------- Tagebuch (PC: Seitenleiste, Handy: Vollbild-Blatt) ----------
 function diarySheet() {
   const sheet = h('aside', { class: 'sh-sheet', hidden: true, role: 'dialog', 'aria-label': 'Tagebuch' });
@@ -353,7 +379,8 @@ export function showView() {
     openDiary = (id) => sheet.open(id);
     const drawSubs = () => {
       clear(subs);
-      for (const [id, label] of SUBS) subs.append(h('button', { type: 'button', role: 'tab', class: 'sh-sub', 'aria-selected': id === sub, onclick: () => { sub = id; saveSub(id); lastKey = ''; render(); } }, label));
+      if (!subsNow().some((x) => x[0] === sub)) sub = 'buehne';
+      for (const [id, label] of subsNow()) subs.append(h('button', { type: 'button', role: 'tab', class: 'sh-sub', 'aria-selected': id === sub, onclick: () => { sub = id; saveSub(id); lastKey = ''; render(); } }, label));
     };
     const render = () => {
       if (!showData) { clear(body); body.append(h('div', { class: 'empty' }, 'Die Show wird geladen …')); return; }
@@ -362,7 +389,8 @@ export function showView() {
       lastKey = key;
       day.textContent = showData.tag ? 'Tag ' + showData.tag : '';
       clear(body);
-      const v = { buehne: viewBuehne, netz: viewNetz, feuer: viewFeuer, zeit: viewZeit, rat: viewRat }[sub];
+      if (!subsNow().some((x) => x[0] === sub)) sub = 'buehne';
+      const v = { buehne: viewBuehne, netz: viewNetz, feuer: viewFeuer, zeit: viewZeit, rat: viewRat, gedenken: viewGedenken, beichte: viewBeichte }[sub];
       try { body.append(v()); } catch (e) { console.warn('[show]', e); body.append(h('div', { class: 'empty' }, 'Diese Ansicht ist gerade nicht verfügbar.')); }
       drawSubs();
     };

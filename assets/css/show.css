@@ -149,3 +149,16 @@ body.show-mode [data-act] { display: none !important; }    /* Kauf-/Befehlsknöp
 .mp-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .mp-chip { min-height: 44px; padding: 0 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
 .mp-chip.on { border-color: var(--accent); color: var(--accent); }
+
+/* Gedenkwand, Beichtstuhl */
+.sh-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.sh-memo { padding: 12px; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--muted); border-radius: var(--radius); }
+.sh-memo-h { display: flex; gap: 12px; align-items: center; }
+.sh-av.gone { filter: grayscale(1) brightness(.8); }
+.sh-memos { margin: 10px 0 0; padding-left: 18px; font-size: 14px; color: var(--muted); }
+.sh-memos li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sh-confs { display: flex; flex-direction: column; gap: 14px; }
+.sh-conf { padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.sh-conf-q { margin-bottom: 8px; overflow-wrap: anywhere; }
+.sh-conf-a { display: flex; gap: 10px; align-items: flex-start; }
+.sh-bub { padding: 8px 12px; background: var(--accent-soft); border-radius: 12px; overflow-wrap: anywhere; min-width: 0; }
