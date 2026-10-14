@@ -10,7 +10,7 @@ const el = (tag, props, ...kids) => {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(props || {})) {
     if (v == null || v === false) continue;
-    if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : String(v));
+    if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true && !k.startsWith('aria-') ? '' : String(v));
   }
   for (const c of kids.flat(Infinity)) if (c != null && c !== false) e.append(c);
   return e;
@@ -124,9 +124,21 @@ export function karteView() {
 
     function drawWorld() {
       ctx.fillStyle = '#1d2a38'; ctx.fillRect(0, 0, size.w, size.h);
+      // Ausschnitt: alle Objekte samt Ziel, mindestens 24 Grad breit, mit Rand
+      const pts = [];
+      for (const o of data?.world || []) { pts.push([o.lon, o.lat]); if (o.destLon != null) pts.push([o.destLon, o.destLat]); }
+      let minX = -180, maxX = 180, minY = -90, maxY = 90;
+      if (pts.length) {
+        minX = Math.min(...pts.map((q) => q[0])); maxX = Math.max(...pts.map((q) => q[0])); minY = Math.min(...pts.map((q) => q[1])); maxY = Math.max(...pts.map((q) => q[1]));
+        const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+        const sp = Math.max(24, (maxX - minX) * 1.4, ((maxY - minY) * 1.4 * size.w) / size.h);
+        minX = cx - sp / 2; maxX = cx + sp / 2; minY = cy - (sp * size.h) / size.w / 2; maxY = cy + (sp * size.h) / size.w / 2;
+      }
+      const P = (lon, lat) => [((lon - minX) / (maxX - minX)) * size.w, ((maxY - lat) / (maxY - minY)) * size.h];
       ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1; ctx.setLineDash([]);
-      for (let i = 1; i < 8; i++) { ctx.beginPath(); ctx.moveTo(0, (size.h * i) / 8); ctx.lineTo(size.w, (size.h * i) / 8); ctx.stroke(); ctx.beginPath(); ctx.moveTo((size.w * i) / 8, 0); ctx.lineTo((size.w * i) / 8, size.h); ctx.stroke(); }
-      const P = (lon, lat) => [((lon + 180) / 360) * size.w, ((90 - lat) / 180) * size.h];
+      const stepG = (maxX - minX) > 100 ? 30 : (maxX - minX) > 40 ? 10 : 5;
+      for (let g = Math.ceil(minX / stepG) * stepG; g <= maxX; g += stepG) { const [x] = P(g, 0); ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size.h); ctx.stroke(); }
+      for (let g = Math.ceil(minY / stepG) * stepG; g <= maxY; g += stepG) { const [, y] = P(0, g); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(size.w, y); ctx.stroke(); }
       for (const o of data?.world || []) {
         const [x, y] = P(o.lon, o.lat);
         if (o.kind === 'caravan' && o.destLon != null) { const [a, b] = P(o.destLon, o.destLat); ctx.setLineDash([6, 4]); ctx.strokeStyle = '#d99a4e'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(a, b); ctx.stroke(); ctx.setLineDash([]); ctx.strokeRect(a - 4, b - 4, 8, 8); }
@@ -236,7 +248,7 @@ export function karteView() {
         if (r.status !== 200 || !r.data || r.unchanged) { if (r.status === 503 && !data) clear(body), body.append(el('div', { class: 'empty' }, 'Die Karte wird gelesen …')); return; }
         const first = !data; data = r.data;
         infoTxt.textContent = (data.maps || []).reduce((n, m) => n + m.pawns.length, 0) + ' Figuren';
-        if (first || !which || (which !== 'world' && !mapObj())) { which = data.maps?.[0]?.id || 'world'; rebuild(); return; }
+        if (first || !which || (which !== 'world' && !mapObj())) { which = location.hash.split('/')[2] === 'world' ? 'world' : (data.maps?.[0]?.id || 'world'); rebuild(); return; }
         drawSubs(); drawStrip(); drawCard(); draw();
         if (which !== 'world') loadTerrain(which);
       },

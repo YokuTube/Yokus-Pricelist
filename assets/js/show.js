@@ -16,7 +16,7 @@ function build(make, props, kids) {
     if (k === 'class') e.setAttribute('class', v);
     else if (k === 'style') e.style.cssText = v;
     else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
-    else e.setAttribute(k, v === true ? '' : String(v));
+    else e.setAttribute(k, v === true && !k.startsWith('aria-') ? '' : String(v));
   }
   for (const c of kids.flat(Infinity)) if (c != null && c !== false) e.append(c);
   return e;
