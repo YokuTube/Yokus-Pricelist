@@ -24,17 +24,25 @@ export function karteView() {
     let data = null, which = null;                       // which = Karten-id oder 'world'
     const terrain = new Map();                           // id -> { data, canvas }
     const imgs = new Map();                              // pawn id -> Image | false
+    let follow = false;                                  // Karte folgt der ausgewählten Figur (bis man selbst verschiebt)
     let selected = null, view = { s: 4, x: 0, z: 0, fit: false }, cv = null, ctx = null, raf = 0, card = null, strip = null;
     let size = { w: 300, h: 300 };
 
     const alive = () => body.isConnected;
     const mapObj = () => data?.maps?.find((m) => m.id === which);
+    // Gemaltes Porträt (gibt es erst, wenn der Server es einmal gerendert hat), sonst das normale Porträt; beides später erneut versuchen.
+    const tryImg = (id, src, onFail) => {
+      const im = new Image(); im.decoding = 'async';
+      im.onload = () => { if (!alive()) return; imgs.set(id, im); draw(); };
+      im.onerror = onFail; im.src = src;
+    };
     const pawnImg = (id) => {
       if (imgs.has(id)) return imgs.get(id);
-      const im = new Image(); im.decoding = 'async';
-      im.onload = () => { imgs.set(id, im); draw(); };
-      im.onerror = () => imgs.set(id, false);
-      imgs.set(id, false); im.src = live.artUrl(id, 0);
+      imgs.set(id, false);
+      tryImg(id, live.artUrl(id, 0), () => {
+        if (!imgs.get(id)) tryImg(id, live.portraitUrl(id, 0), () => {});
+        setTimeout(() => { if (alive()) tryImg(id, live.artUrl(id, Date.now() % 100000), () => {}); }, 30000);   // gemaltes Bild nachladen, sobald es da ist
+      });
       return false;
     };
     const loadTerrain = async (id) => {
@@ -207,7 +215,8 @@ export function karteView() {
       if (!p) return;
       const bar = (label, v) => v == null ? null : el('div', { class: 'mp-need' }, el('span', {}, label), el('span', { class: 'mp-bar' }, el('i', { style: `width:${Math.max(2, Math.min(100, v))}%` })), el('span', { class: 'muted small' }, v + ' %'));
       const near = m.pawns.filter((q) => q.id !== p.id && Math.hypot(q.x - p.x, q.z - p.z) < NEAR);
-      card.append(el('div', { class: 'mp-card-h' }, el('b', {}, p.name), el('button', { type: 'button', class: 'mp-x', 'aria-label': 'Schließen', onclick: () => { selected = null; drawCard(); draw(); } }, '✕')),
+      card.append(el('div', { class: 'mp-card-h' }, el('b', {}, p.name), el('button', { type: 'button', class: 'mp-x', 'aria-label': 'Schließen', onclick: () => { selected = null; follow = false; drawCard(); draw(); } }, '✕')),
+        el('button', { type: 'button', class: 'mp-link', 'aria-pressed': follow, onclick: () => { follow = !follow; if (follow) { view.x = p.x; view.z = p.z; } drawCard(); draw(); } }, follow ? '◉ Folge ich – aus' : '○ Folgen'),
         el('div', { class: 'small muted' }, (p.job || '') + (p.sleeping ? ' · schläft' : '')),
         bar('Hunger', p.food), bar('Durst', p.thirst), bar('Schlaf', p.rest), bar('Stimmung', p.mood),
         el('div', { class: 'small' }, 'Ort: ' + m.name + ' (' + p.x + ' / ' + p.z + ')'),
@@ -224,9 +233,9 @@ export function karteView() {
     }
 
     function pick(id, center) {
-      selected = id; drawCard(); drawStrip();
+      selected = id; follow = !!id; drawCard(); drawStrip();
       const p = mapObj()?.pawns.find((q) => q.id === id);
-      if (center && p) { view.x = p.x; view.z = p.z; }
+      if ((center || follow) && p) { view.x = p.x; view.z = p.z; }
       draw();
       if (id && window.matchMedia('(max-width: 700px)').matches) cv.scrollIntoView({ block: 'start', behavior: 'smooth' });   // Handy: Infokarte verdeckt unten, Karte nach oben
     }
@@ -270,7 +279,9 @@ export function karteView() {
           pinch = d; moved = 99; return;
         }
         view.x -= (e.clientX - last[0]) / view.s; view.z += (e.clientY - last[1]) / view.s;
-        moved += Math.abs(e.clientX - last[0]) + Math.abs(e.clientY - last[1]); last = [e.clientX, e.clientY]; draw();
+        moved += Math.abs(e.clientX - last[0]) + Math.abs(e.clientY - last[1]); last = [e.clientX, e.clientY];
+        if (follow && moved >= 6) { follow = false; drawCard(); }   // selbst verschoben: Folgen aus
+        draw();
       });
       const up = (e) => {
         const wasTap = pts.size === 1 && moved < 6; pts.delete(e.pointerId); pinch = 0;
@@ -295,6 +306,7 @@ export function karteView() {
         const first = !data; data = r.data;
         infoTxt.textContent = (data.maps || []).reduce((n, m) => n + m.pawns.length, 0) + ' Figuren' + (data.maps?.some((m) => fogOf(m)) ? ' · dunkel = außerhalb der Sicht der Gruppe, ? = zuletzt gesehen' : '');
         if (first || !which || (which !== 'world' && !mapObj())) { which = location.hash.split('/')[2] === 'world' ? 'world' : (data.maps?.[0]?.id || 'world'); rebuild(); return; }
+        if (follow && selected) { const fp = mapObj()?.pawns.find((q) => q.id === selected); if (fp) { view.x = fp.x; view.z = fp.z; } }
         drawSubs(); drawStrip(); drawCard(); draw();
         if (which !== 'world') loadTerrain(which);
       },
