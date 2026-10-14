@@ -791,6 +791,49 @@ def show_diary(pid):
         {"title": "Beichtstuhl", "lines": [{"text": "Noch nichts im Beichtstuhl.", "tone": "quiet"}]}]}
 
 
+# ---------- Daten-Karte: /api/map und /api/map/terrain/<id> ----------
+import math
+MAP_W = MAP_H = 100
+
+
+def map_terrain():
+    rows = []
+    for gz in range(MAP_H):
+        r = []
+        for gx in range(MAP_W):
+            bach = abs(gx - (50 + 14 * math.sin(gz / 11.0))) < 2.2
+            teich = (gx - 74) ** 2 + (gz - 70) ** 2 < 50
+            fels = (gx - 18) ** 2 + (gz - 22) ** 2 < 120 or (gx - 85) ** 2 + (gz - 15) ** 2 < 70
+            h = hashlib.md5(("%d,%d" % (gx, gz)).encode()).digest()[0]
+            baum = h < 38 and (gx < 40 or gz > 75)
+            sand = abs(gx - (50 + 14 * math.sin(gz / 11.0))) < 4.5
+            r.append("W" if teich and (gx - 74) ** 2 + (gz - 70) ** 2 < 20 else "w" if bach or teich else "r" if fels else "t" if baum else "s" if sand else "g")
+        rows.append("".join(r))
+    return {"id": "m1", "w": MAP_W, "h": MAP_H, "step": 3, "sizeX": 250, "sizeZ": 250, "rows": rows}
+
+
+def map_live():
+    t = time.time()
+    pawns = []
+    homes = {"yoku": (120, 120), "mira_spielt": (130, 118), "luna_88": (118, 132), "eddi_tv": (150, 100)}
+    for i, (k, p) in enumerate(PAWNS.items()):
+        bx, bz = homes.get(k, (110 + i * 9, 125 - i * 4))
+        a = t / 6.0 + i * 1.7
+        x, z = int(bx + 10 * math.sin(a)), int(bz + 8 * math.cos(a * 0.8))
+        pawns.append({"id": p["id"], "name": p["name"], "x": x, "z": z, "job": p.get("job") or "Steht herum", "food": 80 - i * 9, "rest": 90 - i * 12,
+                      "thirst": 70 - i * 6, "mood": int(p.get("moodPct") or 50), "sleeping": i == 3,
+                      "dx": bx + 14, "dz": bz - 6})
+    blds = [{"x": 125, "z": 125, "k": "fire", "sx": 1, "sz": 1, "label": "Lagerfeuer"}]
+    for j in range(7):
+        blds.append({"x": 108 + j * 4, "z": 112, "k": "bed", "sx": 1, "sz": 2, "label": "Schlafplatz"})
+    for j in range(5):
+        blds.append({"x": 134, "z": 140 + j, "k": "wall", "sx": 1, "sz": 1, "label": "Wand"})
+    blds.append({"x": 140, "z": 128, "k": "build", "sx": 2, "sz": 2, "label": "Reuse"})
+    return {"maps": [{"id": "m1", "name": "Strand", "sizeX": 250, "sizeZ": 250, "pawns": pawns, "buildings": blds}],
+            "world": [{"kind": "settlement", "name": "Strand", "lon": 12.0, "lat": 48.0},
+                      {"kind": "caravan", "name": "Karawane", "lon": 14.5, "lat": 47.0, "destLon": 18.0, "destLat": 45.0, "pawns": ["yoku"]}]}
+
+
 class H(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -849,6 +892,10 @@ class H(BaseHTTPRequestHandler):
         u = urlparse(self.path)
         p = u.path
         q = parse_qs(u.query)
+        if p == "/api/map":
+            return self.js(200, map_live(), cache=False)
+        if p.startswith("/api/map/terrain/"):
+            return self.js(200, map_terrain())
         if p == "/api/show" or p.startswith("/api/show/diary/"):
             if not SHOW:
                 return self.js(404, {"error": "Keine Show aktiv"}, cache=False)

@@ -32,6 +32,7 @@ const listeners = new Set();
 let probeStop = null;
 
 export const isShowMode = () => active && live.isLive();
+export const getShowData = () => showData;
 export const onShowChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 
 function setActive(v) {

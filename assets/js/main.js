@@ -10,6 +10,7 @@ import { initLiveUi, setLiveData, offerLive, ichView, kolonieView, spielView, er
 import { initStreamSettings, syncStreamDock, openStreamBar } from './stream.js';
 import { initCooldowns, setCooldownData } from './cooldowns.js';
 import { initFeedback } from './feedback.js';
+import { karteView } from './map.js';
 import { showView, initShow, isShowMode, onShowChange } from './show.js';
 
 const TABS = [
@@ -28,6 +29,7 @@ const LIVE_TABS = [
   { id: 'ich', label: 'Ich', view: ichView },
   { id: 'kolonie', label: 'Kolonie', view: kolonieView },
   { id: 'spiel', label: 'Spiel', view: spielView },
+  { id: 'karte', label: 'Karte', view: karteView },
   { id: 'ereignisse', label: 'Ereignisse', view: ereignisseView },
   { id: 'gedenken', label: 'Gedenken', view: gedenkenView },
 ];
