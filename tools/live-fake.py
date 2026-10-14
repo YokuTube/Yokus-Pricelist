@@ -745,7 +745,8 @@ def show_info():
         members.append({"id": i, "name": PAWNS[i]["name"], "leader": i == "svenja", "clique": cl.get(i, -1),
                         "regard": {"yoku": 0.4, "mira_spielt": 0.1, "svenja": 0.7, "eddi_tv": -0.5, "tom_w": -0.2, "luna_88": 0.0, "jule": 0.2}[i],
                         "popularity": 0.2,
-                        "role": {"text": r[0], "done": r[1], "yesterday": r[2]}, "psyche": psy[i]})
+                        "role": {"text": r[0], "done": r[1], "yesterday": r[2]}, "psyche": psy[i],
+                        "marks": {"yoku": ["scar"], "eddi_tv": ["saboteur"], "tom_w": ["hoard", "scar"]}.get(i, [])})
     pairs = {("yoku", "mira_spielt"): (62, 55), ("yoku", "svenja"): (48, 51), ("mira_spielt", "svenja"): (40, 33), ("eddi_tv", "tom_w"): (44, 47),
              ("yoku", "eddi_tv"): (-45, -52), ("svenja", "eddi_tv"): (-30, -12), ("luna_88", "jule"): (22, 10), ("tom_w", "mira_spielt"): (-8, 15),
              ("luna_88", "yoku"): (18, 5)}

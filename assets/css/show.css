@@ -1,5 +1,6 @@
 /* Wildshow-Ansicht (Show-Teil der Live-Seite). Handy zuerst (ab 375 px), kein waagrechtes Scrollen. */
 body.show-mode [data-kolsub="ranks"] { display: none; }   /* Kill-Ranglisten gehören nicht in die Show */
+body.show-mode [data-act] { display: none !important; }    /* Kauf-/Befehlsknöpfe (Benutzen, Wette, Forschung, Isekai ...): keine Käufe in der Show */
 
 .sh-page { min-width: 0; }
 .sh-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
