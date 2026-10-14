@@ -1,0 +1,128 @@
+/* Wildshow-Ansicht (Show-Teil der Live-Seite). Handy zuerst (ab 375 px), kein waagrechtes Scrollen. */
+body.show-mode [data-kolsub="ranks"] { display: none; }   /* Kill-Ranglisten gehören nicht in die Show */
+
+.sh-page { min-width: 0; }
+.sh-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.sh-subs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -2px 12px; padding: 2px; }
+.sh-subs::-webkit-scrollbar { display: none; }
+.sh-sub { flex: 0 0 auto; min-height: 44px; padding: 0 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; }
+.sh-sub[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+
+/* Figuren */
+.sh-av { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border-radius: 50%; overflow: hidden; background: var(--surface-2); color: var(--muted); font-weight: 700; vertical-align: middle; }
+.sh-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sh-name { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; font-weight: 600; text-decoration: underline dotted; min-height: 24px; }
+.sh-name.inline { display: inline; }
+.sh-crown { position: absolute; right: -4px; top: -6px; font-size: 20px; line-height: 1; filter: drop-shadow(0 1px 1px #0008); }
+.sh-crown.sm { right: auto; left: 50%; top: -12px; transform: translateX(-50%); font-size: 16px; }
+.sh-marks { margin-left: 4px; }
+.sh-mark { margin-left: 2px; }
+
+/* Bühne: Karten */
+.sh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.sh-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px 10px; text-align: center; min-width: 0; min-height: 44px; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--ring, var(--border)); border-radius: var(--radius); cursor: pointer; }
+.sh-card:hover { background: var(--surface-2); }
+.sh-card.leader { box-shadow: 0 0 0 1px var(--accent) inset; }
+.sh-card-top { position: relative; display: inline-flex; }
+.sh-card-name { font-weight: 700; overflow-wrap: anywhere; }
+.sh-viewer { font-size: 12px; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-mood { width: 100%; height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.sh-mood-bar { display: block; height: 100%; background: var(--neutral); }
+.sh-mood.good .sh-mood-bar { background: var(--good); }
+.sh-mood.bad .sh-mood-bar { background: var(--doom); }
+.sh-role { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 2px 8px; border-radius: 999px; font-size: 13px; background: var(--surface-2); border: 1px solid var(--border); }
+.sh-role-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-role.ok { border-color: var(--good); color: var(--good); }
+.sh-role.no { border-color: var(--doom); color: var(--doom); }
+.sh-role.part { border-color: var(--bad); color: var(--bad); }
+.sh-role.none { color: var(--muted); }
+.sh-chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.sh-chip { font-size: 12px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--text); }
+
+.sh-talk { margin-top: 16px; }
+.sh-talk summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+.sh-line { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.sh-line-b { min-width: 0; }
+.sh-line-t { overflow-wrap: anywhere; }
+
+/* Beziehungsnetz + Feuer: quadratische Bühne, skaliert mit der Breite */
+.sh-netbox, .sh-fire-stage { position: relative; width: 100%; max-width: 520px; aspect-ratio: 1 / 1; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.sh-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sh-edge { stroke-width: 3; stroke-linecap: round; opacity: .9; }
+.sh-edge.friend { stroke: var(--good); }
+.sh-edge.warm { stroke: var(--good); opacity: .4; stroke-width: 2; }
+.sh-edge.rival { stroke: var(--doom); stroke-dasharray: 7 5; }
+.sh-edge.cold { stroke: var(--doom); opacity: .4; stroke-width: 2; stroke-dasharray: 3 5; }
+.sh-edge-hit { stroke: transparent; stroke-width: 22; cursor: pointer; }
+.sh-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0; background: none; border: 0; cursor: pointer; width: 64px; }
+.sh-node-n { font-size: 12px; line-height: 1.1; padding: 1px 5px; background: var(--bg); border-radius: 4px; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-cap { text-align: center; min-height: 24px; margin: 8px 0; }
+.sh-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.sh-key { display: inline-block; width: 22px; height: 0; border-top: 3px solid; margin-right: 6px; vertical-align: middle; }
+.sh-key.friend { border-color: var(--good); }
+.sh-key.warm { border-color: var(--good); opacity: .45; }
+.sh-key.rival { border-color: var(--doom); border-top-style: dashed; }
+.sh-key.cold { border-color: var(--doom); opacity: .45; border-top-style: dotted; }
+.sh-cliques { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.sh-clique { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border: 1px solid var(--ring); border-radius: var(--radius); background: var(--surface); }
+.sh-clique-t { font-size: 13px; font-weight: 600; margin-right: 4px; }
+
+/* Lagerfeuer-Bühne */
+.sh-fire-stage { background: radial-gradient(circle at 50% 52%, #5a2d0f 0, #2b170b 38%, #12100d 78%); }
+:root[data-theme="light"] .sh-fire-stage { background: radial-gradient(circle at 50% 52%, #f3b36b 0, #b9783a 35%, #3b2c1c 85%); }
+.sh-fire:not(.on) .sh-fire-stage { filter: grayscale(.8) brightness(.55); }
+.sh-flame { position: absolute; left: 50%; top: 52.8%; transform: translate(-50%, -50%); font-size: 44px; line-height: 1; animation: sh-flick 1.4s ease-in-out infinite; }
+@keyframes sh-flick { 50% { transform: translate(-50%, -52%) scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .sh-flame { animation: none; } }
+.sh-node.away { opacity: .4; }
+.sh-node.sit .sh-node-n, .sh-node.away .sh-node-n { background: #000a; color: #fff; }
+.sh-bubble { position: absolute; left: 8px; right: 8px; top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; overflow-wrap: anywhere; }
+.sh-topic { text-align: center; margin: 4px 0 10px; }
+.sh-check { display: flex; align-items: center; gap: 8px; margin-top: 10px; min-height: 44px; justify-content: center; cursor: pointer; }
+
+/* Zeitleiste */
+.sh-time { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); margin-left: 14px; }
+.sh-ev { position: relative; display: flex; gap: 10px; padding: 0 0 14px 20px; }
+.sh-ev-sym { position: absolute; left: -15px; top: 0; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--accent-soft); border: 2px solid var(--accent); color: var(--text); font-size: 14px; }
+.sh-ev.Erster .sh-ev-sym { border-color: var(--good); }
+.sh-ev.Bestwert .sh-ev-sym { border-color: var(--bad); }
+.sh-ev-b { min-width: 0; }
+.sh-ev-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.sh-day { font-size: 12px; padding: 0 7px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.sh-ev-t { overflow-wrap: anywhere; }
+
+/* Rat */
+.sh-status { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.sh-pill { padding: 3px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); font-size: 14px; }
+.sh-pill.on { border-color: var(--good); color: var(--good); }
+.sh-h { margin: 18px 0 8px; font-size: 16px; }
+.sh-rules { margin: 0; padding-left: 20px; }
+.sh-rules li { margin-bottom: 6px; overflow-wrap: anywhere; }
+.sh-vote { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
+.sh-vote-q { font-weight: 700; margin-bottom: 8px; overflow-wrap: anywhere; }
+.sh-opt { margin-bottom: 8px; }
+.sh-opt-h { display: flex; justify-content: space-between; gap: 8px; }
+.sh-opt-bar { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin: 3px 0; }
+.sh-opt-bar span { display: block; height: 100%; background: var(--neutral); }
+.sh-opt.won .sh-opt-bar span { background: var(--good); }
+.sh-opt-voters { display: flex; flex-wrap: wrap; gap: 3px; }
+.sh-decision { margin-top: 6px; font-style: italic; }
+
+/* Tagebuch: PC Seitenleiste, Handy Vollbild-Blatt */
+.sh-backdrop { position: fixed; inset: 0; background: #0007; z-index: 60; }
+.sh-sheet { position: fixed; inset: 0; z-index: 61; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px 24px; }
+.sh-sheet[hidden], .sh-backdrop[hidden] { display: none; }
+.sh-sheet-head { position: sticky; top: 0; display: flex; align-items: center; gap: 12px; padding: 12px 0; background: var(--bg); border-bottom: 1px solid var(--border); }
+.sh-sheet-t { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.sh-x { width: 44px; height: 44px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-size: 18px; }
+.sh-sec { margin-top: 14px; }
+.sh-sec h4 { margin: 0 0 4px; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.sh-dl { margin: 0 0 6px; overflow-wrap: anywhere; }
+.sh-dl.good { color: var(--good); }
+.sh-dl.bad { color: var(--doom); }
+.sh-dl.quiet { color: var(--muted); font-style: italic; }
+@media (min-width: 900px) {
+  .sh-backdrop { display: none !important; }
+  .sh-sheet { inset: 0 0 0 auto; width: 380px; border-left: 1px solid var(--border); box-shadow: -6px 0 24px #0005; }
+}
+@media (max-width: 899px) { body.sh-sheet-open { overflow: hidden; } }

@@ -10,6 +10,7 @@ import { initLiveUi, setLiveData, offerLive, ichView, kolonieView, spielView, er
 import { initStreamSettings, syncStreamDock, openStreamBar } from './stream.js';
 import { initCooldowns, setCooldownData } from './cooldowns.js';
 import { initFeedback } from './feedback.js';
+import { showView, initShow, isShowMode, onShowChange } from './show.js';
 
 const TABS = [
   { id: 'start', label: 'Start', view: startView },
@@ -30,9 +31,16 @@ const LIVE_TABS = [
   { id: 'ereignisse', label: 'Ereignisse', view: ereignisseView },
   { id: 'gedenken', label: 'Gedenken', view: gedenkenView },
 ];
-const LIVE_IDS = LIVE_TABS.map((t) => t.id);
+// Show-Modus (Mod Wildshow läuft, Show-Spielstand): eigener Reiter „Show“, Einkaufs- und Preislisten-Reiter fallen weg.
+const SHOW_TAB = { id: 'show', label: 'Show', view: showView };
+const SHOW_HIDDEN = ['items', 'events', 'wetter', 'traits', 'rassen', 'mods', 'spiel'];
+const LIVE_IDS = [...LIVE_TABS.map((t) => t.id), SHOW_TAB.id];
 // Der Stream ist kein Reiter mehr, sondern eine Leiste oben (stream.js).
-const tabList = () => (live.isLive() ? [TABS[0], ...LIVE_TABS, ...TABS.slice(1)] : [...TABS]);
+const tabList = () => {
+  if (!live.isLive()) return [...TABS];
+  if (isShowMode()) return [TABS[0], SHOW_TAB, ...LIVE_TABS.filter((t) => !SHOW_HIDDEN.includes(t.id)), ...TABS.slice(1).filter((t) => !SHOW_HIDDEN.includes(t.id))];
+  return [TABS[0], ...LIVE_TABS, ...TABS.slice(1)];
+};
 
 // ---------- Design (hell/dunkel) ----------
 const THEME_KEY = 'ys-theme';
@@ -184,6 +192,8 @@ async function boot() {
     if (LIVE_IDS.includes(wanted) || LIVE_IDS.includes(shownTab)) renderView(); else { renderTabs(); syncStreamDock(); }
   });
   live.initLive();
+  initShow();
+  onShowChange(() => { renderTabs(); syncStreamDock(); renderView(); });
   initStreamSettings(() => syncStreamDock());
 
   let config = null;

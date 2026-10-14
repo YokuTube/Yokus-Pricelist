@@ -194,6 +194,7 @@ for _p in PAWNS.values():
 ALLOWED_USERS = {"yoku": "Yoku"}
 
 
+
 # ---------- Isekai-Baeume ----------
 def tree_nodes(spec):
     return [{"id": i, "label": l, "desc": d, "type": t, "x": x, "y": y, "cost": c, "bonuses": ["+3% Nahkampfschaden", "+2% Bewegungstempo"] if t != "start" else []} for (i, l, d, t, x, y, c) in spec]
@@ -718,6 +719,77 @@ def fake_effect(user, cmd, args):
     return None
 
 
+# ---------- Wildshow (Show-Modus), nur mit FAKE_SHOW=1: /api/show und /api/show/diary/<id> ----------
+# Ohne FAKE_SHOW antwortet der Fake wie die echte Mod ohne Wildshow: 404 "Keine Show aktiv".
+SHOW = bool(os.environ.get("FAKE_SHOW"))
+if SHOW:
+    import copy
+    for _u, _n, _m in (("svenja", "Svenja", 64), ("tom_w", "Tom", 38), ("jule", "Jule", 81)):
+        _c = copy.deepcopy(PAWNS["eddi_tv"])
+        _c.update({"user": _u, "id": _u, "displayName": _n + "_TV" if _u != "jule" else None, "name": _n, "fullName": _n + " Wald", "moodPct": _m})
+        PAWNS[_u] = _c
+    PAWNS["jule"]["user"] = None
+    PAWNS["yoku"]["name"] = "Kira"
+
+
+def show_info():
+    ids = ["yoku", "mira_spielt", "svenja", "eddi_tv", "tom_w", "luna_88", "jule"]
+    cl = {"yoku": 0, "mira_spielt": 0, "svenja": 0, "eddi_tv": 1, "tom_w": 1}
+    roles = {"yoku": ("Kochen", 0.9, 0.8), "mira_spielt": ("Jagen", 0.4, 0.75), "svenja": ("Sammeln", 1.0, 0.5), "eddi_tv": ("Bauen", 0.2, 0.3),
+             "tom_w": ("Jagen", 0.7, 0.2), "luna_88": ("Feuer hüten", 0.55, 0.9), "jule": (None, None, None)}
+    psy = {"yoku": ["gesellig", "fleißig", "mutig"], "mira_spielt": ["verspielt", "offen"], "svenja": ["gelassen", "mitfühlend"],
+           "eddi_tv": ["angespannt", "eitel"], "tom_w": ["aggressiv", "nüchtern"], "luna_88": ["fantasievoll", "verschlossen"], "jule": ["ängstlich", "bescheiden"]}
+    members = []
+    for i in ids:
+        r = roles[i]
+        members.append({"id": i, "name": PAWNS[i]["name"], "leader": i == "svenja", "clique": cl.get(i, -1),
+                        "regard": {"yoku": 0.4, "mira_spielt": 0.1, "svenja": 0.7, "eddi_tv": -0.5, "tom_w": -0.2, "luna_88": 0.0, "jule": 0.2}[i],
+                        "popularity": 0.2,
+                        "role": {"text": r[0], "done": r[1], "yesterday": r[2]}, "psyche": psy[i]})
+    pairs = {("yoku", "mira_spielt"): (62, 55), ("yoku", "svenja"): (48, 51), ("mira_spielt", "svenja"): (40, 33), ("eddi_tv", "tom_w"): (44, 47),
+             ("yoku", "eddi_tv"): (-45, -52), ("svenja", "eddi_tv"): (-30, -12), ("luna_88", "jule"): (22, 10), ("tom_w", "mira_spielt"): (-8, 15),
+             ("luna_88", "yoku"): (18, 5)}
+    ops = []
+    for (a, b), (x, y) in pairs.items():
+        ops.append({"a": a, "b": b, "v": x}); ops.append({"a": b, "b": a, "v": y})
+    return {
+        "active": True, "tag": 9, "tick": 9 * 60000 + 21000, "staffel": "20261014-1200", "members": members, "opinions": ops,
+        "cliques": [{"nr": 0, "members": ["yoku", "mira_spielt", "svenja"]}, {"nr": 1, "members": ["eddi_tv", "tom_w"]}],
+        "feuerabend": {"running": True, "topic": "Svenja erzählt vom ersten Fisch des Tages.", "seated": ["yoku", "mira_spielt", "svenja", "luna_88", "tom_w"]},
+        "timeline": [
+            {"kind": "Etappe", "title": "Erstes Feuer", "text": "Kira hat das erste Feuer entfacht.", "day": 1, "tick": 20000, "pawn": "yoku", "name": "Kira"},
+            {"kind": "Erster", "title": "Erster Fisch", "text": "Tom hat den ersten Fisch gefangen.", "day": 3, "tick": 190000, "pawn": "tom_w", "name": "Tom"},
+            {"kind": "Bestwert", "title": "Längste Jagd", "text": "Mira jagte vier Stunden am Stück.", "day": 6, "tick": 370000, "pawn": "mira_spielt", "name": "Mira"},
+            {"kind": "Etappe", "title": "Erster Streit", "text": "Kira und Eddi gerieten aneinander.", "day": 7, "tick": 430000, "pawn": "eddi_tv", "name": "Eddi"},
+            {"kind": "Etappe", "title": "Neuer Anführer", "text": "Svenja führt jetzt die Gruppe.", "day": 8, "tick": 500000, "pawn": "svenja", "name": "Svenja"}],
+        "talk": [
+            {"tick": 540000, "from": "svenja", "to": "yoku", "kind": "Erzaehlen_Antwort", "text": "Der Fisch war so groß wie mein Unterarm.", "thread": 4},
+            {"tick": 540200, "from": "yoku", "to": "svenja", "kind": "Erzaehlen_Antwort", "text": "Dann braten wir ihn heute Abend.", "thread": 4},
+            {"tick": 540400, "from": "tom_w", "to": "mira_spielt", "kind": "Erzaehlen_Antwort", "text": "Ich hab die Spur im Schilf gesehen.", "thread": 4},
+            {"tick": 540600, "from": "luna_88", "to": None, "kind": "Selbstgespraech", "text": "Ob es morgen regnet?", "thread": 0}],
+        "council": {"running": False, "openWishes": 2,
+                    "protocol": [{"id": 3, "tick": 400000, "kind": "Teilen", "question": "Wer bekommt das letzte Fell?", "options": ["Kira", "Tom", "Niemand"],
+                                  "chosen": 0, "decision": "Kira bekommt das Fell.", "tie": False,
+                                  "votes": [{"pawn": "svenja", "option": 0, "weight": 1.5}, {"pawn": "yoku", "option": 1, "weight": 1.0}, {"pawn": "tom_w", "option": 1, "weight": 1.0},
+                                            {"pawn": "mira_spielt", "option": 0, "weight": 1.0}, {"pawn": "luna_88", "option": 0, "weight": 1.0}]}],
+                    "rules": [{"kind": "Feuer", "text": "Nachts wacht immer einer am Feuer.", "pawn": "svenja"}, {"kind": "Essen", "text": "Beute wird zuerst geteilt.", "pawn": None}]},
+    }
+
+
+def show_diary(pid):
+    if pid not in PAWNS:
+        return None
+    n = PAWNS[pid]["name"]
+    return {"id": pid, "name": n, "sections": [
+        {"title": "Erlebtes", "lines": [{"text": "Tag 8: Hat Eddi widersprochen – Eddi", "tone": "bad"}, {"text": "Tag 7: Hat Beeren geteilt – Mira", "tone": "good"}, {"text": "Tag 5: Hat am Feuer gesessen", "tone": "text"}]},
+        {"title": "Erste Male", "lines": [{"text": "der erste Fisch (Tag 3)", "tone": "good"}]},
+        {"title": "Meinungen", "lines": [{"text": "Mira ist mir sympathisch.", "tone": "good"}, {"text": "Eddi nervt mich.", "tone": "bad"}]},
+        {"title": "Befinden", "lines": [{"text": "Heute: Kochen", "tone": "text"}, {"text": "Gestern lief es gut.", "tone": "quiet"}]},
+        {"title": "Ich", "lines": [{"text": "„Ich will nicht, dass wir hungern.“", "tone": "text"}]},
+        {"title": "Wünsche", "lines": [{"text": "Einmal wieder warm schlafen.", "tone": "quiet"}]},
+        {"title": "Beichtstuhl", "lines": [{"text": "Noch nichts im Beichtstuhl.", "tone": "quiet"}]}]}
+
+
 class H(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -776,6 +848,13 @@ class H(BaseHTTPRequestHandler):
         u = urlparse(self.path)
         p = u.path
         q = parse_qs(u.query)
+        if p == "/api/show" or p.startswith("/api/show/diary/"):
+            if not SHOW:
+                return self.js(404, {"error": "Keine Show aktiv"}, cache=False)
+            if p == "/api/show":
+                return self.js(200, show_info())
+            d = show_diary(unquote(p[16:]).lower())
+            return self.js(200, d) if d else self.js(404, {"error": "Noch kein Tagebuch"}, cache=False)
         if p == "/api/status":
             return self.js(200, {"live": True, "colony": "Neu-Yoku", "prefix": "!", "allowed": ALLOWED})
         if p == "/api/game":
