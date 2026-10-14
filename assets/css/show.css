@@ -168,3 +168,51 @@ body.show-mode [data-act] { display: none !important; }    /* Kauf-/Befehlsknöp
 .sh-conf-q { margin-bottom: 8px; overflow-wrap: anywhere; }
 .sh-conf-a { display: flex; gap: 10px; align-items: flex-start; }
 .sh-bub { padding: 8px 12px; background: var(--accent-soft); border-radius: 12px; overflow-wrap: anywhere; min-width: 0; }
+
+/* Jetzt / Archiv (Strang live-show2) */
+.sx-banners { display: grid; gap: 8px; margin-bottom: 12px; }
+.sx-banner { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; min-height: 44px; padding: 6px 12px; text-align: left; font: inherit; color: var(--text); cursor: pointer; background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); }
+.sx-banner.lost { border-left-color: var(--doom); }
+.sx-ico { font-size: 22px; line-height: 1; }
+.sx-ico.big { font-size: 28px; margin-left: auto; }
+.sx-sec { margin-bottom: 8px; }
+.sx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.sx-card { display: grid; gap: 8px; align-content: start; padding: 12px; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--neutral, var(--border)); border-radius: var(--radius); }
+.sx-card.ev.challenge, .sx-card.ev.finale { border-top-color: var(--accent); }
+.sx-card.ev.dilemma { border-top-color: var(--bad, var(--doom)); }
+.sx-card.lost { border-top-color: var(--doom); }
+.sx-card.lost.done { border-top-color: var(--good); opacity: .85; }
+.sx-card.don { border-top-color: var(--good); margin-bottom: 14px; }
+.sx-card.camp.cur { border-top-color: var(--accent); }
+.sx-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sx-head-t { display: flex; flex-direction: column; min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.sx-badge { flex: 0 0 auto; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-variant-numeric: tabular-nums; background: var(--surface-2); border: 1px solid var(--border); }
+.sx-badge.on { border-color: var(--good); color: var(--good); }
+.sx-badge.urgent { border-color: var(--doom); color: var(--doom); }
+.sx-line { display: flex; align-items: center; gap: 8px; }
+.sx-bar { flex: 1; height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.sx-bar span { display: block; height: 100%; background: var(--neutral, var(--accent)); transition: width .6s; }
+.sx-bar.prog span { background: var(--good); }
+.sx-bar.time span { background: var(--accent); }
+.sx-text { margin: 0; overflow-wrap: anywhere; }
+.sx-note { margin: 0; }
+.sx-faces { display: flex; flex-wrap: wrap; gap: 4px; }
+.sx-face { padding: 4px; min-width: 44px; min-height: 44px; display: grid; place-items: center; background: none; border: 0; border-radius: 50%; cursor: pointer; }
+.sx-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.sx-item { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; background: var(--surface-2); border-radius: 8px; }
+.sx-item.out { opacity: .5; text-decoration: line-through; }
+.sx-item-m { color: var(--muted); font-size: 14px; text-align: right; }
+.sx-donors { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.sx-chip { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); font-size: 13px; overflow-wrap: anywhere; }
+.sx-steps { display: flex; flex-wrap: wrap; gap: 4px; }
+.sx-step { padding: 3px 10px; border-radius: 999px; font-size: 13px; color: var(--muted); border: 1px solid var(--border); opacity: .6; }
+.sx-step.on { opacity: 1; color: var(--text); border-color: var(--doom); background: var(--surface-2); font-weight: 700; }
+.sx-stat { text-align: center; margin-top: 12px; }
+.sx-arch { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.sx-card.season { border-top-color: var(--accent); }
+.sx-winners { display: grid; gap: 10px; }
+.sx-win { display: flex; align-items: center; gap: 12px; }
+.sx-fates { margin: 0; padding-left: 18px; font-size: 14px; }
+.sx-fates li { margin-bottom: 3px; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .sx-grid, .sx-arch { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .sx-bar span { transition: none; } }

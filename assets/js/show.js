@@ -2,13 +2,15 @@
 // ihr /api/show eine laufende Show meldet (Mod andreas.wildshow, Show-Modus). Sonst: nichts davon sichtbar, die Seite bleibt wie bisher.
 // Alles Fremde (Namen, Zuschauer, Gespräche, Tagebuch) wird nur per textContent in die Seite gesetzt – nie innerHTML.
 import * as live from './live.js';
+import * as X from './show-live.js';   // Strang live-show2: Jetzt (Challenges, Spenden, Verschollen, Lager/Reisen) + Archiv
 
 const NS = 'http://www.w3.org/2000/svg';
 const CLIQUE_COLORS = ['#e0a653', '#6fb7d6', '#b38fd9', '#8fbf7a', '#e07a6b', '#d6cf6f'];
 const SUB_KEY = 'ys-show-sub';
 // Dritter Eintrag: nur anzeigen, wenn es etwas zu sehen gibt (Gedenkwand/Beichtstuhl sind anfangs leer)
-const SUBS = [['buehne', 'Bühne'], ['netz', 'Netz'], ['feuer', 'Feuer'], ['zeit', 'Zeitleiste'], ['rat', 'Rat'],
-  ['gedenken', 'Gedenkwand', (d) => (d?.memorial || []).length > 0], ['beichte', 'Beichtstuhl', (d) => (d?.confessions || []).length > 0]];
+const SUBS = [['buehne', 'Bühne'], ['jetzt', 'Jetzt', (d) => X.hasNow(d)], ['netz', 'Netz'], ['feuer', 'Feuer'], ['zeit', 'Zeitleiste'], ['rat', 'Rat'],
+  ['gedenken', 'Gedenkwand', (d) => (d?.memorial || []).length > 0], ['beichte', 'Beichtstuhl', (d) => (d?.confessions || []).length > 0],
+  ['archiv', 'Archiv', (d) => X.hasArchive(d)]];
 const subsNow = () => SUBS.filter((x) => !x[2] || x[2](showData));
 
 // ---------- kleine DOM-Helfer (Text nur als Textknoten) ----------
@@ -87,6 +89,8 @@ function avatar(id, size, extra = '') {
 function nameBtn(id, cls = '') {
   return h('button', { type: 'button', class: ('sh-name ' + cls).trim(), 'data-id': id, onclick: () => openDiary(id) }, nameOf(id));
 }
+
+X.init({ h, avatar, nameBtn, nameOf, openDiary: (id) => openDiary(id), goto: (id) => window.dispatchEvent(new CustomEvent('ys-show-goto', { detail: id })) });
 
 function roleBadge(m) {
   const r = m.role;
@@ -414,13 +418,17 @@ export function showView() {
       clear(body);
       const ask = askCard(); if (ask) body.append(ask);
       if (!subsNow().some((x) => x[0] === sub)) sub = 'buehne';
-      const v = { buehne: viewBuehne, netz: viewNetz, feuer: viewFeuer, zeit: viewZeit, rat: viewRat, gedenken: viewGedenken, beichte: viewBeichte }[sub];
+      if (sub !== 'jetzt') { const b1 = X.donationCard(showData, true), b2 = X.missingBanner(showData); if (b1 || b2) body.append(h('div', { class: 'sx-banners' }, b1, b2)); }
+      const v = { buehne: viewBuehne, netz: viewNetz, feuer: viewFeuer, zeit: viewZeit, rat: viewRat, gedenken: viewGedenken, beichte: viewBeichte, jetzt: () => X.viewJetzt(showData), archiv: () => X.viewArchiv(showData) }[sub];
       try { body.append(v()); } catch (e) { console.warn('[show]', e); body.append(h('div', { class: 'empty' }, 'Diese Ansicht ist gerade nicht verfügbar.')); }
       drawSubs();
     };
     drawSubs(); render();
     const onAsk = () => { if (body.isConnected) render(); };
     window.addEventListener('ys-ask-redraw', onAsk);
+    const onGoto = (e) => { if (body.isConnected && SUBS.some((x) => x[0] === e.detail)) { sub = e.detail; saveSub(sub); lastKey = ''; render(); } };
+    window.addEventListener('ys-show-goto', onGoto);
+    const cdTimer = setInterval(() => { for (const el of body.querySelectorAll('[data-cd-end]')) { const sec = Math.max(0, Math.round((Number(el.getAttribute('data-cd-end')) - Date.now()) / 1000)); el.textContent = 'noch ' + Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); } }, 1000);
     const askTimer = setInterval(() => { const el = body.querySelector('[data-ask-left]'); if (el) el.textContent = 'Noch ' + askLeft() + ' s'; }, 1000);
     const alive = () => body.isConnected;
     const offA = live.poll({ path: '/api/show', every: 2500, alive, onResult: (r) => { if (r.status === 200 && r.data?.active) { showData = r.data; render(); } } });
@@ -431,7 +439,7 @@ export function showView() {
       lastColony = JSON.stringify([...colony.values()].map((p) => [p.id, p.moodPct, p.displayName]));
       render();
     } });
-    const obs = new MutationObserver(() => { if (!alive()) { window.removeEventListener('ys-ask-redraw', onAsk); clearInterval(askTimer); offA(); offB(); sheet.close(); sheet.nodes.forEach((n) => n.remove()); clearInterval(threadTimer); obs.disconnect(); } });
+    const obs = new MutationObserver(() => { if (!alive()) { window.removeEventListener('ys-ask-redraw', onAsk); window.removeEventListener('ys-show-goto', onGoto); clearInterval(cdTimer); clearInterval(askTimer); offA(); offB(); sheet.close(); sheet.nodes.forEach((n) => n.remove()); clearInterval(threadTimer); obs.disconnect(); } });
     obs.observe(document.getElementById('view'), { childList: true });
   }
   return { html, bind };

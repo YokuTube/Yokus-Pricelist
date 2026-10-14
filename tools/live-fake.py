@@ -758,6 +758,45 @@ def show_info():
     ops = []
     for (a, b), (x, y) in pairs.items():
         ops.append({"a": a, "b": b, "v": x}); ops.append({"a": b, "b": a, "v": y})
+    res = show_info_base(ids, members, ops)
+    res.update(show_extra())
+    return res
+
+
+def show_extra():
+    """Strang live-show2: events, eventStats, missing, donation, camps, journeys, archive. FAKE_SHOW_EMPTY=1: alles leer (Test Leerzustand)."""
+    if os.environ.get("FAKE_SHOW_EMPTY"):
+        return {"events": [], "eventStats": {"done": 0, "failed": 0, "open": 0}, "missing": [], "donation": None, "camps": [], "journeys": [], "archive": []}
+    el = int(time.time() - FAKE_START)
+    left = max(0, 150000 - el * 400)          # Spielticks, laufen sichtbar ab
+    dsec = max(0, 180 - el % 200)
+    return {
+        "events": [
+            {"id": 7, "def": "WS_SE_Challenge_Vorrat", "title": "Vorrat für den Winter", "kind": "challenge", "startTick": 520000, "endTick": 520000 + 180000,
+             "ticksLeft": left, "ticksTotal": 180000, "leftText": "noch %d T. %d Std." % (left // 60000, (left % 60000) // 2500), "progress": round(min(0.95, 0.35 + el / 400), 2),
+             "text": "Vorrat 35 %", "camp": 1, "members": ["yoku", "svenja", "tom_w"]},
+            {"id": 8, "def": "WS_SE_Dilemma_Fell", "title": "Wer bekommt das Fell?", "kind": "dilemma", "startTick": 560000, "endTick": 560000 + 20000, "ticksLeft": 3000, "ticksTotal": 20000,
+             "leftText": "noch 2 Std.", "progress": None, "text": None, "camp": 1, "members": []},
+            {"id": 9, "def": "WS_SE_Natur_Nebel", "title": "Dichter Nebel", "kind": "nature", "startTick": 570000, "endTick": None, "ticksLeft": -1, "ticksTotal": -1,
+             "leftText": "ohne Frist", "progress": None, "text": "Nebel zieht durch das Tal", "camp": 1, "members": ["luna_88"]},
+        ],
+        "eventStats": {"done": 3, "failed": 1, "open": 3},
+        "missing": [{"pawn": "tom_w", "name": "Tom", "state": "missing", "sinceDay": 8, "sinceTick": 500000, "phase": "search", "searchSinceTick": 520000, "round": 1},
+                    {"pawn": "jule", "name": "Jule", "state": "home", "sinceDay": 5, "sinceTick": 330000, "phase": None, "searchSinceTick": None, "round": 1}],
+        "donation": {"open": True, "secondsLeft": dsec if os.environ.get("FAKE_DON_LIMIT") else -1, "donors": 3, "total": 7, "totalMax": 10, "perViewer": 1,
+                     "items": [{"name": "Schokolade", "price": 40, "max": 3, "left": 3}, {"name": "Mahlzeit", "price": 25, "max": 5, "left": 2},
+                               {"name": "Heilkraut", "price": 30, "max": 2, "left": 0}],
+                     "list": [{"name": "eddi_tv", "item": "Mahlzeit", "count": 3}, {"name": "mira_spielt", "item": "Schokolade", "count": 1}, {"name": "<b>luna_88</b>", "item": "Heilkraut", "count": 2}]},
+        "camps": [{"map": 1, "name": "Hauptlager", "tile": 100, "second": False, "current": True, "members": ["yoku", "mira_spielt", "svenja", "luna_88"]},
+                  {"map": 2, "name": "Flusslager", "tile": 101, "second": True, "current": False, "members": ["eddi_tv"]}],
+        "journeys": [{"kind": "Besuch", "phase": 1, "members": ["eddi_tv"], "from": 2, "to": 1, "tile": 100, "destTile": 100, "moving": True, "resting": False, "days": 1.4}],
+        "archive": [{"season": "20261001-1200", "endTick": 400000, "endDay": 7, "winner": {"id": "p901", "name": "Lena"}, "viewerWinner": {"id": "p902", "name": "Ole"},
+                     "members": [{"id": "p901", "name": "Lena", "fate": "Siegerin"}, {"id": "p902", "name": "Ole", "fate": "Publikumsliebling"}, {"id": "p903", "name": "Rik", "fate": "ausgeschieden an Tag 4"}],
+                     "highlights": ["Lena zündete das Signalfeuer.", "Ole trug Rik durch den Sturm."]}],
+    }
+
+
+def show_info_base(ids, members, ops):
     return {
         "active": True, "tag": 9, "tick": 9 * 60000 + 21000, "staffel": "20261014-1200", "members": members, "opinions": ops,
         "cliques": [{"nr": 0, "members": ["yoku", "mira_spielt", "svenja"]}, {"nr": 1, "members": ["eddi_tv", "tom_w"]}],
