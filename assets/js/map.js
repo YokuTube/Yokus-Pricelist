@@ -72,6 +72,50 @@ export function karteView() {
       return v1 >= 30 && v2 >= 30 ? 'friend' : (v1 + v2) / 2 <= -30 ? 'rival' : 'plain';
     };
 
+    // ---- Nebel (Wildshow live-nebel): Daten kommen aus /api/show (fog), nur im Show-Modus mit Surveillance Shift. Ohne fog: alles sichtbar wie bisher. ----
+    const fogOf = (m) => (isShowMode() ? getShowData()?.fog?.maps?.find((f) => f.id === m.id) : null) || null;
+    const fogCache = new WeakMap();
+    const FOGA = { 0: 0.93, 1: 0.58, 2: 0 };
+    const fogCanvas = (f) => {                        // winziges Bild (eine Zelle = ein Pixel), beim Hochskalieren weich
+      let c = fogCache.get(f); if (c) return c;
+      c = document.createElement('canvas'); c.width = f.cols; c.height = f.rows;
+      const g = c.getContext('2d');
+      for (let gz = 0; gz < f.rows; gz++) {
+        const row = f.vis[gz] || '';
+        for (let gx = 0; gx < f.cols; gx++) { const a = FOGA[row[gx]] ?? 0; if (a) { g.fillStyle = `rgba(14,12,10,${a})`; g.fillRect(gx, f.rows - 1 - gz, 1, 1); } }
+      }
+      fogCache.set(f, c); return c;
+    };
+    const ageText = (ticks) => { const min = Math.round(ticks / 41.7); return min < 60 ? 'vor ' + Math.max(1, min) + ' Min.' : 'vor ' + Math.round(min / 60) + ' Std.'; };
+    function drawFog(m, f) {
+      const k = f.cell * view.s, [x0, y0] = toPx(0, f.rows * f.cell);
+      ctx.save();
+      const [cx0, cy0] = toPx(0, m.sizeZ);
+      ctx.beginPath(); ctx.rect(cx0, cy0, m.sizeX * view.s, m.sizeZ * view.s); ctx.clip();   // letzte Zelle kann über den Kartenrand ragen
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(fogCanvas(f), x0, y0, f.cols * k, f.rows * k);
+      ctx.restore();
+    }
+    function drawFogMarks(f) {
+      const fade = Math.max(1, getShowData()?.fog?.fade || 15000);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (const w of f.seen || []) {
+        const [px, py] = toPx(w.x, w.z);
+        ctx.font = '15px system-ui'; ctx.fillText(w.kind === 'foreign' ? '👤' : '🐾', px, py);
+        ctx.font = '11px system-ui'; ctx.textBaseline = 'top'; const tw = ctx.measureText(w.label).width + 6;
+        ctx.fillStyle = '#000b'; ctx.fillRect(px - tw / 2, py + 9, tw, 14); ctx.fillStyle = '#fff'; ctx.fillText(w.label, px, py + 10); ctx.textBaseline = 'middle';
+      }
+      for (const g of f.ghosts || []) {
+        const [px, py] = toPx(g.x, g.z), a = Math.max(0.25, 1 - g.age / fade);
+        ctx.globalAlpha = a;
+        ctx.beginPath(); ctx.arc(px, py, 11, 0, 7); ctx.fillStyle = '#2b2620'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = g.kind === 'foreign' ? '#e07a6b' : '#d99a4e'; ctx.stroke();
+        ctx.font = 'bold 15px system-ui'; ctx.fillStyle = '#fff'; ctx.fillText('?', px, py + 1);
+        ctx.font = '11px system-ui'; ctx.textBaseline = 'top'; const txt = g.label + '? · ' + ageText(g.age), tw = ctx.measureText(txt).width + 6;
+        ctx.fillStyle = '#000b'; ctx.fillRect(px - tw / 2, py + 13, tw, 14); ctx.fillStyle = '#fff'; ctx.fillText(txt, px, py + 14); ctx.textBaseline = 'middle';
+        ctx.globalAlpha = 1;
+      }
+    }
+
     function drawMap() {
       const m = mapObj(); if (!m) return;
       ctx.fillStyle = '#1d1b18'; ctx.fillRect(0, 0, size.w, size.h);
@@ -87,6 +131,8 @@ export function karteView() {
         ctx.fillStyle = BLD[b.k] || BLD.build;
         ctx.fillRect(px, py, Math.max(2, b.sx * view.s), Math.max(2, b.sz * view.s));
       }
+      const fog = fogOf(m);
+      if (fog) { drawFog(m, fog); drawFogMarks(fog); }
       const ps = m.pawns;
       // Wege (gestrichelt) und Nähe-Linien
       ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(255,255,255,.45)';
@@ -247,7 +293,7 @@ export function karteView() {
       onResult: (r) => {
         if (r.status !== 200 || !r.data || r.unchanged) { if (r.status === 503 && !data) clear(body), body.append(el('div', { class: 'empty' }, 'Die Karte wird gelesen …')); return; }
         const first = !data; data = r.data;
-        infoTxt.textContent = (data.maps || []).reduce((n, m) => n + m.pawns.length, 0) + ' Figuren';
+        infoTxt.textContent = (data.maps || []).reduce((n, m) => n + m.pawns.length, 0) + ' Figuren' + (data.maps?.some((m) => fogOf(m)) ? ' · dunkel = außerhalb der Sicht der Gruppe, ? = zuletzt gesehen' : '');
         if (first || !which || (which !== 'world' && !mapObj())) { which = location.hash.split('/')[2] === 'world' ? 'world' : (data.maps?.[0]?.id || 'world'); rebuild(); return; }
         drawSubs(); drawStrip(); drawCard(); draw();
         if (which !== 'world') loadTerrain(which);

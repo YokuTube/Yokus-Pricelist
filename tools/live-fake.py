@@ -760,6 +760,8 @@ def show_info():
         ops.append({"a": a, "b": b, "v": x}); ops.append({"a": b, "b": a, "v": y})
     res = show_info_base(ids, members, ops)
     res.update(show_extra())
+    if not os.environ.get("FAKE_NOFOG"):
+        res["fog"] = fog_fake()
     return res
 
 
@@ -880,6 +882,27 @@ def map_live():
     return {"maps": [{"id": "m1", "name": "Strand", "sizeX": 250, "sizeZ": 250, "pawns": pawns, "buildings": blds}],
             "world": [{"kind": "settlement", "name": "Strand", "lon": 12.0, "lat": 48.0},
                       {"kind": "caravan", "name": "Karawane", "lon": 14.5, "lat": 47.0, "destLon": 18.0, "destLat": 45.0, "pawns": ["yoku"]}]}
+
+
+def fog_fake():
+    """Strang live-nebel: Sichtmaske (Zellraster, 10 Felder je Zelle) + sichtbare Wesen + Merkpunkte. FAKE_NOFOG=1: kein Nebel (fog fehlt)."""
+    m = map_live()["maps"][0]
+    cell, cols, rows = 10, 25, 25
+    t = int(time.time() - FAKE_START)
+    vis = []
+    for gz in range(rows):
+        row = []
+        for gx in range(cols):
+            cx, cz = gx * cell + 5, gz * cell + 5
+            d = min(math.hypot(cx - p["x"], cz - p["z"]) for p in m["pawns"])
+            row.append("2" if d < 24 else "1" if d < 60 or (cx < 100 and cz > 150) else "0")
+        vis.append("".join(row))
+    seen = [{"kind": "animal", "label": "Wolf", "x": m["pawns"][0]["x"] + 12, "z": m["pawns"][0]["z"] + 8}]
+    ghosts = [{"kind": "animal", "label": "Hirsch", "x": 70, "z": 190, "age": 1800 + t * 40},
+              {"kind": "foreign", "label": "Fremder", "x": 190, "z": 60, "age": 9000 + t * 40},
+              {"kind": "animal", "label": "Wildschwein", "x": 40, "z": 100, "age": 14000 + t * 40}]
+    return {"on": True, "tick": 9 * 60000 + 21000, "fade": 15000,
+            "maps": [{"id": m["id"], "cell": cell, "cols": cols, "rows": rows, "vis": vis, "seen": seen, "ghosts": [g for g in ghosts if g["age"] < 15000]}]}
 
 
 class H(BaseHTTPRequestHandler):
