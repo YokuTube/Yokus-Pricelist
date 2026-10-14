@@ -809,6 +809,10 @@ button.an-group:hover { border-color: var(--accent); }
 .vote-go { min-height: 44px; width: 100%; }
 .vote-mine { color: var(--good); font-weight: 600; font-size: .9rem; }
 .vote-note { margin: 0; }
+.vote-q { margin: 0; font-size: 1.1rem; font-weight: 700; overflow-wrap: anywhere; padding-right: 40px; }
+.vote-total { margin: 0; text-align: right; }
+.vote-q-head { padding-right: 40px; }
+.vote-q-head .vt-left { margin-left: auto; }
 @media (max-width: 640px) {
   .vote-card { left: 0; right: 0; bottom: 0; width: auto; max-height: 42vh; border-radius: 12px 12px 0 0; }
 }

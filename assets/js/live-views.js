@@ -391,7 +391,8 @@ function markBuyable() {
 const VOTE_KEY = 'ys-vote';                 // sessionStorage: eigene Stimme zur laufenden Abstimmung
 let voteEl = null, voteState = null, voteAt = 0, voteBusy = false, voteTick = null, votePolling = false;
 
-const voteKey = (opts) => opts.map((o) => o.label).join('|');
+const voteKey = (opts) => (voteState?.kind === 'frage' ? String(voteState.question || '') + '#' : '') + opts.map((o) => o.label).join('|');
+const isFrage = (v) => v?.kind === 'frage';
 function myVote(opts) {
   try {
     const v = JSON.parse(sessionStorage.getItem(VOTE_KEY) || 'null');
@@ -407,15 +408,21 @@ function voteHtml(v) {
   const opts = v.options || [];
   const mine = myVote(opts);
   const linked = live.isLinked();
-  const canVote = linked && mine == null && live.isAllowed('vote');
+  const frage = isFrage(v);
+  const canVote = linked && (mine == null || frage) && live.isAllowed('vote');   // bei Fragen darf man umstimmen
   const rows = opts.map((o, i) => {
     const n = i + 1, pct = clamp(o.pct), isMine = mine === n;
-    const inner = `<span class="vb-fill" style="width:${pct}%"></span><span class="vb-n">${n}</span>${optionPic(o.defName || o.def, o.label, o.karma, 40)}<span class="vb-l">${esc(o.label)}</span><span class="vb-p">${isMine ? '✓ ' : ''}${Math.round(pct)} %${o.count ? ` · ${fmt(o.count)}` : ''}</span>`;
+    const inner = `<span class="vb-fill" style="width:${pct}%"></span><span class="vb-n">${n}</span>${frage ? '' : optionPic(o.defName || o.def, o.label, o.karma, 40)}<span class="vb-l">${esc(o.label)}</span><span class="vb-p">${isMine ? '✓ ' : ''}${Math.round(pct)} %${o.count ? ` · ${fmt(o.count)}` : ''}</span>`;
     return `<li class="vote-opt${isMine ? ' mine' : ''}">${canVote
-      ? `<button type="button" class="vote-big with-pic" data-vote="${n}" title="Für Nr. ${n} stimmen"${voteBusy ? ' disabled' : ''}>${inner}</button>`
-      : `<div class="vote-big with-pic static${isMine ? ' mine' : ''}">${inner}</div>`}</li>`;
+      ? `<button type="button" class="vote-big${frage ? '' : ' with-pic'}" data-vote="${n}" title="Für Nr. ${n} stimmen"${voteBusy ? ' disabled' : ''}>${inner}</button>`
+      : `<div class="vote-big${frage ? '' : ' with-pic'} static${isMine ? ' mine' : ''}">${inner}</div>`}</li>`;
   }).join('');
-  const note = linked && live.isAllowed('vote') ? '' : `<p class="small muted vote-note">Schreib die Zahl (1–${opts.length}) in den Chat${linked ? '.' : ', oder verbinde dich oben, um hier abzustimmen.'}</p>`;
+  const note = linked && live.isAllowed('vote') && !frage ? '' : `<p class="small muted vote-note">${frage && linked && live.isAllowed('vote') ? 'Oder schreib' : 'Schreib'} die Zahl (1–${opts.length}) in den Chat${linked ? '.' : ', oder verbinde dich oben, um hier abzustimmen.'}</p>`;
+  if (frage) {
+    return `<div class="vote-head vote-q-head"><b>🗳 Frage von Yoku</b><span class="vt-left">Noch ${voteLeft()} s</span></div>
+    <p class="vote-q">${esc(v.question || '')}</p>
+    <ol class="vote-opts">${rows}</ol><p class="small muted vote-total">${fmt(v.total)} Stimmen</p>${note}`;
+  }
   return `<div class="vote-head"><b>🗳 Abstimmung</b><span class="vt-left">Noch ${voteLeft()} s</span><span class="small muted">${fmt(v.total)} Stimmen</span></div>
     <ol class="vote-opts">${rows}</ol>${note}`;
 }
@@ -427,19 +434,30 @@ function startVoteTick() {
 function stopVoteTick() { clearInterval(voteTick); voteTick = null; }
 
 // Einklappen: pro Abstimmung gemerkt; sie startet als Pille (überall), nach eigener Stimme klappt sie ein.
-const voteSig = () => (voteState?.options || []).map((o) => o.label).join('|');
+const voteSig = () => (isFrage(voteState) ? String(voteState.question || '') + '#' : '') + (voteState?.options || []).map((o) => o.label).join('|');
 function voteMinimized() {
   let st = null;
   try { st = JSON.parse(sessionStorage.getItem('ys-vote-min') || 'null'); } catch { /* egal */ }
   if (st && st.sig === voteSig()) return st.min;
-  return true;   // standardmäßig als Pille – aufklappbar, nach der Wahl wieder eingeklappt
+  return !isFrage(voteState) || location.hash.startsWith('#/show');   // im Show-Reiter steht die Frage schon groß im Reiter   // standardmäßig als Pille – aufklappbar, nach der Wahl wieder eingeklappt
 }
 function setVoteMin(min) {
   try { sessionStorage.setItem('ys-vote-min', JSON.stringify({ sig: voteSig(), min })); } catch { /* egal */ }
   renderVote();
 }
 
+function announceVote() {
+  const v = voteState?.open && live.isLive() ? voteState : null;
+  const opts = v?.options || [];
+  const detail = v ? { state: v, at: voteAt, mine: myVote(opts), busy: voteBusy } : null;
+  window.__ysVoteDetail = detail;   // für Ansichten, die später geladen werden (Show-Reiter)
+  try { window.dispatchEvent(new CustomEvent('ys-vote-state', { detail })); } catch { /* egal */ }
+}
+window.addEventListener('hashchange', () => { if (isFrage(voteState)) renderVote(); });
+window.addEventListener('ys-vote-cast', (e) => { const n = Number(e.detail?.n); if (n >= 1) castVote(n); });
+
 function renderVote() {
+  announceVote();
   if (!voteEl) return;
   if (!voteState?.open || !live.isLive()) {
     voteEl.hidden = true; stopVoteTick(); morph(voteEl, '');
@@ -451,7 +469,7 @@ function renderVote() {
   if (min) {
     stopVoteTick();
     const left = Math.max(0, Math.round((voteState.secondsLeft || 0) - (Date.now() - voteAt) / 1000));
-    morph(voteEl, `<button type="button" class="vote-pill" data-vote-toggle aria-label="Abstimmung aufklappen">🗳 Abstimmung · noch ${left} s <span aria-hidden="true">▴</span></button>`);
+    morph(voteEl, `<button type="button" class="vote-pill" data-vote-toggle aria-label="Abstimmung aufklappen">🗳 ${isFrage(voteState) ? 'Frage' : 'Abstimmung'} · noch ${left} s <span aria-hidden="true">▴</span></button>`);
     return;
   }
   morph(voteEl, `<button type="button" class="vote-min" data-vote-toggle aria-label="Abstimmung einklappen" title="Einklappen">▾</button>${voteHtml(voteState)}`);
@@ -471,7 +489,7 @@ async function castVote(n) {
     } else {
       rememberVote(opts, n);
       toast(msgs.length ? msgs.join(' · ') : `Stimme ${n} abgegeben`, 4000);
-      setVoteMin(true); // nach der eigenen Stimme Platz machen
+      if (!isFrage(voteState)) setVoteMin(true); // nach der eigenen Stimme Platz machen (Fragen bleiben offen: man kann umstimmen)
     }
   } catch (e) {
     toast(e.message, 5000);
@@ -666,7 +684,7 @@ export function initLiveUi() {
   });
   // Außerhalb tippen: aufgeklappte Abstimmung wieder zur Pille einklappen (verdeckt so nichts)
   document.addEventListener('click', (e) => {
-    if (voteEl && !voteEl.hidden && !voteEl.classList.contains('min') && !voteEl.contains(e.target)) setVoteMin(true);
+    if (voteEl && !voteEl.hidden && !voteEl.classList.contains('min') && !voteEl.contains(e.target) && !isFrage(voteState)) setVoteMin(true);
   });
   ensureVotePoll();
   live.on('me', handleDuel);

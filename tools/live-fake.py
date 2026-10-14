@@ -403,8 +403,10 @@ EVENTS = [
 ]
 
 # ---------- Abstimmung (RICS Voting): 90 s offen, dann 20 s Pause ----------
-VOTE_OPTS = ["Überfall: Plünderer", "Hitzewelle", "Händler-Besuch", "Wanderer aufnehmen"]
-VOTE = {"cycle": -1, "counts": [0, 0, 0, 0]}
+ASK = os.environ.get("FAKE_ASK") == "1"   # eigene freie Frage des Streamers statt Event-Abstimmung
+ASK_Q = "Was soll Svenja heute als Erstes bauen?"
+VOTE_OPTS = ["Eine Hütte", "Ein Lagerfeuer", "Eine Falle"] if ASK else ["Überfall: Plünderer", "Hitzewelle", "Händler-Besuch", "Wanderer aufnehmen"]
+VOTE = {"cycle": -1, "counts": [0] * len(VOTE_OPTS)}
 
 
 def vote_phase():
@@ -421,7 +423,10 @@ def vote_state():
         VOTE["counts"] = [5 + secrets.randbelow(20) for _ in VOTE_OPTS]
     total = sum(VOTE["counts"])
     opts = [{"label": l, "count": c, "pct": round(c * 100 / total) if total else 0} for l, c in zip(VOTE_OPTS, VOTE["counts"])]
-    return {"open": True, "options": opts, "total": total, "secondsLeft": 90 - ph}
+    res = {"open": True, "kind": "frage" if ASK else "event", "options": opts, "total": total, "secondsLeft": 90 - ph}
+    if ASK:
+        res.update({"question": ASK_Q, "answers": list(VOTE_OPTS), "votes": list(VOTE["counts"]), "remaining": 90 - ph})
+    return res
 
 
 # ---------- Herausforderung (Duell): alle 120 s fuer 45 s, Antwort beendet sie ----------

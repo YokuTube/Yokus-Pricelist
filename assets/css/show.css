@@ -107,6 +107,12 @@ body.show-mode [data-act] { display: none !important; }    /* Kauf-/Befehlsknöp
 .sh-opt-bar span { display: block; height: 100%; background: var(--neutral); }
 .sh-opt.won .sh-opt-bar span { background: var(--good); }
 .sh-opt-voters { display: flex; flex-wrap: wrap; gap: 3px; }
+.sh-ask { margin-bottom: 14px; padding: 12px 14px; display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: var(--radius); }
+.sh-ask-head { display: flex; align-items: baseline; gap: 10px; }
+.sh-ask-head .vt-left { margin-left: auto; color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+.sh-ask-q { margin: 0; font-size: 1.15rem; font-weight: 700; overflow-wrap: anywhere; }
+.sh-ask-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sh-ask-note { margin: 0; }
 .sh-decision { margin-top: 6px; font-style: italic; }
 
 /* Tagebuch: PC Seitenleiste, Handy Vollbild-Blatt */

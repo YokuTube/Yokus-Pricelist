@@ -364,6 +364,29 @@ function diarySheet() {
   };
 }
 
+// ---------- Laufende eigene Frage des Streamers (Daten von live-views.js per Fenster-Ereignis; Fremdtext nur per textContent) ----------
+let askState = window.__ysVoteDetail?.state?.kind === 'frage' ? window.__ysVoteDetail : null;   // { state, at, mine, busy } oder null
+const askLeft = () => Math.max(0, Math.round((Number(askState?.state?.secondsLeft) || 0) - (Date.now() - (askState?.at || 0)) / 1000));
+window.addEventListener('ys-vote-state', (e) => { askState = e.detail && e.detail.state?.kind === 'frage' ? e.detail : null; window.dispatchEvent(new CustomEvent('ys-ask-redraw')); });
+function askCard() {
+  if (!askState) return null;
+  const v = askState.state, opts = v.options || [];
+  const canVote = live.isLinked() && live.isAllowed('vote');
+  const left = h('span', { class: 'vt-left', 'data-ask-left': '' }, 'Noch ' + askLeft() + ' s');
+  return h('section', { class: 'sh-ask', 'aria-label': 'Laufende Frage' },
+    h('div', { class: 'sh-ask-head' }, h('b', {}, '🗳 Frage von Yoku'), left),
+    h('p', { class: 'sh-ask-q' }, v.question || ''),
+    h('ol', { class: 'sh-ask-opts' }, opts.map((o, i) => {
+      const n = i + 1, pct = Math.max(0, Math.min(100, Number(o.pct) || 0)), mine = askState.mine === n;
+      const inner = [h('span', { class: 'vb-fill', style: `width:${pct}%` }), h('span', { class: 'vb-n' }, String(n)), h('span', { class: 'vb-l' }, o.label || ''),
+        h('span', { class: 'vb-p' }, (mine ? '✓ ' : '') + Math.round(pct) + ' %' + (o.count ? ' · ' + o.count : ''))];
+      return h('li', { class: 'vote-opt' }, canVote
+        ? h('button', { type: 'button', class: 'vote-big' + (mine ? ' mine' : ''), title: 'Für Nr. ' + n + ' stimmen', disabled: askState.busy, onclick: () => window.dispatchEvent(new CustomEvent('ys-vote-cast', { detail: { n } })) }, inner)
+        : h('div', { class: 'vote-big static' + (mine ? ' mine' : '') }, inner));
+    })),
+    h('p', { class: 'small muted sh-ask-note' }, (v.total || 0) + ' Stimmen · ' + (canVote ? 'Oder schreib' : 'Schreib') + ' die Zahl (1–' + opts.length + ') in den Chat' + (live.isLinked() ? '.' : ', oder verbinde dich oben, um hier abzustimmen.')));
+}
+
 // ---------- Ansicht ----------
 function readSub() { const hs = location.hash.replace(/^#\/?/, '').split('/')[1]; if (SUBS.some((x) => x[0] === hs)) return hs; try { const v = localStorage.getItem(SUB_KEY); return SUBS.some((x) => x[0] === v) ? v : 'buehne'; } catch { return 'buehne'; } }
 function saveSub(v) { try { localStorage.setItem(SUB_KEY, v); } catch { /* egal */ } }
@@ -384,17 +407,21 @@ export function showView() {
     };
     const render = () => {
       if (!showData) { clear(body); body.append(h('div', { class: 'empty' }, 'Die Show wird geladen …')); return; }
-      const key = JSON.stringify([sub, showData, lastColony]);
+      const key = JSON.stringify([sub, showData, lastColony, askState && [askState.state.question, askState.state.options, askState.state.total, askState.mine, askState.busy]]);
       if (key === lastKey) return;
       lastKey = key;
       day.textContent = showData.tag ? 'Tag ' + showData.tag : '';
       clear(body);
+      const ask = askCard(); if (ask) body.append(ask);
       if (!subsNow().some((x) => x[0] === sub)) sub = 'buehne';
       const v = { buehne: viewBuehne, netz: viewNetz, feuer: viewFeuer, zeit: viewZeit, rat: viewRat, gedenken: viewGedenken, beichte: viewBeichte }[sub];
       try { body.append(v()); } catch (e) { console.warn('[show]', e); body.append(h('div', { class: 'empty' }, 'Diese Ansicht ist gerade nicht verfügbar.')); }
       drawSubs();
     };
     drawSubs(); render();
+    const onAsk = () => { if (body.isConnected) render(); };
+    window.addEventListener('ys-ask-redraw', onAsk);
+    const askTimer = setInterval(() => { const el = body.querySelector('[data-ask-left]'); if (el) el.textContent = 'Noch ' + askLeft() + ' s'; }, 1000);
     const alive = () => body.isConnected;
     const offA = live.poll({ path: '/api/show', every: 2500, alive, onResult: (r) => { if (r.status === 200 && r.data?.active) { showData = r.data; render(); } } });
     const offB = live.poll({ path: '/api/colony', every: 2500, alive, onResult: (r) => {
@@ -404,7 +431,7 @@ export function showView() {
       lastColony = JSON.stringify([...colony.values()].map((p) => [p.id, p.moodPct, p.displayName]));
       render();
     } });
-    const obs = new MutationObserver(() => { if (!alive()) { offA(); offB(); sheet.close(); sheet.nodes.forEach((n) => n.remove()); clearInterval(threadTimer); obs.disconnect(); } });
+    const obs = new MutationObserver(() => { if (!alive()) { window.removeEventListener('ys-ask-redraw', onAsk); clearInterval(askTimer); offA(); offB(); sheet.close(); sheet.nodes.forEach((n) => n.remove()); clearInterval(threadTimer); obs.disconnect(); } });
     obs.observe(document.getElementById('view'), { childList: true });
   }
   return { html, bind };
