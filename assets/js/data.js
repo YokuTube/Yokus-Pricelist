@@ -32,7 +32,7 @@ export async function loadAll() {
   }));
 
   const notes = out.notes || { names: {}, events: {}, weather: {}, types: {} };
-  // Namen, wie das Spiel sie anzeigt (bei Andreas Deutsch) – exportiert von RICS Extras beim Hochladen; optional.
+  // Namen, wie das Spiel sie anzeigt (bei Yoku Deutsch) – exportiert von RICS Extras beim Hochladen; optional.
   let labels = {};
   try { labels = (await getJson('data/RICSExtras_Labels.json', v)) || {}; } catch { /* gibt es erst nach dem ersten Upload */ }
   return {
