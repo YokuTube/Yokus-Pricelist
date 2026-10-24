@@ -58,6 +58,10 @@ body::before {
 a { color: var(--accent); }
 code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 button { font: inherit; color: inherit; }
+/* Kein Doppeltipp-Zoom auf Knöpfen und Bedienelementen (schnelles Tippen auf „+“ zählt weiter); Zwei-Finger-Zoom der Seite bleibt erlaubt.
+   :where() = keine Spezifität, Regeln mit eigenem touch-action (Karte, Stream-Griff) gewinnen weiter. */
+:where(button, [role="button"], input, select, textarea, a, summary, label, .chip, .chip-btn, .cmd, .btn, .tab, .qty-btn, .cat-btn, .it-tile, .trait) { touch-action: manipulation; }
+.qty-btn { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 h1, h2, h3, h4 { line-height: 1.25; margin: 0; }
 h1, h2, .group > h3, .section-title { font-family: var(--head-font); text-transform: uppercase; letter-spacing: .06em; }
 
@@ -1623,3 +1627,20 @@ body.stream-side-right.stream-beside .duel-strip { right: calc(var(--side-w) + v
 .fb-send { min-height: 44px; border-radius: var(--radius); border: 0; background: var(--accent); color: var(--accent-text); font: inherit; font-weight: 700; cursor: pointer; }
 .fb-send:disabled { opacity: .45; cursor: not-allowed; }
 @media print { .fb-panel, .fb-open, .fb-link { display: none; } }
+
+/* ---------- Eigenschaften ändern (Reiter Traits, trait-panel.js) ---------- */
+.tp { margin-bottom: 14px; display: grid; gap: 10px; }
+.tp-h { font-size: 1.15rem; margin: 0; }
+.tp-h2 { font-size: 1rem; margin: 6px 0 0; }
+.tp-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-weight: 600; cursor: pointer; text-align: left; }
+.tp-chip:hover { border-color: var(--accent); }
+.tp-chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent) inset; }
+.tp-chip.fixed { opacity: .65; cursor: default; }
+.tp-chip .tr-sym { flex: none; }
+.tp-chip.tone-good .tr-sym { color: var(--good); } .tp-chip.tone-bad .tr-sym { color: var(--doom); }
+.tp-pr { font-size: .8rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tp-avail { max-height: 340px; overflow-y: auto; padding: 2px; }
+.tp-tools { display: grid; gap: 8px; }
+.tp-buildbox { background: var(--surface-2); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; padding: 10px 12px; display: grid; gap: 8px; }
+.tp-hint { margin: 0; }
+.tp-what { font-size: 1rem; }

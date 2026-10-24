@@ -69,7 +69,7 @@ def fake_cooldowns_me():
 
 
 RB_WAIT = [0]  # Spielstunden bis !forschung wieder geht (Test)
-ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "slots", "wette", "lob", "nachhilfe", "pate", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult", "benutzen"]
+ALLOWED = ["buy", "use", "equip", "wear", "event", "weather", "bal", "mypawn", "join", "leave", "flirt", "chitchat", "wants", "aspirations", "quirks", "isekai", "duel", "vote", "sethair", "setbeard", "dyehair", "setfavoritecolor", "geschenk", "forschung", "slots", "wette", "lob", "nachhilfe", "pate", "chitchat", "deeptalk", "buildrapport", "reassure", "flirt", "insult", "benutzen", "trait", "addtrait", "removetrait", "replacetrait", "settraits"]
 ARGS_RE = re.compile(r"^[\w \-.'#@]{0,80}$", re.UNICODE)
 
 LOCK = threading.Lock()
@@ -142,9 +142,10 @@ PAWNS = {
         "yoku", "Yoku", "Kira", "Kira \"Funke\" Aldemar", "Weiblich", 27, "Mensch", "Basismensch",
         "ok", "Gesund", "Kocht eine einfache Mahlzeit", 96, 71, "Zufrieden",
         "Straßenkind", "Feldköchin", skills_for(1),
-        [{"label": "Fleißig", "desc": "Arbeitet schneller als andere, braucht aber mehr Erholung."},
-         {"label": "Optimist", "desc": "Gute Laune: +12 Stimmung. Lässt sich nicht so leicht entmutigen."},
-         {"label": "Nachtaktiv", "desc": "Fühlt sich nachts am wohlsten und arbeitet dann besser."}],
+        [{"label": "Fleißig", "def": "Industriousness", "degree": 2, "desc": "Arbeitet schneller als andere, braucht aber mehr Erholung."},
+         {"label": "Optimist", "def": "NaturalMood", "degree": 1, "desc": "Gute Laune: +12 Stimmung. Lässt sich nicht so leicht entmutigen."},
+         {"label": "Nachteule", "def": "NightOwl", "degree": 0, "desc": "Fühlt sich nachts am wohlsten und arbeitet dann besser."},
+         {"label": "Schusstraining", "def": "PE_FirearmProficiency", "degree": 0, "desc": "Grundausstattung der Mod (wird ausgeblendet)."}],
         [cond("Narbe", "Linker Arm", bad=False), cond("Bionisches Bein", "Rechtes Bein", bad=False)],
         2, {"weapon": "Revolver (gut)", "apparel": ["Kochschürze (normal)", "Cowboyhut", "Lederstiefel (meisterhaft)"],
             "inventory": ["Bier x3", "Verband x2", "Silber x120"],
@@ -644,10 +645,55 @@ def ticker():
             STATE["coins"] += 50
 
 
+_TR_CAT = None
+
+
+def fake_traits(pw, user, cmd, a):
+    """addtrait/removetrait/replacetrait aendern die Eigenschaften des Pawns wirklich (Katalog = data/Traits.json)."""
+    global _TR_CAT
+    if _TR_CAT is None:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "Traits.json"), encoding="utf-8") as f:
+            _TR_CAT = json.load(f)
+
+    def slug(x):
+        return re.sub(r"[^a-z0-9äöüß]+", "", x.lower())
+
+    def find(n):
+        return next((d for d in _TR_CAT.values() if slug(d["Name"]) == slug(n) or slug(d["DefName"]) == slug(n)), None)
+
+    def has(d):
+        return any(t.get("def") == d["DefName"] and t.get("degree", 0) == d["Degree"] for t in pw["traits"])
+
+    def drop(d):
+        pw["traits"] = [t for t in pw["traits"] if not (t.get("def") == d["DefName"] and t.get("degree", 0) == d["Degree"])]
+
+    def put(d):
+        pw["traits"].append({"label": d["Name"], "def": d["DefName"], "degree": d["Degree"], "desc": d["Description"][:200]})
+
+    old = find(a[0]) if cmd in ("removetrait", "replacetrait") and a else None
+    new = find(a[-1]) if cmd in ("addtrait", "replacetrait") and a else None
+    if cmd == "removetrait":
+        if not old or not has(old):
+            return "@%s Diese Eigenschaft hast du nicht." % user
+        drop(old); STATE["coins"] -= old["RemovePrice"]
+        return "@%s %s entfernt (−%d Münzen)." % (user, old["Name"], old["RemovePrice"])
+    if cmd == "addtrait":
+        if not new or has(new):
+            return "@%s Das geht nicht (unbekannt oder schon vorhanden)." % user
+        put(new); STATE["coins"] -= new["AddPrice"]
+        return "@%s %s hinzugefügt (−%d Münzen)." % (user, new["Name"], new["AddPrice"])
+    if not old or not new or not has(old) or has(new):
+        return "@%s Tauschen geht nicht." % user
+    drop(old); put(new); STATE["coins"] -= old["RemovePrice"] + new["AddPrice"]
+    return "@%s %s gegen %s getauscht (−%d Münzen)." % (user, old["Name"], new["Name"], old["RemovePrice"] + new["AddPrice"])
+
+
 def fake_effect(user, cmd, args):
     """Beispielantworten der neuen Knoepfe; fuer "yoku" aendern Lernen/Stat/Quirk die Daten wirklich."""
     pw = PAWNS.get(user)
     a = args.split()
+    if cmd in ("addtrait", "removetrait", "replacetrait") and pw:
+        return fake_traits(pw, user, cmd, a)
     if cmd == "wette" and len(a) >= 2 and a[-1].isdigit():
         who, amt = " ".join(a[:-1]).lower(), int(a[-1])
         if who not in ("mira", "luna"):

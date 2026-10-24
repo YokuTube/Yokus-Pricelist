@@ -1,6 +1,7 @@
 // RICS Live – Oberfläche: Live-Leiste, Verbinden-Dialog, Kauf-Dialog, Tabs „Ich“ und „Kolonie“, Charakter-Ansicht.
 // Alle Texte aus der Schnittstelle sind Zuschauernamen/Spielinhalte und werden mit esc() entschärft.
-import { esc as escRaw, fmt, copyText, toast, cmdBtn, morph, scrollPageTo } from './util.js';
+import { esc as escRaw, fmt, copyText, toast, cmdBtn, morph, scrollPageTo, slug } from './util.js';
+import { HIDDEN_TRAITS } from './trait-panel.js';
 import * as live from './live.js';
 // Alle Anzeigetexte aus der Mod laufen durch esc(): erst Unity-Rich-Text (<color=..>, <b> …) entfernen, dann entschärfen.
 const esc = (s) => escRaw(live.stripTags(s));
@@ -221,10 +222,21 @@ function priceOf({ cmd, args }) {
     const hit = list.filter((x) => x.cmdName === name || normName(x.defName) === name);
     return hit.length === 1 ? { price: hit[0].cost, label: hit[0].de || hit[0].label } : null;
   }
+  if (cmd === 'addtrait' || cmd === 'removetrait' || cmd === 'replacetrait') {
+    const find = (n) => DATA.traits.find((t) => slug(t.name) === slug(n) || slug(t.defName) === slug(n));
+    const tok = args.split(' ').filter(Boolean);
+    if (cmd === 'replacetrait') {
+      const o = tok.length === 2 ? find(tok[0]) : null, a = tok.length === 2 ? find(tok[1]) : null;
+      return o && a ? { price: o.removePrice + a.addPrice, label: `${o.name} → ${a.name}` } : null;
+    }
+    const t = tok.length === 1 ? find(tok[0]) : null;
+    return t ? { price: cmd === 'addtrait' ? t.addPrice : t.removePrice, label: t.name } : null;
+  }
   return null;
 }
 
 const VERBS = { buy: 'Sofort kaufen', use: 'Sofort benutzen', equip: 'Sofort ausrüsten', wear: 'Sofort anziehen', backpack: 'Ins Gepäck',
+  addtrait: 'Sofort hinzufügen', removetrait: 'Sofort entfernen', replacetrait: 'Sofort tauschen',
   event: 'Sofort auslösen', weather: 'Sofort auslösen', raid: 'Sofort auslösen', militaryaid: 'Sofort auslösen' };
 
 /** Früher: Dialog beim Antippen. Jetzt gibt es eigene Knöpfe „Sofort kaufen/auslösen“ – Antippen kopiert immer. */
@@ -361,6 +373,8 @@ function markBuyable() {
   document.querySelectorAll('#view [data-copy]').forEach((b) => {
     const p = on ? parseCommand(b.dataset.copy) : null;
     let nb = b.nextElementSibling?.matches?.('[data-live-buy]') ? b.nextElementSibling : null;
+    // Item-Kauf nur mit sichtbarer Mengenwahl (Zeile mit Menge) oder ausdrücklicher Zahl im Befehl – nie „still“ ein Stück
+    if (p && ['buy', 'use', 'backpack'].includes(p.cmd) && !b.closest('.item-row') && !/ \d+$/.test(p.args)) { nb?.remove(); return; }
     if (!p) { nb?.remove(); return; }
     const { verb, price } = buyLabel(p);
     const poor = price != null && coins != null && price > coins;
@@ -861,8 +875,7 @@ function panelOverview(p) {
   return bonds + needs + skills + traits || '<div class="empty">Keine Angaben.</div>';
 }
 
-// Eigenschaften, die jeder Kolonist hat (Mod-Grundausstattung) – auf der Seite nichtssagend, deshalb ausgeblendet (Nutzerwunsch 2026-10-24)
-const HIDDEN_TRAITS = new Set(['PE_FirearmProficiency']);
+// HIDDEN_TRAITS (Eigenschaften der Mod-Grundausstattung, ausgeblendet) steht in trait-panel.js
 
 // Gedanken wie im Stimmungs-Reiter des Spiels; Antippen zeigt die Beschreibung (gleicher Mechanismus wie Eigenschaften)
 function panelMood(p) {

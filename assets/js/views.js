@@ -6,6 +6,7 @@ import * as vb from './visual-b.js';   // Paket B: Symbole statt Text
 import * as live from './live.js';
 import { setIcons, fillAll as fillPics, hue, hasStaticPic } from './pics.js';
 import { eventPic, weatherPic } from './event-pics.js';
+import { traitPanel } from './trait-panel.js';
 import { introCardsHtml, itemTeaserHtml, fillTeasers } from './live-visual-a.js';
 
 const PAGE = 48;
@@ -71,18 +72,28 @@ function uniRow(title, sub, price, cmd, link, pic = '') {
     ${price ? `<div class="price">${fmt(price)}</div>` : ''}<div class="uni-act">${cmd ? cmdBtn(cmd) : link || ''}</div></div>`;
 }
 
-/** Item im Schaufenster: wie im Items-Reiter mit Menge (wird in den Befehl eingebaut). */
-function showItemRow(i) {
-  const max = i.limit > 0 ? i.limit : 9999;
-  const base = '!buy ' + i.cmdName;
-  const btn = cmdBtn(base).replace('class="cmd "', `class="cmd" data-qty data-base="${esc(base)}"`);
-  const qty = max > 1 ? `<div class="qty-box" title="Wie viele? Wird automatisch in den Befehl eingebaut">
-      <button type="button" class="qty-btn" data-d="-1" aria-label="Weniger">−</button>
+/** Mengenwahl (− Zahl +) mit Gesamtpreis; bindQuantity() verdrahtet sie. Überall gleich: Items-Karte, Schaufenster, Suche. */
+function qtyBox(max, label = false, price = 0) {
+  return `<div class="qty-box" title="Wie viele? Wird automatisch in den Befehl eingebaut">
+      ${label ? '<span class="small muted">Menge</span>' : ''}
+      <button type="button" class="qty-btn" data-d="-1" aria-label="Weniger" title="Weniger (gedrückt halten = schnell)">−</button>
       <input class="qty" type="number" inputmode="numeric" min="1" max="${max}" value="1" aria-label="Menge">
-      <button type="button" class="qty-btn" data-d="1" aria-label="Mehr">+</button>
-      <span class="sum small muted"></span>
-    </div>` : '';
-  return `<div class="uni-row item-row show-item" data-price="${i.price}"><div class="uni-main"><div class="uni-title">${esc(i.name)}</div><div class="small muted">${esc(i.category)}</div></div>
+      <button type="button" class="qty-btn" data-d="1" aria-label="Mehr" title="Mehr (gedrückt halten = schnell)">+</button>
+      <span class="sum small muted">${price ? `Summe <span class="coin"></span>${fmt(price)}` : ''}</span>
+    </div>`;
+}
+
+/** Befehl, mit dem man ein Item im Store bekommt (kaufen, sonst benutzen/ausrüsten/anziehen). */
+const itemVerb = (i) => (i.enabled ? '!buy ' : i.usable ? '!use ' : i.equippable ? '!equip ' : '!wear ') + i.cmdName;
+
+/** Item als Zeile mit Mengenwahl (Schaufenster und Suchergebnisse). Der Befehl-Knopf (und damit auch „Sofort kaufen“) trägt die gewählte Menge. */
+function showItemRow(i, sub = i.category) {
+  const max = i.limit > 0 ? i.limit : 9999;
+  const base = itemVerb(i);
+  const multi = /^!(buy|use) /.test(base);   // equip/wear: immer ein Stück
+  const btn = (multi ? cmdBtn(base).replace('class="cmd "', `class="cmd" data-qty data-base="${esc(base)}"`) : cmdBtn(base));
+  const qty = multi && max > 1 ? qtyBox(max, false, i.price) : '';
+  return `<div class="uni-row item-row show-item" data-price="${i.price}"><div class="uni-main"><div class="uni-title">${esc(i.name)}</div><div class="small muted">${esc(sub)}</div></div>
     <div class="price">${fmt(i.price)}</div><div class="uni-act">${qty}<div class="cmd-row">${btn}</div></div></div>`;
 }
 
@@ -104,7 +115,7 @@ function showcase(data) {
     <article class="card show-card"><h3><a href="#/${tab}">${icon(tab, 20)}${esc(title)}</a></h3><p>${esc(desc)}</p>${body}${more ? `<a class="more" href="#/${tab}">${esc(more)} →</a>` : ''}</article>`;
   const out = [];
   if (itemPick.length) out.push(card('Items kaufen', 'items', 'Rohstoffe, Medizin, Waffen und mehr – direkt in die Kolonie oder an deinen Pawn.',
-    itemPick.map(showItemRow).join(''), `Alle ${fmt(sold.length)} Items ansehen`));
+    itemPick.map((i) => showItemRow(i)).join(''), `Alle ${fmt(sold.length)} Items ansehen`));
   if (evPick.length) out.push(card('Events auslösen', 'events', 'Gutes wie Schlechtes passiert sofort im Spiel – für Coins.',
     evPick.map((e) => uniRow(`${esc(cap(e.label))} ${karmaBadge(e.karma)}`, esc(e.text || ''), e.cost, '!event ' + e.cmdName, '', eventPic(e.defName, e.label, e.karma, 44))).join(''), `Alle ${fmt(data.events.length)} Events ansehen`));
   if (wPick.length) out.push(card('Wetter ändern', 'wetter', 'Vom Sonnenschein bis zum Sturm.',
@@ -197,7 +208,7 @@ export function startView(data) {
       if (cmds.length) sections.push(['Befehle',cmds.map((c) => uniRow(`<a href="#/befehle/${esc(c.cmd)}">!${esc(c.cmd)}</a>`, esc(c.summary), 0, '', '')).join(''), 'befehle']);
       const its = data.items.filter((i) => i.available && m(`${i.name} ${i.defName} ${i.category}`));
       const itsOff = data.items.filter((i) => !i.available && m(`${i.name} ${i.defName}`));
-      if (its.length) sections.push([`Items (${fmt(its.length)})`,its.slice(0, 5).map((i) => uniRow(esc(i.name), esc(i.category), i.price, (i.enabled ? '!buy ' : i.usable ? '!use ' : i.equippable ? '!equip ' : '!wear ') + i.cmdName)).join(''), 'items']);
+      if (its.length) sections.push([`Items (${fmt(its.length)})`,its.slice(0, 5).map((i) => showItemRow(i)).join(''), 'items']);
       else if (itsOff.length) sections.push(['Items',`<div class="small muted" style="padding:6px 0">Gibt es im Spiel, wird aber gerade nicht verkauft: ${itsOff.slice(0, 5).map((i) => esc(i.name)).join(', ')}.</div>`, 'items']);
       const evs = data.events.filter((e) => m(`${e.label} ${e.de} ${e.defName} ${e.text}`));
       if (evs.length) sections.push([`Events (${fmt(evs.length)})`,evs.slice(0, 5).map((e) => uniRow(`${esc(cap(e.label))} ${karmaBadge(e.karma)}`, esc(e.text || ''), e.cost, '!event ' + e.cmdName, '', eventPic(e.defName, e.label, e.karma, 44))).join(''), 'events']);
@@ -276,6 +287,7 @@ function cmdCard(c, data) {
       <div class="cmd-body">
         <div><h4>Das gibst du ein</h4><div class="usage">${usage}${(data.picks?.[c.cmd] || []).map((p) => pickHtml(p, data)).join('')}</div></div>
         ${examples}
+        ${/^(trait|traits|addtrait|removetrait|replacetrait|settraits)$/.test(c.cmd) ? '<p class="small" style="margin:0"><a href="#/traits">Eigenschaften auswählen und direkt ändern →</a></p>' : ''}
         <div><h4>Das passiert</h4><p style="margin:0">${esc(c.effect || '')}</p></div>
         ${notes}
       </div>
@@ -352,13 +364,7 @@ function itemRow(i) {
   if (i.equippable) acts.push(cmdBtn('!equip ' + i.cmdName));
   if (i.wearable) acts.push(cmdBtn('!wear ' + i.cmdName));
   const hasQty = i.enabled || i.usable;
-  const qty = `<div class="qty-box" title="Wie viele? Wird automatisch in den Befehl eingebaut">
-      <span class="small muted">Menge</span>
-      <button type="button" class="qty-btn" data-d="-1" aria-label="Weniger">−</button>
-      <input class="qty" type="number" inputmode="numeric" min="1" max="${max}" value="1" aria-label="Menge">
-      <button type="button" class="qty-btn" data-d="1" aria-label="Mehr">+</button>
-      <span class="sum small muted"></span>
-    </div>`;
+  const qty = qtyBox(max, true, i.price);
   return `
     <article class="card item-row item-detail" data-price="${i.price}" data-for="${esc(i.defName)}">
       <div>
@@ -389,16 +395,37 @@ function bindQuantity(root) {
       b.querySelector('.txt').textContent = t;
     });
     const sum = row.querySelector('.sum');
-    if (sum) sum.innerHTML = n > 1 ? `Summe <span class="coin"></span>${fmt(Number(row.dataset.price) * n)}` : '';
+    if (sum) sum.innerHTML = `Summe <span class="coin"></span>${fmt(Number(row.dataset.price) * n)}`;
   };
   root.addEventListener('input', (e) => { const row = e.target.closest('.item-row'); if (row && e.target.matches('.qty')) sync(row, false); });
   root.addEventListener('change', (e) => { const row = e.target.closest('.item-row'); if (row && e.target.matches('.qty')) sync(row, true); });
+  // + / −: Antippen zählt um 1, gedrückt halten zählt schnell weiter (Pointer Events; Tastatur-Klick bleibt als Klick erhalten)
+  const step = (b) => {
+    const row = b.closest('.item-row'), inp = row?.querySelector('.qty');
+    if (!inp) return;
+    const d = Number(b.dataset.d) * (b._rep > 25 ? 10 : b._rep > 10 ? 5 : 1);
+    inp.value = String(Math.max(1, (parseInt(inp.value, 10) || 1) + d));
+    sync(row, true);
+  };
+  let hold = null;
+  const stopHold = () => { if (!hold) return; clearTimeout(hold.t1); clearInterval(hold.t2); hold = null; };
+  root.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('.qty-btn');
+    if (!b || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    stopHold();
+    b._rep = 0;
+    step(b);
+    hold = { b, t1: setTimeout(() => { hold.t2 = setInterval(() => { b._rep++; step(b); }, 90); }, 420) };
+    b._pointerDone = true;   // der folgende „click“ gehört zu diesem Druck und darf nicht noch einmal zählen
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => root.addEventListener(t, (e) => { if (t !== 'pointerleave' || e.target.closest?.('.qty-btn')) stopHold(); }, true));
+  document.addEventListener('pointerup', stopHold);
+  root.addEventListener('contextmenu', (e) => { if (e.target.closest('.qty-btn')) e.preventDefault(); });
   root.addEventListener('click', (e) => {
     const b = e.target.closest('.qty-btn');
     if (!b) return;
-    const row = b.closest('.item-row'), inp = row.querySelector('.qty');
-    inp.value = String(Math.max(1, (parseInt(inp.value, 10) || 1) + Number(b.dataset.d)));
-    sync(row, true);
+    if (b._pointerDone) { b._pointerDone = false; return; }
+    b._rep = 0; step(b);   // Tastatur (Enter/Leertaste)
   });
 }
 
@@ -680,7 +707,9 @@ function traitCard(t) {
 export function traitsView(data) {
   const tr = data.traits;
   tr.forEach((t) => { t.tone = vb.traitTone(t); t.legacy = vb.traitLegacy(t); });
+  const panel = traitPanel(data);
   const html = `
+    ${panel.html}
     <details class="help-box">
       <summary>So änderst du die Eigenschaften deines Pawns</summary>
       <ul>
@@ -705,6 +734,7 @@ export function traitsView(data) {
     <div id="t-list" class="grid cols-2"></div>`;
   function bind(root) {
     const $ = (s) => root.querySelector(s);
+    panel.bind(root);
     const flags = new Set();
     let tone = '';
     const apply = () => {
