@@ -858,8 +858,10 @@ def map_terrain():
         return _TERR["t"]
     n = 250
     rows = []
+    prows = []
     for gz in range(n):
         r = []
+        pr = []
         for gx in range(n):
             bx = 125 + 28 * math.sin(gz / 22.0)
             bach = abs(gx - bx) < 3
@@ -877,7 +879,13 @@ def map_terrain():
             ch = ("b" if bruecke else "W" if tief else "w" if bach or teich else "f" if boden and h < 220 else "r" if fels else "m" if schlamm else "i" if eis
                   else "c" if kies else "t" if baum else "s" if sand else "g")
             r.append(ch)
-        rows.append("".join(r))
+            pch = 0                                   # Pflanzen (Index in PDEFS): 0 keine, 1 Gras, 2 Busch, 3 Baum, 4 Reis (Feld), 5 Moos
+            if os.environ.get("FAKE_NOPLANTS") != "1":
+                crop = 88 <= gx <= 98 and 105 <= gz <= 125 and ch == "g"
+                pch = (4 if crop and h < 230 else 3 if ch == "t" and h < 14 else 2 if ch == "t" and h < 26 else 1 if ch in "tg" and h < 150
+                       else 2 if ch == "g" and h < 162 else 5 if ch == "r" and h < 25 else 0)
+            pr.append(pch)
+        rows.append("".join(r)); prows.append(pr)
     _TERR["t"] = {"id": "m1", "w": n, "h": n, "step": 1, "sizeX": 250, "sizeZ": 250, "rows": rows}
     if os.environ.get("FAKE_NOGFX") != "1":           # Spielgrafik-Felder (Plan karte-spielgrafik): defs + cells (enc 1). FAKE_NOGFX=1 = alte Mod ohne
         defs = [TERR_DEF[c] for c in "gtswWrfbmic"]
@@ -885,6 +893,10 @@ def map_terrain():
         ix = {c: alpha[i] for i, c in enumerate("gtswWrfbmic")}
         _TERR["t"]["defs"] = defs
         _TERR["t"]["cells"] = ["".join(ix.get(ch, "A") for ch in r) for r in rows]
+        if os.environ.get("FAKE_NOPLANTS") != "1":    # Pflanzen-Felder (Nachtrag): pdefs/pkinds/pcells, Index 0 = keine
+            _TERR["t"]["pdefs"] = ["", "Plant_Grass", "Plant_Bush", "Plant_TreeOak", "Plant_Rice", "Plant_Moss"]
+            _TERR["t"]["pkinds"] = ["", "grass", "bush", "tree", "crop", "other"]
+            _TERR["t"]["pcells"] = ["".join(alpha[v] for v in pr) for pr in prows]
     return _TERR["t"]
 
 
@@ -939,6 +951,8 @@ def map_live():
     if os.environ.get("FAKE_NOGFX") != "1":
         for b in blds:
             b["def"] = BLD_DEF.get(b["k"], "Reuse"); b["rot"] = (b["x"] + b["z"]) % 4
+            if b["k"] in BLD_COL and os.environ.get("FAKE_NOPLANTS") != "1":
+                b["col"] = BLD_COL[b["k"]]
     return {"maps": [{"id": "m1", "name": "Strand", "sizeX": 250, "sizeZ": 250, "pawns": pawns, "buildings": blds, "animals": animals, "strangers": strangers, "terrainVer": terrain_ver()}],
             "world": [{"kind": "settlement", "name": "Strand", "lon": 12.0, "lat": 48.0},
                       {"kind": "caravan", "name": "Karawane", "lon": 14.5, "lat": 47.0, "destLon": 18.0, "destLat": 45.0, "pawns": ["yoku"]}]}
@@ -947,6 +961,7 @@ def map_live():
 BLD_DEF = {"fire": "Campfire", "bed": "Bed", "wall": "Wall", "door": "Door", "build": "Reuse", "bench": "TableSmithing", "table": "Table2x2", "seat": "Stool",
            "turret": "Turret_MiniTurret", "storage": "Shelf", "joy": "HorseshoesPin", "power": "Generator", "light": "TorchLamp", "plant": "PlantPot",
            "med": "HospitalBed", "other": "Fridge"}
+BLD_COL = {"wall": "#8c6a3e", "door": "#8c6a3e", "bed": "#b04a4a", "table": "#a07848", "bench": "#7d8088", "storage": "#9a7a50"}   # Zeichenfarbe (Material), nur wenn nicht weiss
 _THING_SEEN = set()
 
 
@@ -979,6 +994,8 @@ WS_THING = {     # ThingDef -> Datei; nicht aufgefuehrt (Wall, Door, Reuse, Gene
     "Campfire": "1718190143/Textures/NewThings/Temperature/Firepit/StoneCampfire.png", "Bed": "1659631711/Textures/Things/Building/Furniture/DoublePillowBed/DoublePillowBed.png",
     "Table2x2": "1558635181/Textures/Things/Building/Table/RGK_Table2x2.png", "Stool": "1694750191/Textures/Things/Building/Art/DryadStool/DryadStool.png",
     "Shelf": "1558635181/Textures/Things/Building/Furniture/GL_TablewareShelf.png", "TorchLamp": "1541438614/Textures/Things/Building/Imperial/BuildingStyles/ImperialTorchLamp.png",
+    "Plant_Grass": "1786466855/Textures/Plants/MutatedGrass/MutatedGrassA.png", "Plant_Bush": "1786466855/Textures/Plants/MutatedBush/MutatedBushA.png",
+    "Plant_TreeOak": "1786466855/Textures/Plants/GnarledTree/GnarledTreeA.png", "Plant_Rice": "1841354677/Textures/Things/Plants/AB_GauGrass/AB_GauGrassA.png",
     "TableSmithing": "1558161673/Textures/Things/Building/RB_Beekeeping_Workbench_m.png"}
 WS_TINT = {"WoodPlankFloor": (176, 124, 72), "Granite_Rough": (140, 136, 130)}
 _WS_CACHE = {}

@@ -13,11 +13,14 @@ const BLD_SYM = { bench: '🔨', table: '🍴', seat: '🪑', turret: '🎯', st
 const BLD_NAME = { bench: 'Werkbank', table: 'Tisch', seat: 'Sitzplatz', turret: 'Geschütz', storage: 'Lager', joy: 'Freizeit', power: 'Strom', light: 'Licht', plant: 'Pflanze', med: 'Krankenbett', bed: 'Bett', fire: 'Feuer', door: 'Tür', other: 'Gebäude', build: 'Gebäude' };
 const REL = { enemy: ['Feind', '#c0392b'], guest: ['Gast', '#3b7dd8'], prisoner: ['Gefangene/r', '#e08a1e'], slave: ['Sklave/in', '#e08a1e'], other: ['Fremde/r', '#7d7d7d'] };
 const FILT_KEY = 'ys-map-filter';
-const FILTERS = [['pawns', 'Kolonisten'], ['animals', 'Tiere'], ['strangers', 'Fremde'], ['blds', 'Gebäude']];
-const loadFilt = () => { const f = { pawns: true, animals: true, strangers: true, blds: true }; try { Object.assign(f, JSON.parse(localStorage.getItem(FILT_KEY) || '{}')); } catch { /* ohne Speicher */ } return f; };
+const FILTERS = [['pawns', 'Kolonisten'], ['animals', 'Tiere'], ['strangers', 'Fremde'], ['blds', 'Gebäude'], ['plants', 'Pflanzen']];
+const loadFilt = () => { const f = { pawns: true, animals: true, strangers: true, blds: true, plants: true }; try { Object.assign(f, JSON.parse(localStorage.getItem(FILT_KEY) || '{}')); } catch { /* ohne Speicher */ } return f; };
 const saveFilt = (f) => { try { localStorage.setItem(FILT_KEY, JSON.stringify(f)); } catch { /* egal */ } };
 const QUAL = ['Schrott', 'Schlecht', 'Normal', 'Gut', 'Hervorragend', 'Meisterhaft', 'Legendär'];
 const NEAR = 8;   // Felder
+// Pflanzen in der Übersicht: Mischfarbe + Deckkraft je Art; gezoomt Bild (Bäume größer), bis zum Laden dieselbe Farbe
+const PL_COL = { grass: [128, 184, 84, 0.45], bush: [72, 144, 62, 0.6], tree: [34, 94, 40, 0.8], crop: [176, 196, 64, 0.6], other: [112, 140, 92, 0.4] };
+const HEX = /^#[0-9a-f]{6}$/i;
 const el = (tag, props, ...kids) => {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(props || {})) {
@@ -77,6 +80,21 @@ const GFX = (() => {
   };
 })();
 const bw = (b) => b.naturalWidth || b.width, bh = (b) => b.naturalHeight || b.height;
+// Gebäudebilder kommen weiß aus dem Spiel: Einfärben per Multiplikation, Alpha bleibt; je (Bild, Farbe) einmal, höchstens 128 px Kante
+const TINT = new Map();
+const tinted = (ent, col) => {
+  const key = ent.url + '|' + col; let c = TINT.get(key);
+  if (c) return c;
+  const bmp = ent.bmp, iw = bw(bmp), ih = bh(bmp), sc = Math.min(1, 128 / Math.max(iw, ih, 1)), W = Math.max(1, Math.round(iw * sc)), H = Math.max(1, Math.round(ih * sc));
+  c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.drawImage(bmp, 0, 0, W, H);
+  g.globalCompositeOperation = 'multiply'; g.fillStyle = col; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'destination-in'; g.drawImage(bmp, 0, 0, W, H);
+  if (TINT.size > 300) TINT.clear();
+  TINT.set(key, c); return c;
+};
+const shade = (hex, f) => `rgb(${[1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * f)).join(',')})`;
 const CH = 32;                 // Felder je Stück (Kante)
 const TILE_MIN = 5;            // ab so vielen Bildpunkten je Feld: Bodenkacheln statt Übersicht
 const IMG_MIN = 6;             // ab so vielen Bildpunkten je Feld: Gebäude mit Spielbild
@@ -124,12 +142,15 @@ export function karteView() {
     const buildOverview = (t) => {
       const w = t.w, h = t.h;
       if (!t.ov) { t.ov = document.createElement('canvas'); t.ov.width = w; t.ov.height = h; }
-      const g = t.ov.getContext('2d'), img = g.createImageData(w, h), px = img.data, cols = t.idx ? defCols(t) : null;
+      const g = t.ov.getContext('2d'), img = g.createImageData(w, h), px = img.data, cols = t.idx ? defCols(t) : null, pl = filt.plants && t.pidx ? t.pidx : null;
       for (let gz = 0; gz < h; gz++) {
         const row = t.data.rows[gz] || '', base = (h - 1 - gz) * w * 4;
         for (let gx = 0; gx < w; gx++) {
           const col = cols ? cols[t.idx[gz * w + gx]] || RGB.g : RGB[row[gx]] || RGB.g, o = base + gx * 4;
-          px[o] = col[0]; px[o + 1] = col[1]; px[o + 2] = col[2]; px[o + 3] = 255;
+          const pk = pl ? pl[gz * w + gx] : 0;
+          if (pk) { const pc = t.pcol[pk], a = pc[3]; px[o] = col[0] + (pc[0] - col[0]) * a; px[o + 1] = col[1] + (pc[1] - col[1]) * a; px[o + 2] = col[2] + (pc[2] - col[2]) * a; }
+          else { px[o] = col[0]; px[o + 1] = col[1]; px[o + 2] = col[2]; }
+          px[o + 3] = 255;
         }
       }
       g.putImageData(img, 0, 0); t.ovDirty = false;
@@ -142,7 +163,7 @@ export function karteView() {
         const r = await live.getJson('/api/map/terrain/' + encodeURIComponent(id));
         if (r.status !== 200 || !r.data) return;
         const d = r.data, w = Math.max(1, d.w | 0), h = Math.max(1, d.h | 0), step = Math.max(1, d.step | 0);
-        const t = { data: d, ver, w, h, step, idx: null, defs: [], catRgb: [], catCss: [], chunks: new Map(), bytes: 0, ov: null, ovDirty: false };
+        const t = { data: d, ver, w, h, step, idx: null, pidx: null, pdefs: [], pkinds: [], pcol: [], defs: [], catRgb: [], catCss: [], chunks: new Map(), bytes: 0, ov: null, ovDirty: false };
         if (Array.isArray(d.defs) && d.defs.length && Array.isArray(d.cells) && d.cells.length) {   // Spielgrafik-Felder (alte Mod: nichts davon)
           const enc2 = d.enc === 2, idx = new Uint16Array(w * h), cnt = new Array(d.defs.length).fill(0), first = new Array(d.defs.length);
           for (let gz = 0; gz < h; gz++) {
@@ -158,6 +179,19 @@ export function karteView() {
           t.water = t.defs.map((_, i) => first[i] === 'w' || first[i] === 'W');
           t.catCss = t.catRgb.map((c) => `rgb(${c[0]},${c[1]},${c[2]})`);
           t.order = t.defs.map((_, i) => i).sort((a, b) => cnt[b] - cnt[a]);
+        }
+        if (Array.isArray(d.pdefs) && d.pdefs.length > 1 && Array.isArray(d.pcells) && d.pcells.length) {   // Pflanzen (optional, Index 0 = keine)
+          const enc2 = d.penc === 2, pidx = new Uint16Array(w * h), n = d.pdefs.length;
+          for (let gz = 0; gz < h; gz++) {
+            const cr = d.pcells[gz] || '';
+            for (let gx = 0; gx < w; gx++) {
+              const v = enc2 ? ALPHA_IX[cr[gx * 2]] * 64 + ALPHA_IX[cr[gx * 2 + 1]] : ALPHA_IX[cr[gx]];
+              pidx[gz * w + gx] = v > 0 && v < n ? v : 0;
+            }
+          }
+          t.pidx = pidx; t.pdefs = d.pdefs.map(String);
+          t.pkinds = t.pdefs.map((_, i) => (Array.isArray(d.pkinds) && PL_COL[d.pkinds[i]] ? d.pkinds[i] : 'other'));
+          t.pcol = t.pkinds.map((k) => PL_COL[k]);
         }
         buildOverview(t);
         if (!alive()) return;
@@ -178,8 +212,15 @@ export function karteView() {
         }
         clearTimeout(ovTimer);
         ovTimer = setTimeout(() => { for (const t of terrain.values()) if (t.ovDirty) buildOverview(t); draw(); }, 200);
+      } else if (e.kind === 'pl') {
+        for (const t of terrain.values()) {
+          const i = t.pdefs.indexOf(e.def); if (i < 0) continue;
+          for (const c of t.chunks.values()) if (c.plMissing?.has(i)) c.plStale = true;
+        }
+        clearTimeout(plTimer); plTimer = setTimeout(draw, 150);
       } else draw();
     };
+    let plTimer = 0;
     GFX.subs.add(onGfx);
     // Stück bauen: je Feld der 16×16-Ausschnitt ((x mod 4)·16, (3 − z mod 4)·16) der 64×64-Kachel; ohne Kachel Kategoriefarbe
     const buildChunk = (t, ccx, ccz, L, old) => {
@@ -202,6 +243,32 @@ export function karteView() {
       if (!old) t.bytes += c.bytes;
       return c;
     };
+    // Pflanzenschicht eines Stücks: durchsichtig, 1 Feld Rand rundum (Bäume ragen über die Kante), von oben nach unten gemalt; ohne Bild die Mischfarbe
+    const buildLayer = (t, ccx, ccz, L, c) => {
+      const size = (CH + 2) * L;
+      if (!c.pl) { c.pl = document.createElement('canvas'); c.pl.width = size; c.pl.height = size; c.bytes += size * size * 4; t.bytes += size * size * 4; }
+      const g = c.pl.getContext('2d'); g.clearRect(0, 0, size, size); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
+      const ents = new Array(t.pdefs.length), missing = new Set();
+      for (let gz = Math.min(t.h - 1, ccz * CH + CH); gz >= Math.max(0, ccz * CH - 1); gz--) {
+        const dy = (CH - gz + ccz * CH) * L;                       // Zeile -1 (unterhalb) .. CH (oberhalb) -> y mit 1 Feld Rand
+        for (let gx = Math.max(0, ccx * CH - 1); gx <= Math.min(t.w - 1, ccx * CH + CH); gx++) {
+          const k = t.pidx[gz * t.w + gx]; if (!k) continue;
+          const dx = (gx - ccx * CH + 1) * L, tree = t.pkinds[k] === 'tree';
+          let bmp = ents[k];
+          if (bmp === undefined) { const e = GFX.get('t_' + t.pdefs[k], 'pl', t.pdefs[k]); bmp = ents[k] = e.state === 'ok' ? e.bmp : null; }
+          if (bmp) {
+            const h0 = ((gx * 73856093) ^ (gz * 19349663)) >>> 0, jx = ((h0 & 255) / 255 - 0.5) * 0.2 * L, jy = (((h0 >> 8) & 255) / 255 - 0.5) * 0.2 * L;
+            const iw = bw(bmp), ih = bh(bmp), box = tree ? 1.6 * L : L, sc = Math.min(box / iw, box / ih), dw = iw * sc, dh = ih * sc;
+            const cx = dx + L / 2 + jx, by = dy + (tree ? 0.95 : 0.5) * L + (tree ? 0 : dh / 2) + jy;   // Baum: Fuß am Feldrand, Krone ragt nach oben; sonst mittig
+            g.drawImage(bmp, cx - dw / 2, by - dh, dw, dh);
+          } else {
+            missing.add(k); const pc = t.pcol[k]; g.fillStyle = `rgba(${pc[0]},${pc[1]},${pc[2]},${Math.min(0.9, pc[3] + 0.1)})`;
+            if (tree) { g.beginPath(); g.arc(dx + L / 2, dy + 0.3 * L, 0.7 * L, 0, 7); g.fill(); } else g.fillRect(dx, dy, L, L);
+          }
+        }
+      }
+      c.plMissing = missing; c.plStale = false;
+    };
     // sichtbare Stücke zeichnen; je Bild nur begrenzt viel neu bauen (Rest im nächsten Bild), darunter liegt immer die Übersicht
     function drawChunks(t, ps) {
       const L = ps <= 10 ? 8 : 16, step = t.step;
@@ -211,7 +278,7 @@ export function karteView() {
       const list = [];
       for (let cz = cz0; cz <= cz1; cz++) for (let cx = cx0; cx <= cx1; cx++) list.push([cx, cz, Math.hypot((cx + 0.5) * CH * step - view.x, (cz + 0.5) * CH * step - view.z)]);
       list.sort((a, b) => a[2] - b[2]);
-      const t0 = performance.now(); let built = 0, more = false;
+      const t0 = performance.now(); let built = 0, more = false; const vis = [];
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'medium';
       for (const [cx, cz] of list) {
         const key = L + ':' + cx + ':' + cz;
@@ -225,6 +292,17 @@ export function karteView() {
         const Y0 = toPx(0, (cz + 1) * span - 0.5)[1], Y1 = toPx(0, cz * span - 0.5)[1];
         const x = Math.floor(X0), y = Math.floor(Y0);
         ctx.drawImage(c.cv, x, y, Math.ceil(X1) - x, Math.ceil(Y1) - y);
+        vis.push([c, cx, cz, X0, Y0, X1, Y1]);
+      }
+      if (t.pidx && filt.plants) {                                           // Pflanzen über dem gesamten Boden (damit Kronen nicht vom Nachbarstück überdeckt werden)
+        for (const [c, cx, cz, X0, Y0, X1, Y1] of vis) {
+          if (!c.pl || c.plStale) {
+            if (built && performance.now() - t0 > 6) { more = true; if (!c.pl) continue; }
+            else { buildLayer(t, cx, cz, L, c); built++; }
+          }
+          const k = (X1 - X0) / CH;
+          ctx.drawImage(c.pl, X0 - k, Y0 - k, (CH + 2) * k, (CH + 2) * k);
+        }
       }
       while (t.bytes > CHUNK_BYTES && t.chunks.size) { const k = t.chunks.keys().next().value, c = t.chunks.get(k); t.bytes -= c.bytes; t.chunks.delete(k); }
       if (more) draw();
@@ -343,14 +421,16 @@ export function karteView() {
         const w = Math.max(2, b.sx * view.s), h = Math.max(2, b.sz * view.s);
         const [px, py] = toPx(b.x - (b.sx - 1) / 2 - 0.5, b.z + (b.sz - 1) / 2 + 0.5);
         if (px > size.w || py > size.h || px + w < 0 || py + h < 0) continue;      // außerhalb des Bildes
-        const ent = pics && b.def ? GFX.get('t_' + b.def, 'th', b.def) : null, bmp = ent && ent.state === 'ok' ? ent.bmp : null;
+        const ent = pics && b.def ? GFX.get('t_' + b.def, 'th', b.def) : null, col = HEX.test(b.col || '') ? b.col : null;
+        let bmp = ent && ent.state === 'ok' ? ent.bmp : null;
+        if (bmp && col) bmp = tinted(ent, col);
         if (b.k === 'wall') {                                                      // zusammenhängende Fläche: ganze Pixel, keine Fugen
           const x = Math.floor(px), y = Math.floor(py), ww = Math.ceil(px + w) - x, hh = Math.ceil(py + h) - y;
           if (bmp) { ctx.imageSmoothingEnabled = true; ctx.drawImage(bmp, x, y, ww, hh); }
           else {
-            ctx.fillStyle = BLD.wall; ctx.fillRect(x, y, ww, hh);
+            ctx.fillStyle = col || BLD.wall; ctx.fillRect(x, y, ww, hh);
             if (ww >= 8) {                                                         // Kante nur dort, wo keine Wand anschließt
-              const mk = b._wm | 0, e = Math.max(1, Math.round(ww / 10)); ctx.fillStyle = '#2a2623';
+              const mk = b._wm | 0, e = Math.max(1, Math.round(ww / 10)); ctx.fillStyle = col ? shade(col, 0.55) : '#2a2623';
               if (!(mk & 1)) ctx.fillRect(x, y, ww, e); if (!(mk & 2)) ctx.fillRect(x + ww - e, y, e, hh);
               if (!(mk & 4)) ctx.fillRect(x, y + hh - e, ww, e); if (!(mk & 8)) ctx.fillRect(x, y, e, hh);
             }
@@ -593,6 +673,7 @@ export function karteView() {
             dot('#3a342c', 'Kolonist (Porträt)'), dot('#4a5a3c', 'Haustier (grüner Ring)'), dot(REL.enemy[1], 'Feind'), dot(REL.guest[1], 'Gast / Händler'),
             dot(REL.prisoner[1], 'Gefangene / Sklaven'), dot(REL.other[1], 'Sonstige Fremde'))),
           el('div', {}, el('b', { class: 'small' }, 'Boden (Übersicht)'), el('ul', {}, terr.map(([k, n]) => dot(COLORS[k], n, false)))),
+          el('div', {}, el('b', { class: 'small' }, 'Pflanzen (Übersicht)'), el('ul', {}, [['grass', 'Gras'], ['bush', 'Busch'], ['tree', 'Baum'], ['crop', 'Anbau'], ['other', 'Sonstige']].map(([k, n]) => dot(`rgb(${PL_COL[k][0]},${PL_COL[k][1]},${PL_COL[k][2]})`, n, false)))),
           el('div', {}, el('b', { class: 'small' }, 'Gebäude'), el('ul', {}, [['wall', 'Wand'], ['door', 'Tür'], ['bed', 'Bett'], ['bench', 'Werkbank'], ['table', 'Tisch'], ['storage', 'Lager'], ['other', 'Sonstiges']].map(([k, n]) => dot(BLD[k], n, false)))),
         ),
         el('p', { class: 'small muted' }, 'Ganz nah heranzoomen: dann siehst du den Boden und die Gebäude so wie im Spiel.'));
@@ -612,7 +693,7 @@ export function karteView() {
         el('button', { type: 'button', onclick: () => { view.fit = false; fit(); draw(); } }, 'zum Lager'));
       const bar = which === 'world' ? null : el('div', { class: 'mp-filter', role: 'group', 'aria-label': 'Anzeigen' }, FILTERS.map(([k, label]) =>
         el('button', { type: 'button', class: 'mp-chip mp-fchip', 'aria-pressed': !!filt[k], onclick: (ev) => {
-          filt[k] = !filt[k]; saveFilt(filt); ev.currentTarget.setAttribute('aria-pressed', String(filt[k]));
+          filt[k] = !filt[k]; saveFilt(filt); if (k === 'plants') for (const t of terrain.values()) buildOverview(t); ev.currentTarget.setAttribute('aria-pressed', String(filt[k]));
           if (selected && !filt[{ p: 'pawns', a: 'animals', s: 'strangers', b: 'blds' }[selected.t]]) { selected = null; follow = false; clearTimeout(thingTimer); drawCard(); }
           draw();
         } }, label)));
