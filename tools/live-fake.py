@@ -846,20 +846,41 @@ import math
 MAP_W = MAP_H = 100
 
 
+_TERR = {}
+
+
 def map_terrain():
+    """Gelaende in voller Aufloesung (250x250, step 1) mit den Zeichen g s w W r t + f b m i c. Einmal berechnet."""
+    if "t" in _TERR:
+        return _TERR["t"]
+    n = 250
     rows = []
-    for gz in range(MAP_H):
+    for gz in range(n):
         r = []
-        for gx in range(MAP_W):
-            bach = abs(gx - (50 + 14 * math.sin(gz / 11.0))) < 2.2
-            teich = (gx - 74) ** 2 + (gz - 70) ** 2 < 50
-            fels = (gx - 18) ** 2 + (gz - 22) ** 2 < 120 or (gx - 85) ** 2 + (gz - 15) ** 2 < 70
+        for gx in range(n):
+            bx = 125 + 28 * math.sin(gz / 22.0)
+            bach = abs(gx - bx) < 3
+            teich = (gx - 185) ** 2 + (gz - 170) ** 2 < 300
+            tief = (gx - 185) ** 2 + (gz - 170) ** 2 < 50
+            fels = (gx - 45) ** 2 + (gz - 55) ** 2 < 700 or (gx - 210) ** 2 + (gz - 40) ** 2 < 400
             h = hashlib.md5(("%d,%d" % (gx, gz)).encode()).digest()[0]
-            baum = h < 38 and (gx < 40 or gz > 75)
-            sand = abs(gx - (50 + 14 * math.sin(gz / 11.0))) < 4.5
-            r.append("W" if teich and (gx - 74) ** 2 + (gz - 70) ** 2 < 20 else "w" if bach or teich else "r" if fels else "t" if baum else "s" if sand else "g")
+            baum = h < 38 and (gx < 90 or gz > 190)
+            sand = abs(gx - bx) < 8
+            bruecke = bach and 118 <= gz <= 123
+            boden = 100 <= gx <= 150 and 105 <= gz <= 145
+            schlamm = (gx - 200) ** 2 + (gz - 215) ** 2 < 260 or (gx < 60 and gz > 200 and h < 140)
+            eis = gz < 15 and gx > 120
+            kies = (gx - 60) ** 2 + (gz - 150) ** 2 < 350 and h < 200
+            ch = ("b" if bruecke else "W" if tief else "w" if bach or teich else "f" if boden and h < 220 else "r" if fels else "m" if schlamm else "i" if eis
+                  else "c" if kies else "t" if baum else "s" if sand else "g")
+            r.append(ch)
         rows.append("".join(r))
-    return {"id": "m1", "w": MAP_W, "h": MAP_H, "step": 3, "sizeX": 250, "sizeZ": 250, "rows": rows}
+    _TERR["t"] = {"id": "m1", "w": n, "h": n, "step": 1, "sizeX": 250, "sizeZ": 250, "rows": rows}
+    return _TERR["t"]
+
+
+def terrain_ver():
+    return 1 + int((time.time() - FAKE_START) // 120)   # steigt alle 2 Minuten: Seite muss Gelaende neu laden
 
 
 def map_live():
@@ -873,15 +894,64 @@ def map_live():
         pawns.append({"id": p["id"], "name": p["name"], "x": x, "z": z, "job": p.get("job") or "Steht herum", "food": 80 - i * 9, "rest": 90 - i * 12,
                       "thirst": 70 - i * 6, "mood": int(p.get("moodPct") or 50), "sleeping": i == 3,
                       "dx": bx + 14, "dz": bz - 6})
-    blds = [{"x": 125, "z": 125, "k": "fire", "sx": 1, "sz": 1, "label": "Lagerfeuer"}]
+    blds = [{"id": "b1", "x": 125, "z": 125, "k": "fire", "sx": 1, "sz": 1, "label": "Lagerfeuer"}]
+    n = 2
     for j in range(7):
-        blds.append({"x": 108 + j * 4, "z": 112, "k": "bed", "sx": 1, "sz": 2, "label": "Schlafplatz"})
+        blds.append({"id": "b%d" % n, "x": 108 + j * 4, "z": 112, "k": "bed", "sx": 1, "sz": 2, "label": "Schlafplatz"}); n += 1
     for j in range(5):
-        blds.append({"x": 134, "z": 140 + j, "k": "wall", "sx": 1, "sz": 1, "label": "Wand"})
-    blds.append({"x": 140, "z": 128, "k": "build", "sx": 2, "sz": 2, "label": "Reuse"})
-    return {"maps": [{"id": "m1", "name": "Strand", "sizeX": 250, "sizeZ": 250, "pawns": pawns, "buildings": blds}],
+        blds.append({"id": "b%d" % n, "x": 134, "z": 140 + j, "k": "wall", "sx": 1, "sz": 1, "label": "Wand"}); n += 1
+    blds.append({"id": "b%d" % n, "x": 140, "z": 128, "k": "build", "sx": 2, "sz": 2, "label": "Reuse"}); n += 1
+    kinds = [("bench", "Schmiede", 3, 1), ("table", "Esstisch", 2, 1), ("seat", "Stuhl", 1, 1), ("turret", "Mini-Geschuetz", 1, 1), ("storage", "Regal", 2, 1),
+             ("joy", "Hufeisenplatz", 1, 1), ("power", "Generator", 2, 2), ("light", "Stehlampe", 1, 1), ("plant", "Pflanzgefaess", 1, 1), ("med", "Krankenbett", 1, 2),
+             ("other", "Kuehlschrank", 2, 1), ("door", "Tuer", 1, 1)]
+    for i, (k, lab, sx, sz) in enumerate(kinds):
+        blds.append({"id": "b%d" % n, "x": 112 + (i % 6) * 5, "z": 120 + (i // 6) * 5, "k": k, "sx": sx, "sz": sz, "label": lab}); n += 1
+    if os.environ.get("FAKE_MANY_BLDS", "1") == "1":     # Leistungsprobe: ~900 Wandteile/Sonstiges
+        for i in range(900):
+            blds.append({"id": "b%d" % n, "x": 20 + (i % 60) * 3, "z": 10 + (i // 60) * 3, "k": "wall" if i % 3 else "other", "sx": 1, "sz": 1, "label": "Gebaeude"}); n += 1
+    animals = []
+    spec = [("a201", "Rex", "Dog", "Hund", 120, 125, "yoku", "Yoku"), ("a202", None, "Cat", "Katze", 128, 128, None, None), ("a203", "Lama Dora", "Alpaca", "Alpaka", 105, 128, None, None),
+            ("a204", None, "Chicken", "Huhn", 100, 118, None, None), ("a205", None, "Chicken", "Huhn", 101, 119, None, None), ("a206", "Kuno", "Donkey", "Esel", 150, 135, None, None)]
+    for i, (aid, nm, kind, lab, bx, bz, bond, bondName) in enumerate(spec):
+        a = t / 5.0 + i * 2.1
+        d = {"id": aid, "name": nm, "kind": kind if kind != "Chicken" else "404", "label": lab, "x": int(bx + 4 * math.sin(a)), "z": int(bz + 3 * math.cos(a)),
+             "job": "Wandert umher" if i % 2 else "Frisst", "sleeping": i == 1, "health": 100 - i * 8, "food": 70 - i * 9}
+        if bond:
+            d["bondId"] = PAWNS[bond]["id"]; d["bondName"] = bondName
+        if i == 2:
+            d["masterId"] = PAWNS["mira_spielt"]["id"]
+        animals.append(d)
+    strangers = [
+        {"id": "p301", "name": "Gruenkohl", "label": "Pirat", "x": 160 + int(6 * math.sin(t / 7)), "z": 170, "dx": 140, "dz": 140, "rel": "enemy", "faction": "Plunderer-Bande"},
+        {"id": "p302", "name": "Hanna", "label": "Haendler", "x": 90, "z": 150, "rel": "guest", "faction": "Handelsgilde"},
+        {"id": "p303", "name": "Gregor", "label": "Gefangener", "x": 118, "z": 108, "rel": "prisoner", "faction": "Plunderer-Bande"},
+        {"id": "p304", "name": "Bo", "label": "Sklave", "x": 132, "z": 112, "rel": "slave", "faction": None},
+        {"id": "p305", "name": None, "label": "Mech", "x": 70, "z": 100, "rel": "other", "faction": None}]
+    return {"maps": [{"id": "m1", "name": "Strand", "sizeX": 250, "sizeZ": 250, "pawns": pawns, "buildings": blds, "animals": animals, "strangers": strangers, "terrainVer": terrain_ver()}],
             "world": [{"kind": "settlement", "name": "Strand", "lon": 12.0, "lat": 48.0},
                       {"kind": "caravan", "name": "Karawane", "lon": 14.5, "lat": 47.0, "destLon": 18.0, "destLat": 45.0, "pawns": ["yoku"]}]}
+
+
+_THING_SEEN = set()
+
+
+def thing_info(tid):
+    for b in map_live()["maps"][0]["buildings"]:
+        if b["id"] == tid:
+            break
+    else:
+        return 404, {"error": "Unbekannt"}
+    if tid not in _THING_SEEN:
+        _THING_SEEN.add(tid)
+        return 202, {"pending": True}
+    d = {"id": tid, "label": b["label"], "k": b["k"], "x": b["x"], "z": b["z"], "hp": 180, "hpMax": 200, "quality": "gut", "stuff": "Stahl"}
+    if b["k"] == "bench":
+        d["bills"] = ["Kurzschwert herstellen x3", "Stahl schmelzen (dauerhaft)"]; d["user"] = {"id": PAWNS["yoku"]["id"], "name": "Yoku"}
+    if b["k"] == "power":
+        d["power"] = "an"; d["fuel"] = 64
+    if b["k"] == "light":
+        d["power"] = "aus"
+    return 200, d
 
 
 def fog_fake():
@@ -965,6 +1035,9 @@ class H(BaseHTTPRequestHandler):
         q = parse_qs(u.query)
         if p == "/api/map":
             return self.js(200, map_live(), cache=False)
+        if p.startswith("/api/map/thing/"):
+            st, body = thing_info(unquote(p[15:]))
+            return self.js(st, body, cache=False)
         if p.startswith("/api/map/terrain/"):
             return self.js(200, map_terrain())
         if p == "/api/show" or p.startswith("/api/show/diary/"):

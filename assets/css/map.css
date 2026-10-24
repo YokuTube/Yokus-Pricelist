@@ -19,3 +19,12 @@
 .mp-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .mp-chip { min-height: 44px; padding: 0 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
 .mp-chip.on { border-color: var(--accent); color: var(--accent); }
+.mp-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.mp-fchip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.mp-fchip[aria-pressed="false"] { opacity: .6; text-decoration: line-through; }
+.mp-rel { display: inline-block; padding: 1px 8px; border-radius: 999px; color: #fff; font-size: 12px; }
+.mp-bills { margin: 2px 0 0; padding-left: 18px; }
+.mp-link { min-height: 32px; }
+.mp-follow { margin: 2px 0; min-height: 44px; }
+.mp-card { max-height: 60%; overflow-y: auto; }
+@media (max-width: 700px) { .mp-card { max-width: none; } }
