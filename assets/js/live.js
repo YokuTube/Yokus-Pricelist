@@ -115,7 +115,8 @@ async function hubTick(hub) {
     const r = await api(hub.path, { auth: hub.auth, etag: hub.etag });
     if (!hub.subs.size) return;
     if (r.status === 401 && hub.auth) { dropToken(true); [...hub.subs].forEach((s) => s.entry.stop()); return; }
-    if (r.status >= 500) fail();
+    // 503 mit anderem Text als „kein Spiel geladen“ (z. B. „Noch keine Daten“ bei der Karte) betrifft nur diesen Endpunkt, nicht die ganze Verbindung
+    if (r.status >= 500 && !(r.status === 503 && r.data?.error && !/Spiel/i.test(r.data.error))) fail();
     else {
       S.fails = 0;
       if (r.status === 304) hubDeliver(hub, { status: 200, data: hub.cached, unchanged: true });

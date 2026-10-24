@@ -155,5 +155,3 @@ export function optionPic(defName, name, karma, size = 40, text = '') {
   const isWeather = /^LE_ForceWeather_|^Weather/i.test(d) || (!gamePic(d, name) && /\b(weather|wetter)\b/i.test(`${name} ${text}`));
   return isWeather ? weatherPic(d, name, karma, size, text) : eventPic(d, name, karma, size);
 }
-/** Anzahl Events mit echtem Spielsymbol (für Berichte/Tests). */
-export const pictureStats = (events) => ({ total: events.length, game: events.filter((e) => gamePic(e.defName, e.label)).length });

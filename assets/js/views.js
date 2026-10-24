@@ -1,9 +1,8 @@
 // Alle Ansichten (Tabs). Jede Funktion liefert { html, bind(root) }.
-import { esc, rich, plain, cap, slug, fmt, debounce, cmdBtn, pickBtn, karmaBadge, karmaInfo, days, KARMA, makeMatcher } from './util.js';
+import { esc, rich, plain, cap, slug, fmt, debounce, cmdBtn, pickBtn, karmaBadge, days, makeMatcher } from './util.js';
 import { EVENT_TYPES } from './data.js';
 import { icon } from './icons.js';
 import * as vb from './visual-b.js';   // Paket B: Symbole statt Text
-import * as vbl from './live-visual-b.js';   // Spielsymbole (nur mit laufender Live-Mod)
 import * as live from './live.js';
 import { setIcons, fillAll as fillPics, hue, hasStaticPic } from './pics.js';
 import { eventPic, weatherPic } from './event-pics.js';

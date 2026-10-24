@@ -22,9 +22,6 @@ function candidates(key) {
   return out.filter((u) => !bad.has(u));
 }
 
-/** Gibt es (voraussichtlich) ein Bild? Statisch sicher, live nur mit Mod. */
-export const hasPic = (key) => good.has(key) || candidates(key).length > 0;
-
 /**
  * Setzt in `el` (Platzhalter) ein <img>, sobald eines geladen ist. Der Platzhalter bleibt bis dahin sichtbar.
  * `el.dataset.pic` merkt den Stand: 'ok' (Bild drin), 'x' (nichts gefunden, nur nochmal versuchen wenn die Live-Mod neu online ist).

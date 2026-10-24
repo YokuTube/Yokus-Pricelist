@@ -73,7 +73,11 @@ function startProbe(every) {
 
 /** Einmal beim Start: erkennt im Hintergrund, ob eine Show läuft. Ohne Live-Mod passiert nichts. */
 export function initShow() {
+  let wasLive = false;
   const start = () => {
+    const now = live.isLive();
+    if (now && wasLive && probeStop) return;   // andere Änderung (z. B. Verknüpfung): Abfrage läuft weiter
+    wasLive = now;
     if (probeStop) { probeStop(); probeStop = null; }
     if (!live.isLive()) { showData = null; settled = false; setActive(false, true); return; }
     startProbe(8000);

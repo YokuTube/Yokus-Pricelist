@@ -1,6 +1,6 @@
 // Paket B: gemeinsame, rein darstellende Bausteine für die Live-Ansichten (Symbole statt Text).
 // Alles hier liefert nur HTML-Zeichenketten; Daten aus der Mod laufen durch esc().
-import { esc as escRaw, fmt } from './util.js';
+import { esc as escRaw } from './util.js';
 import * as live from './live.js';
 
 const esc = (s) => escRaw(live.stripTags(s));
@@ -37,8 +37,6 @@ export function symHtml(key, emo, cls = '') {
     : `<span class="sym-emo ${cls}" aria-hidden="true">${esc(emo || '')}</span>`;
 }
 
-/** Münze + Zahl (Preis). */
-export const coinHtml = (n, cls = '') => `<span class="pcoin ${cls}" title="${esc(fmt(n))} Münzen"><i class="pc-ico" aria-hidden="true">🪙</i>${esc(fmt(n))}</span>`;
 /** Uhr + Dauer (Wartezeit). */
 export const clockHtml = (txt, title = '') => `<span class="pclock" title="${esc(title || 'Wartezeit')}"><i aria-hidden="true">⏱</i>${esc(txt)}</span>`;
 

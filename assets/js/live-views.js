@@ -282,7 +282,6 @@ async function buyNow(btn) {
   }
 }
 
-const coinsHtmlStatic = (v) => `<span class="coin-ico" aria-hidden="true">🪙</span> ${fmt(v)} Münzen`;
 
 // =====================================================================
 // Live-Leiste im Kopf
@@ -439,7 +438,8 @@ function voteMinimized() {
   let st = null;
   try { st = JSON.parse(sessionStorage.getItem('ys-vote-min') || 'null'); } catch { /* egal */ }
   if (st && st.sig === voteSig()) return st.min;
-  return !isFrage(voteState) || location.hash.startsWith('#/show');   // im Show-Reiter steht die Frage schon groß im Reiter   // standardmäßig als Pille – aufklappbar, nach der Wahl wieder eingeklappt
+  // Standard: Pille (aufklappbar, nach der Wahl wieder eingeklappt). Im Show-Reiter steht die Frage schon groß im Reiter.
+  return !isFrage(voteState) || (document.body.classList.contains('show-mode') && location.hash.startsWith('#/show'));
 }
 function setVoteMin(min) {
   try { sessionStorage.setItem('ys-vote-min', JSON.stringify({ sig: voteSig(), min })); } catch { /* egal */ }
@@ -2894,7 +2894,6 @@ export function spielView() {
 // =====================================================================
 // Ansicht „Ereignisse“ (nur live): Chronik der letzten Briefe, /api/events alle 10 s, nur solange offen
 // =====================================================================
-const EV_FILTERS = [['all', 'Alle'], ['threat', 'Gefahr'], ['bad', 'Schlecht'], ['good', 'Gut'], ['neutral', 'Neutral']];
 let evFilter = 'all';
 const evOpen = new Set();   // aufgeklappte Einträge (über Schlüssel, übersteht Aktualisierungen)
 // Schlüssel ohne „ago“ (das ändert sich ständig): Tag | Titel | laufende Nummer gleicher Einträge am selben Tag (von den ältesten her)
