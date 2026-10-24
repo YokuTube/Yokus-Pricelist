@@ -42,12 +42,16 @@ Hinweis: Die Anmeldung läuft nur im Browser des Zuschauers (nur Berechtigung `u
 
 ```
 index.html                 Gerüst
-assets/css/site.css        Design (hell/dunkel, Handy)
+assets/css/site.css        Design (hell/dunkel, Handy); weitere Stile in den anderen CSS-Dateien
 assets/js/main.js          Start, Tabs, Design-Umschalter, Kopieren
 assets/js/data.js          lädt und bereinigt die JSON-Dateien
 assets/js/views.js         alle Ansichten (Start, Befehle, Items, Events, …)
 assets/js/chat.js          optionales Senden über Twitch
 assets/js/util.js          Hilfsfunktionen
+assets/js/live*.js, map.js    Live-Teil (nur sichtbar, wenn die Live-Mod des Streamers läuft)
+assets/js/stream.js        Stream-/Chat-Leiste
+assets/js/feedback.js      Feedback-Fenster
+assets/js/cooldowns.js     Abklingzeiten
 data/                      JSON-Daten (siehe oben)
 tools/                     sync-data.ps1 (Abgleich + Upload, vom Knopf im Spiel aufgerufen), sync-pricelist.bat, Vorschau (preview.bat, dev-server.py)
 ```
