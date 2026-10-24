@@ -520,6 +520,12 @@ export function karteView() {
         ctx.restore();
         ring(px, py, r, sameSel(selected, { t: 'p', id: p.id }));
         if (p.sleeping) { ctx.font = '12px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.fillText('💤', px + r - 4, py - r); }
+        // Verletzt: kleiner Gesundheitsbalken über der Figur (grün > gelb > rot)
+        if (p.health != null && p.health < 100) {
+          const hv = Math.max(0, Math.min(100, p.health)), bw = 2 * r + 4, by = py - r - 7;
+          ctx.fillStyle = '#000c'; ctx.fillRect(px - bw / 2, by, bw, 5);
+          ctx.fillStyle = hv > 60 ? '#6cc04a' : hv > 30 ? '#e0b030' : '#d04535'; ctx.fillRect(px - bw / 2 + 1, by + 1, (bw - 2) * hv / 100, 3);
+        }
         tag(p.name, px, py, r);
       }
       // Maßstab
@@ -576,7 +582,7 @@ export function karteView() {
         const near = m.pawns.filter((q) => q.id !== e.id && Math.hypot(q.x - e.x, q.z - e.z) < NEAR);
         add(el('div', { class: 'mp-card-h' }, el('b', {}, e.name), close), folgen(),
           el('div', { class: 'small muted' }, (e.job || '') + (e.sleeping ? ' · schläft' : '')),
-          bar('Hunger', e.food), bar('Durst', e.thirst), bar('Schlaf', e.rest), bar('Stimmung', e.mood), pos,
+          bar('Gesundheit', e.health), bar('Hunger', e.food), bar('Durst', e.thirst), bar('Schlaf', e.rest), bar('Stimmung', e.mood), pos,
           el('div', { class: 'small' }, 'In der Nähe: ', near.length ? near.map((q, i) => [i ? ', ' : '', el('button', { type: 'button', class: 'mp-link', onclick: () => pick({ t: 'p', id: q.id }, true) }, q.name)]) : 'niemand'));
       } else if (selected.t === 'a') {
         add(el('div', { class: 'mp-card-h' }, el('b', {}, '🐾 ' + (e.name || e.label || 'Tier')), close),

@@ -913,7 +913,7 @@ def map_live():
         a = t / 6.0 + i * 1.7
         x, z = int(bx + 10 * math.sin(a)), int(bz + 8 * math.cos(a * 0.8))
         pawns.append({"id": p["id"], "name": p["name"], "x": x, "z": z, "job": p.get("job") or "Steht herum", "food": 80 - i * 9, "rest": 90 - i * 12,
-                      "thirst": 70 - i * 6, "mood": int(p.get("moodPct") or 50), "sleeping": i == 3,
+                      "thirst": 70 - i * 6, "mood": int(p.get("moodPct") or 50), "health": [100, 74, 41, 18][i % 4], "sleeping": i == 3,
                       "dx": bx + 14, "dz": bz - 6})
     blds = [{"id": "b1", "x": 125, "z": 125, "k": "fire", "sx": 1, "sz": 1, "label": "Lagerfeuer"}]
     n = 2
