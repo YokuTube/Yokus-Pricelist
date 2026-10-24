@@ -83,7 +83,7 @@
         { "syntax": "!mypawn owned [all|weapons|armor]", "note": "Ausrüstung, die dir gehört. Mit !mypawn disown <Nr> gibst du etwas wieder frei." }
       ],
       "effect": "Reine Anzeige im Chat, es kostet nichts und ändert nichts.",
-      "notes": ["Dein Pawn muss leben. Hast du keinen, hilft !pawn."]
+      "notes": ["Dein Pawn muss leben. Hast du keinen, hilft !join."]
     },
     {
       "cmd": "help", "group": "start", "src": "rics",
@@ -288,7 +288,7 @@
 
     {
       "cmd": "races", "group": "pawn", "src": "rics",
-      "summary": "Listet die Rassen, die du mit !pawn kaufen kannst.",
+      "summary": "Listet die Rassen, die es in der Kolonie geben kann.",
       "usage": [ { "syntax": "!races" } ],
       "effect": "Reine Anzeige. Mehr Details im Tab „Rassen“."
     },
@@ -345,12 +345,6 @@
       "usage": [ { "syntax": "!trait <Name>" } ],
       "examples": ["!trait quick_learner"],
       "effect": "Reine Anzeige. Die Liste aller kaufbaren Eigenschaften steht im Tab „Traits“."
-    },
-    {
-      "cmd": "traits", "group": "char", "src": "rics",
-      "summary": "Listet die kaufbaren Eigenschaften.",
-      "usage": [ { "syntax": "!traits" } ],
-      "effect": "Reine Anzeige."
     },
     {
       "cmd": "addtrait", "group": "char", "src": "rics",
@@ -511,7 +505,8 @@
       "cmd": "harcosmetic", "group": "look", "src": "addon",
       "summary": "Ändert Körper-Extras von Fremdrassen, z. B. Hörner.",
       "usage": [ { "syntax": "!harcosmetic" } ],
-      "effect": "Passt Kosmetik an, wenn deine Rasse welche hat."
+      "effect": "Passt Kosmetik an, wenn deine Rasse welche hat.",
+      "requires": "Humanoid Alien Races"
     },
     {
       "cmd": "geneedit", "group": "look", "src": "addon",
@@ -653,7 +648,8 @@
       "cmd": "autocombat", "group": "control", "src": "addon",
       "summary": "Dein Pawn sucht und bekämpft Feinde selbst.",
       "usage": [ { "syntax": "!autocombat on" }, { "syntax": "!autocombat off" } ],
-      "effect": "Mit „on“ greift der Pawn von sich aus Feinde an."
+      "effect": "Mit „on“ greift der Pawn von sich aus Feinde an.",
+      "requires": "Search and Destroy"
     },
     {
       "cmd": "gizmo", "group": "control", "src": "addon",
@@ -697,13 +693,6 @@
       "summary": "Ausführliche Infos zu einem Ding oder Gen.",
       "usage": [ { "syntax": "!info <Name>" } ],
       "effect": "Reine Anzeige. Wird nichts gefunden, sagt der Bot es."
-    },
-    {
-      "cmd": "isekai", "group": "control", "src": "addon",
-      "summary": "Zeigt dein Isekai-Level und verteilt Punkte.",
-      "usage": [ { "syntax": "!isekai", "note": "Dein Stand." }, { "syntax": "!isekai level <str|dex|vit|int|wis|cha> [Menge]", "note": "Verteilt Punkte auf einen Wert." }, { "syntax": "!isekai aura", "note": "Wählt eine Aura." } ],
-      "effect": "Deine Werte steigen, wenn du Punkte hast.",
-      "requires": "Isekai RPG Leveling"
     },
     {
       "cmd": "constellation", "group": "control", "src": "addon",
