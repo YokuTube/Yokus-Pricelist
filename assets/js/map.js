@@ -29,6 +29,62 @@ const el = (tag, props, ...kids) => {
 };
 const clear = (e) => { while (e.firstChild) e.removeChild(e.firstChild); };
 
+// ---- Spielgrafiken (Bodenkacheln /api/img/tr_<def>, Gebäudesymbole /api/img/t_<def>) ----
+// Gemeinsamer Lader (überlebt das Neuöffnen der Karte): höchstens 3 Anfragen gleichzeitig; 404 = "noch nicht gerendert" -> später erneut (Rückzug), danach aufgeben.
+// Per fetch geladen, damit der Status bekannt ist und der Durchschnittsfarbwert gelesen werden darf (CORS); scheitert fetch, dient ein <img> (ohne Farbwert).
+const GFX = (() => {
+  const ents = new Map(), queue = [], subs = new Set(), DELAYS = [3000, 8000, 20000, 45000, 120000, 120000];
+  let inflight = 0;
+  const base = () => live.artUrl('x', 0).replace(/\/api\/art\/.*$/, '');
+  const avgOf = (bmp) => {                                  // Mittelwert über ein 8×8-Verkleinerung (Alpha gewichtet)
+    try {
+      const c = document.createElement('canvas'); c.width = c.height = 8;
+      const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(bmp, 0, 0, 8, 8);
+      const d = g.getImageData(0, 0, 8, 8).data; let r = 0, gg = 0, b = 0, a = 0;
+      for (let i = 0; i < d.length; i += 4) { const w = d[i + 3]; r += d[i] * w; gg += d[i + 1] * w; b += d[i + 2] * w; a += w; }
+      return a ? [Math.round(r / a), Math.round(gg / a), Math.round(b / a)] : null;
+    } catch { return null; }
+  };
+  const miss = (e) => {
+    e.state = 'miss'; e.tries++;
+    if (e.tries > DELAYS.length) { e.state = 'gone'; return; }
+    setTimeout(() => { if (e.state === 'miss') { e.state = 'wait'; queue.push(e); pump(); } }, DELAYS[e.tries - 1]);
+  };
+  const done = (e) => { e.state = 'ok'; for (const f of subs) f(e); };
+  async function run(e) {
+    inflight++; e.state = 'load';
+    try {
+      const r = await fetch(e.url, { mode: 'cors' });
+      if (r.status === 200) { const bmp = await createImageBitmap(await r.blob()); e.bmp = bmp; e.avg = avgOf(bmp); done(e); } else miss(e);
+    } catch {
+      await new Promise((res) => {                          // CORS/Netzfehler: <img> versuchen
+        const im = new Image(); im.decoding = 'async';
+        im.onload = () => { e.bmp = im; done(e); res(); }; im.onerror = () => { miss(e); res(); }; im.src = e.url;
+      });
+    } finally { inflight--; pump(); }
+  }
+  function pump() { while (inflight < 3 && queue.length) run(queue.shift()); }
+  return {
+    subs,
+    // Eintrag holen (stößt das Laden an); e.state === 'ok' -> e.bmp / e.avg benutzbar
+    get(key, kind, def) {
+      const url = base() + '/api/img/' + encodeURIComponent(key);
+      let e = ents.get(url);
+      if (!e) { e = { url, key, kind, def, state: 'wait', tries: 0, bmp: null, avg: null }; ents.set(url, e); queue.push(e); pump(); }
+      return e;
+    },
+    peek(key) { return ents.get(base() + '/api/img/' + encodeURIComponent(key)) || null; },
+  };
+})();
+const bw = (b) => b.naturalWidth || b.width, bh = (b) => b.naturalHeight || b.height;
+const CH = 32;                 // Felder je Stück (Kante)
+const TILE_MIN = 5;            // ab so vielen Bildpunkten je Feld: Bodenkacheln statt Übersicht
+const IMG_MIN = 6;             // ab so vielen Bildpunkten je Feld: Gebäude mit Spielbild
+const CHUNK_BYTES = 48 * 1024 * 1024;
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const ALPHA_IX = {}; for (let i = 0; i < ALPHA.length; i++) ALPHA_IX[ALPHA[i]] = i;
+const wallKey = (x, z) => x * 8192 + z;
+
 export function karteView() {
   const html = '<div class="live-page mp-page"><div class="mp-head"><h2 class="section-title" style="margin:0">Karte</h2><span class="small muted" id="mp-info"></span></div><div id="mp-subs" class="mp-subs"></div><div id="mp-body"></div></div>';
   function bind(root) {
@@ -40,7 +96,7 @@ export function karteView() {
     let filt = loadFilt(), thing = null, thingTimer = 0;
     const animImgs = new Map(), terrLoading = new Set();
     let selected = null, view = { s: 4, x: 0, z: 0, fit: false }, cv = null, ctx = null, raf = 0, card = null, strip = null;
-    let size = { w: 300, h: 300 };
+    let size = { w: 300, h: 300 }, legendOpen = false;
 
     const alive = () => body.isConnected;
     const mapObj = () => data?.maps?.find((m) => m.id === which);
@@ -59,7 +115,23 @@ export function karteView() {
       });
       return false;
     };
-    // Gelände: ein Pixel je Feld (ImageData), beim Zeichnen hochskaliert. Neu laden, wenn die Mod terrainVer erhöht.
+    // Gelände: Übersicht = ein Pixel je Feld (ImageData, Durchschnittsfarbe der Bodenkachel bzw. Kategoriefarbe), hochskaliert.
+    // Ab TILE_MIN Bildpunkten je Feld kommen Stücke (32×32 Felder, Offscreen-Canvas) mit den Bodenkacheln darüber – nur sichtbare, begrenzt zwischengespeichert.
+    // Neu laden, wenn die Mod terrainVer erhöht.
+    const defCols = (t) => t.defs.map((d, i) => { const e = GFX.peek('tr_' + d); return (e && e.state === 'ok' && e.avg) || t.catRgb[i] || RGB.g; });
+    const buildOverview = (t) => {
+      const w = t.w, h = t.h;
+      if (!t.ov) { t.ov = document.createElement('canvas'); t.ov.width = w; t.ov.height = h; }
+      const g = t.ov.getContext('2d'), img = g.createImageData(w, h), px = img.data, cols = t.idx ? defCols(t) : null;
+      for (let gz = 0; gz < h; gz++) {
+        const row = t.data.rows[gz] || '', base = (h - 1 - gz) * w * 4;
+        for (let gx = 0; gx < w; gx++) {
+          const col = cols ? cols[t.idx[gz * w + gx]] || RGB.g : RGB[row[gx]] || RGB.g, o = base + gx * 4;
+          px[o] = col[0]; px[o + 1] = col[1]; px[o + 2] = col[2]; px[o + 3] = 255;
+        }
+      }
+      g.putImageData(img, 0, 0); t.ovDirty = false;
+    };
     const loadTerrain = async (id, ver) => {
       const cur = terrain.get(id);
       if (terrLoading.has(id) || (cur && cur.ver === ver)) return;
@@ -67,18 +139,93 @@ export function karteView() {
       try {
         const r = await live.getJson('/api/map/terrain/' + encodeURIComponent(id));
         if (r.status !== 200 || !r.data) return;
-        const d = r.data, w = Math.max(1, d.w | 0), h = Math.max(1, d.h | 0), c = document.createElement('canvas'); c.width = w; c.height = h;
-        const g = c.getContext('2d'), img = g.createImageData(w, h), px = img.data;
-        for (let gz = 0; gz < h; gz++) {
-          const row = d.rows[gz] || '', base = (h - 1 - gz) * w * 4;
-          for (let gx = 0; gx < w; gx++) { const col = RGB[row[gx]] || RGB.g, o = base + gx * 4; px[o] = col[0]; px[o + 1] = col[1]; px[o + 2] = col[2]; px[o + 3] = 255; }
+        const d = r.data, w = Math.max(1, d.w | 0), h = Math.max(1, d.h | 0), step = Math.max(1, d.step | 0);
+        const t = { data: d, ver, w, h, step, idx: null, defs: [], catRgb: [], catCss: [], chunks: new Map(), bytes: 0, ov: null, ovDirty: false };
+        if (Array.isArray(d.defs) && d.defs.length && Array.isArray(d.cells) && d.cells.length) {   // Spielgrafik-Felder (alte Mod: nichts davon)
+          const enc2 = d.enc === 2, idx = new Uint16Array(w * h), cnt = new Array(d.defs.length).fill(0), first = new Array(d.defs.length);
+          for (let gz = 0; gz < h; gz++) {
+            const cr = d.cells[gz] || '', rr = d.rows[gz] || '';
+            for (let gx = 0; gx < w; gx++) {
+              const v = enc2 ? ALPHA_IX[cr[gx * 2]] * 64 + ALPHA_IX[cr[gx * 2 + 1]] : ALPHA_IX[cr[gx]];
+              const k = v < d.defs.length ? v : 0;
+              idx[gz * w + gx] = k; cnt[k]++; if (first[k] == null) first[k] = rr[gx];
+            }
+          }
+          t.idx = idx; t.defs = d.defs.map(String);
+          t.catRgb = t.defs.map((_, i) => RGB[first[i]] || RGB.g);
+          t.catCss = t.catRgb.map((c) => `rgb(${c[0]},${c[1]},${c[2]})`);
+          t.order = t.defs.map((_, i) => i).sort((a, b) => cnt[b] - cnt[a]);
         }
-        g.putImageData(img, 0, 0);
+        buildOverview(t);
         if (!alive()) return;
-        terrain.set(id, { data: d, canvas: c, ver });
+        terrain.set(id, t);
+        if (t.idx) for (const i of t.order) GFX.get('tr_' + t.defs[i], 'tr', t.defs[i]);     // häufigste Böden zuerst
         draw();
       } catch { /* später erneut */ } finally { terrLoading.delete(id); }
     };
+    // Eine Bodenkachel (oder ein Gebäudebild) ist angekommen: betroffene Stücke neu, Übersichtsfarbe nachziehen (gebündelt)
+    let ovTimer = 0;
+    const onGfx = (e) => {
+      if (!alive()) { GFX.subs.delete(onGfx); return; }
+      if (e.kind === 'tr') {
+        for (const t of terrain.values()) {
+          const i = t.defs.indexOf(e.def); if (i < 0) continue;
+          t.ovDirty = true;
+          for (const c of t.chunks.values()) if (c.missing.has(i)) c.stale = true;
+        }
+        clearTimeout(ovTimer);
+        ovTimer = setTimeout(() => { for (const t of terrain.values()) if (t.ovDirty) buildOverview(t); draw(); }, 200);
+      } else draw();
+    };
+    GFX.subs.add(onGfx);
+    // Stück bauen: je Feld der 16×16-Ausschnitt ((x mod 4)·16, (3 − z mod 4)·16) der 64×64-Kachel; ohne Kachel Kategoriefarbe
+    const buildChunk = (t, ccx, ccz, L, old) => {
+      const size = CH * L, cv = old?.cv || document.createElement('canvas');
+      if (!old) { cv.width = size; cv.height = size; }
+      const g = cv.getContext('2d'); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
+      const ents = t.defs.map((d) => { const e = GFX.peek('tr_' + d); return e && e.state === 'ok' ? e.bmp : null; }), missing = new Set();
+      for (let lz = 0; lz < CH; lz++) {
+        const gz = ccz * CH + lz; if (gz >= t.h) break;
+        const dy = (CH - 1 - lz) * L, ty = 3 - (gz & 3);
+        for (let lx = 0; lx < CH; lx++) {
+          const gx = ccx * CH + lx; if (gx >= t.w) break;
+          const k = t.idx[gz * t.w + gx], bmp = ents[k];
+          if (bmp) { const tw = bw(bmp) / 4, th = bh(bmp) / 4; g.drawImage(bmp, (gx & 3) * tw, ty * th, tw, th, lx * L, dy, L, L); }
+          else { missing.add(k); g.fillStyle = t.catCss[k]; g.fillRect(lx * L, dy, L, L); }
+        }
+      }
+      const c = old || { cv, bytes: size * size * 4 };
+      c.missing = missing; c.stale = false;
+      if (!old) t.bytes += c.bytes;
+      return c;
+    };
+    // sichtbare Stücke zeichnen; je Bild nur begrenzt viel neu bauen (Rest im nächsten Bild), darunter liegt immer die Übersicht
+    function drawChunks(t, ps) {
+      const L = ps <= 10 ? 8 : 16, step = t.step;
+      const [wx0, wz1] = toCell(0, 0), [wx1, wz0] = toCell(size.w, size.h);
+      const cx0 = Math.max(0, Math.floor((wx0 + 0.5) / step / CH)), cx1 = Math.min(Math.floor((t.w - 1) / CH), Math.floor((wx1 + 0.5) / step / CH));
+      const cz0 = Math.max(0, Math.floor((wz0 + 0.5) / step / CH)), cz1 = Math.min(Math.floor((t.h - 1) / CH), Math.floor((wz1 + 0.5) / step / CH));
+      const list = [];
+      for (let cz = cz0; cz <= cz1; cz++) for (let cx = cx0; cx <= cx1; cx++) list.push([cx, cz, Math.hypot((cx + 0.5) * CH * step - view.x, (cz + 0.5) * CH * step - view.z)]);
+      list.sort((a, b) => a[2] - b[2]);
+      const t0 = performance.now(); let built = 0, more = false;
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'medium';
+      for (const [cx, cz] of list) {
+        const key = L + ':' + cx + ':' + cz;
+        let c = t.chunks.get(key);
+        if (!c || c.stale) {
+          if (built && performance.now() - t0 > 6) { more = true; if (!c) continue; }
+          else { c = buildChunk(t, cx, cz, L, c); built++; }
+        }
+        t.chunks.delete(key); t.chunks.set(key, c);                         // ans Ende = zuletzt benutzt
+        const span = CH * step, X0 = toPx(cx * span - 0.5, 0)[0], X1 = toPx((cx + 1) * span - 0.5, 0)[0];
+        const Y0 = toPx(0, (cz + 1) * span - 0.5)[1], Y1 = toPx(0, cz * span - 0.5)[1];
+        const x = Math.floor(X0), y = Math.floor(Y0);
+        ctx.drawImage(c.cv, x, y, Math.ceil(X1) - x, Math.ceil(Y1) - y);
+      }
+      while (t.bytes > CHUNK_BYTES && t.chunks.size) { const k = t.chunks.keys().next().value, c = t.chunks.get(k); t.bytes -= c.bytes; t.chunks.delete(k); }
+      if (more) draw();
+    }
     const animImg = (kind) => {                           // Tierbild (gleiche Quelle wie Kolonie > Tiere), sonst /api/img, sonst Pfote
       if (!kind) return false;
       if (animImgs.has(kind)) return animImgs.get(kind);
@@ -170,31 +317,71 @@ export function karteView() {
       }
     }
 
+    // Wände zusammenhängend: Nachbarmaske je Wand einmal je Datenstand (Bits 1 oben, 2 rechts, 4 unten, 8 links = Nachbar ist Wand)
+    const wallMasks = (m) => {
+      if (m._wm) return;
+      const set = new Set(); for (const b of m.buildings) if (b.k === 'wall') set.add(wallKey(b.x, b.z));
+      for (const b of m.buildings) if (b.k === 'wall') b._wm = (set.has(wallKey(b.x, b.z + 1)) ? 1 : 0) | (set.has(wallKey(b.x + 1, b.z)) ? 2 : 0) | (set.has(wallKey(b.x, b.z - 1)) ? 4 : 0) | (set.has(wallKey(b.x - 1, b.z)) ? 8 : 0);
+      m._wm = true;
+    };
+    // Gebäudebild auf die Grundfläche: einpassen, bei abweichendem Seitenverhältnis (Grundfläche liegend/stehend) um 90° gedreht (Richtung nach rot)
+    const drawBldImg = (bmp, px, py, w, h, rot) => {
+      const iw = bw(bmp), ih = bh(bmp);
+      const turn = Math.abs(w - h) > 2 && Math.abs(iw - ih) > 2 && (iw > ih) !== (w > h);
+      const W = turn ? h : w, H = turn ? w : h, sc = Math.min(W / iw, H / ih), dw = iw * sc, dh = ih * sc;
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'medium';
+      if (!turn) { ctx.drawImage(bmp, px + (w - dw) / 2, py + (h - dh) / 2, dw, dh); return; }
+      ctx.save(); ctx.translate(px + w / 2, py + h / 2); ctx.rotate((rot === 3 ? -1 : 1) * Math.PI / 2); ctx.drawImage(bmp, -dw / 2, -dh / 2, dw, dh); ctx.restore();
+    };
+    function drawBlds(m) {
+      const symOk = view.s >= 6, fs = Math.max(10, Math.min(22, view.s * 1.6)), pics = view.s >= IMG_MIN;
+      wallMasks(m);
+      for (const b of m.buildings) {
+        const w = Math.max(2, b.sx * view.s), h = Math.max(2, b.sz * view.s);
+        const [px, py] = toPx(b.x - (b.sx - 1) / 2 - 0.5, b.z + (b.sz - 1) / 2 + 0.5);
+        if (px > size.w || py > size.h || px + w < 0 || py + h < 0) continue;      // außerhalb des Bildes
+        const ent = pics && b.def ? GFX.get('t_' + b.def, 'th', b.def) : null, bmp = ent && ent.state === 'ok' ? ent.bmp : null;
+        if (b.k === 'wall') {                                                      // zusammenhängende Fläche: ganze Pixel, keine Fugen
+          const x = Math.floor(px), y = Math.floor(py), ww = Math.ceil(px + w) - x, hh = Math.ceil(py + h) - y;
+          if (bmp) { ctx.imageSmoothingEnabled = true; ctx.drawImage(bmp, x, y, ww, hh); }
+          else {
+            ctx.fillStyle = BLD.wall; ctx.fillRect(x, y, ww, hh);
+            if (ww >= 8) {                                                         // Kante nur dort, wo keine Wand anschließt
+              const mk = b._wm | 0, e = Math.max(1, Math.round(ww / 10)); ctx.fillStyle = '#2a2623';
+              if (!(mk & 1)) ctx.fillRect(x, y, ww, e); if (!(mk & 2)) ctx.fillRect(x + ww - e, y, e, hh);
+              if (!(mk & 4)) ctx.fillRect(x, y + hh - e, ww, e); if (!(mk & 8)) ctx.fillRect(x, y, e, hh);
+            }
+          }
+          continue;
+        }
+        const on = selected?.t === 'b' && selected.id === b.id;
+        if (bmp) {
+          drawBldImg(bmp, px, py, w, h, b.rot);
+          if (on) { ctx.lineWidth = 3; ctx.strokeStyle = '#d99a4e'; ctx.strokeRect(px - 1, py - 1, w + 2, h + 2); }
+          continue;
+        }
+        if (b.k === 'fire') { ctx.font = Math.max(12, view.s * 2.4) + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🔥', px + view.s / 2, py + view.s / 2); continue; }
+        ctx.fillStyle = BLD[b.k] || BLD.build;
+        ctx.fillRect(px, py, w, h);
+        if (on) { ctx.lineWidth = 3; ctx.strokeStyle = '#d99a4e'; ctx.strokeRect(px - 1, py - 1, w + 2, h + 2); }
+        else if (w >= 5 && h >= 5) { ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.strokeRect(px + .5, py + .5, w - 1, h - 1); }
+        const sym = BLD_SYM[b.k];
+        if (sym && symOk && b.k !== 'bed') { ctx.font = fs + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff'; ctx.fillText(sym, px + w / 2, py + h / 2 + 1); }
+        else if (sym && !symOk && w >= 4 && b.k !== 'bed') { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(px + w / 2 - 1.5, py + h / 2 - 1.5, 3, 3); }   // Punkt statt Symbol bei weitem Zoom
+      }
+    }
+
     function drawMap() {
       const m = mapObj(); if (!m) return;
       ctx.fillStyle = '#1d1b18'; ctx.fillRect(0, 0, size.w, size.h);
       const t = terrain.get(m.id);
       if (t) {
-        const [x0, y0] = toPx(0, m.sizeZ), k = (view.s * t.data.step);
+        const ps = view.s * t.step, [x0, y0] = toPx(-0.5, t.h * t.step - 0.5);       // Feld x belegt [x−0,5; x+0,5] – wie Figuren und Gebäude
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(t.canvas, x0, y0, t.data.w * k, t.data.h * k);
+        ctx.drawImage(t.ov, x0, y0, t.w * ps, t.h * ps);
+        if (t.idx && ps >= TILE_MIN) drawChunks(t, ps);
       }
-      if (filt.blds) {
-        const symOk = view.s >= 6, fs = Math.max(10, Math.min(22, view.s * 1.6));
-        for (const b of m.buildings) {
-          const w = Math.max(2, b.sx * view.s), h = Math.max(2, b.sz * view.s);
-          const [px, py] = toPx(b.x - (b.sx - 1) / 2 - 0.5, b.z + (b.sz - 1) / 2 + 0.5);
-          if (px > size.w || py > size.h || px + w < 0 || py + h < 0) continue;      // außerhalb des Bildes
-          if (b.k === 'fire') { ctx.font = Math.max(12, view.s * 2.4) + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🔥', px + view.s / 2, py + view.s / 2); continue; }
-          ctx.fillStyle = BLD[b.k] || BLD.build;
-          ctx.fillRect(px, py, w, h);
-          if (selected?.t === 'b' && selected.id === b.id) { ctx.lineWidth = 3; ctx.strokeStyle = '#d99a4e'; ctx.strokeRect(px - 1, py - 1, w + 2, h + 2); }
-          else if (w >= 5 && h >= 5 && b.k !== 'wall') { ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.strokeRect(px + .5, py + .5, w - 1, h - 1); }
-          const sym = BLD_SYM[b.k];
-          if (sym && symOk && b.k !== 'bed') { ctx.font = fs + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff'; ctx.fillText(sym, px + w / 2, py + h / 2 + 1); }
-          else if (sym && !symOk && w >= 4 && b.k !== 'bed') { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(px + w / 2 - 1.5, py + h / 2 - 1.5, 3, 3); }   // Punkt statt Symbol bei weitem Zoom
-        }
-      }
+      if (filt.blds) drawBlds(m);
       const fog = fogOf(m);
       if (fog) { drawFog(m, fog); drawFogMarks(fog); }
       const ps = filt.pawns ? m.pawns : [];
@@ -392,6 +579,24 @@ export function karteView() {
       draw();
     }
 
+    // Aufklappbare Legende: Figuren-Farben und Übersichtsfarben des Bodens
+    const legend = () => {
+      const dot = (css, txt, round = true) => el('li', {}, el('i', { class: 'mp-dot' + (round ? '' : ' sq'), style: 'background:' + css }), txt);
+      const terr = [['g', 'Gras / Erde'], ['t', 'Wald'], ['s', 'Sand'], ['w', 'Flaches Wasser'], ['W', 'Tiefes Wasser'], ['r', 'Fels'], ['f', 'Gebauter Boden'], ['b', 'Brücke'], ['m', 'Schlamm / Sumpf'], ['i', 'Eis'], ['c', 'Kies']];
+      const d = el('details', { class: 'mp-legend', open: legendOpen },
+        el('summary', {}, 'Was bedeuten die Farben?'),
+        el('div', { class: 'mp-leg-cols' },
+          el('div', {}, el('b', { class: 'small' }, 'Figuren'), el('ul', {},
+            dot('#3a342c', 'Kolonist (Porträt)'), dot('#4a5a3c', 'Haustier (grüner Ring)'), dot(REL.enemy[1], 'Feind'), dot(REL.guest[1], 'Gast / Händler'),
+            dot(REL.prisoner[1], 'Gefangene / Sklaven'), dot(REL.other[1], 'Sonstige Fremde'))),
+          el('div', {}, el('b', { class: 'small' }, 'Boden (Übersicht)'), el('ul', {}, terr.map(([k, n]) => dot(COLORS[k], n, false)))),
+          el('div', {}, el('b', { class: 'small' }, 'Gebäude'), el('ul', {}, [['wall', 'Wand'], ['door', 'Tür'], ['bed', 'Bett'], ['bench', 'Werkbank'], ['table', 'Tisch'], ['storage', 'Lager'], ['other', 'Sonstiges']].map(([k, n]) => dot(BLD[k], n, false)))),
+        ),
+        el('p', { class: 'small muted' }, 'Ganz nah heranzoomen: dann siehst du den Boden und die Gebäude so wie im Spiel.'));
+      d.addEventListener('toggle', () => { legendOpen = d.open; });
+      return d;
+    };
+
     function rebuild() {
       clear(body); drawSubs();
       cv = el('canvas', { class: 'mp-cv', 'aria-label': 'Karte' });
@@ -408,7 +613,7 @@ export function karteView() {
           if (selected && !filt[{ p: 'pawns', a: 'animals', s: 'strangers', b: 'blds' }[selected.t]]) { selected = null; follow = false; clearTimeout(thingTimer); drawCard(); }
           draw();
         } }, label)));
-      body.append(bar, el('div', { class: 'mp-wrap' }, cv, ctl, card), strip);
+      body.append(bar, el('div', { class: 'mp-wrap' }, cv, ctl, card), strip, which === 'world' ? null : legend());
       // Ziehen, Mausrad, zwei Finger
       const pts = new Map(); let last = null, pinch = 0, moved = 0;
       cv.addEventListener('pointerdown', (e) => { cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); last = [e.clientX, e.clientY]; moved = 0; pinch = 0; });

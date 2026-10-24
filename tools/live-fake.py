@@ -847,6 +847,9 @@ MAP_W = MAP_H = 100
 
 
 _TERR = {}
+# Kategorie-Zeichen -> TerrainDef (nur Fake). Bilder: siehe WS_TERRAIN weiter unten (fehlende -> 404 = Ersatzfarbe).
+TERR_DEF = {"g": "Soil", "t": "SoilRich", "s": "Sand", "w": "WaterShallow", "W": "WaterDeep", "r": "Granite_Rough", "f": "WoodPlankFloor",
+            "b": "BridgeWood", "m": "Mud", "i": "Ice", "c": "Gravel"}
 
 
 def map_terrain():
@@ -876,6 +879,12 @@ def map_terrain():
             r.append(ch)
         rows.append("".join(r))
     _TERR["t"] = {"id": "m1", "w": n, "h": n, "step": 1, "sizeX": 250, "sizeZ": 250, "rows": rows}
+    if os.environ.get("FAKE_NOGFX") != "1":           # Spielgrafik-Felder (Plan karte-spielgrafik): defs + cells (enc 1). FAKE_NOGFX=1 = alte Mod ohne
+        defs = [TERR_DEF[c] for c in "gtswWrfbmic"]
+        alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+        ix = {c: alpha[i] for i, c in enumerate("gtswWrfbmic")}
+        _TERR["t"]["defs"] = defs
+        _TERR["t"]["cells"] = ["".join(ix.get(ch, "A") for ch in r) for r in rows]
     return _TERR["t"]
 
 
@@ -927,11 +936,17 @@ def map_live():
         {"id": "p303", "name": "Gregor", "label": "Gefangener", "x": 118, "z": 108, "rel": "prisoner", "faction": "Plunderer-Bande"},
         {"id": "p304", "name": "Bo", "label": "Sklave", "x": 132, "z": 112, "rel": "slave", "faction": None},
         {"id": "p305", "name": None, "label": "Mech", "x": 70, "z": 100, "rel": "other", "faction": None}]
+    if os.environ.get("FAKE_NOGFX") != "1":
+        for b in blds:
+            b["def"] = BLD_DEF.get(b["k"], "Reuse"); b["rot"] = (b["x"] + b["z"]) % 4
     return {"maps": [{"id": "m1", "name": "Strand", "sizeX": 250, "sizeZ": 250, "pawns": pawns, "buildings": blds, "animals": animals, "strangers": strangers, "terrainVer": terrain_ver()}],
             "world": [{"kind": "settlement", "name": "Strand", "lon": 12.0, "lat": 48.0},
                       {"kind": "caravan", "name": "Karawane", "lon": 14.5, "lat": 47.0, "destLon": 18.0, "destLat": 45.0, "pawns": ["yoku"]}]}
 
 
+BLD_DEF = {"fire": "Campfire", "bed": "Bed", "wall": "Wall", "door": "Door", "build": "Reuse", "bench": "TableSmithing", "table": "Table2x2", "seat": "Stool",
+           "turret": "Turret_MiniTurret", "storage": "Shelf", "joy": "HorseshoesPin", "power": "Generator", "light": "TorchLamp", "plant": "PlantPot",
+           "med": "HospitalBed", "other": "Fridge"}
 _THING_SEEN = set()
 
 
@@ -952,6 +967,47 @@ def thing_info(tid):
     if b["k"] == "light":
         d["power"] = "aus"
     return 200, d
+
+
+# ---------- Spielgrafik-Fake: echte lose PNGs aus den Workshop-Mods (nur LESEN), sonst 404 ----------
+WS = "C:/Program Files (x86)/Steam/steamapps/workshop/content/294100"
+WS_TERRAIN = {   # TerrainDef -> Datei (relativ zu WS); nicht aufgefuehrt (Sand, Wasser, Eis, Bruecke, Schlamm) -> 404 = Ersatzfarbe
+    "Soil": "1542284250/Textures/Terrain/Surfaces/Soil.png", "SoilRich": "1561838700/Textures/Terrain/Surfaces/SoilRichPatched.png",
+    "Granite_Rough": "1817862464/Textures/Terrain/Surfaces/Stone/WDStoneTileRough.png", "WoodPlankFloor": "1817862464/Textures/Terrain/Surfaces/Wooden/WDWoodPlankFloor.png",
+    "Gravel": "1542284250/Textures/Terrain/Surfaces/Gravel.png", "Mud": "1542284250/Textures/Terrain/Surfaces/Mossy.png"}
+WS_THING = {     # ThingDef -> Datei; nicht aufgefuehrt (Wall, Door, Reuse, Generator ...) -> 404 = Farbkaestchen
+    "Campfire": "1718190143/Textures/NewThings/Temperature/Firepit/StoneCampfire.png", "Bed": "1659631711/Textures/Things/Building/Furniture/DoublePillowBed/DoublePillowBed.png",
+    "Table2x2": "1558635181/Textures/Things/Building/Table/RGK_Table2x2.png", "Stool": "1694750191/Textures/Things/Building/Art/DryadStool/DryadStool.png",
+    "Shelf": "1558635181/Textures/Things/Building/Furniture/GL_TablewareShelf.png", "TorchLamp": "1541438614/Textures/Things/Building/Imperial/BuildingStyles/ImperialTorchLamp.png",
+    "TableSmithing": "1558161673/Textures/Things/Building/RB_Beekeeping_Workbench_m.png"}
+WS_TINT = {"WoodPlankFloor": (176, 124, 72), "Granite_Rough": (140, 136, 130)}
+_WS_CACHE = {}
+
+
+def ws_image(key):
+    if key in _WS_CACHE:
+        return _WS_CACHE[key]
+    terr = key.startswith("tr_")
+    rel = (WS_TERRAIN if terr else WS_THING).get(key[3:] if terr else key[2:])
+    out = None
+    if rel:
+        try:
+            import io
+            from PIL import Image
+            im = Image.open(os.path.join(WS, *rel.split("/"))).convert("RGBA")
+            if terr:
+                im = im.resize((64, 64), Image.LANCZOS)
+                tint = WS_TINT.get(key[3:])                  # graue Texturen wie im Spiel mit der Materialfarbe einfaerben
+                if tint:
+                    from PIL import ImageChops
+                    im = ImageChops.multiply(im, Image.new("RGBA", im.size, tint + (255,)))
+            elif max(im.size) > 256:
+                im.thumbnail((256, 256), Image.LANCZOS)
+            buf = io.BytesIO(); im.save(buf, "PNG"); out = buf.getvalue()
+        except Exception as e:                          # Datei/PIL fehlt -> 404, Seite nutzt Ersatz
+            print("ws_image:", key, e)
+    _WS_CACHE[key] = out
+    return out
 
 
 def fog_fake():
@@ -1145,6 +1201,11 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, png(key), "image/png", extra={"Cache-Control": "public, max-age=3600"})
         if p.startswith("/api/img/"):
             key = unquote(p[9:])
+            if key.startswith(("tr_", "t_")) and os.environ.get("FAKE_NOGFX") != "1":
+                body = ws_image(key)
+                if body is None:
+                    return self.js(404, {"error": "Noch nicht gerendert."}, cache=False)
+                return self.send(200, body, "image/png", extra={"Cache-Control": "no-cache"})
             if key == "404":
                 return self.js(404, {"error": "Noch nicht gerendert."}, cache=False)
             return self.send(200, png("img-" + key), "image/png", extra={"Cache-Control": "public, max-age=3600"})

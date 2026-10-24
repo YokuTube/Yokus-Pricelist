@@ -28,3 +28,12 @@
 .mp-follow { margin: 2px 0; min-height: 44px; }
 .mp-card { max-height: 60%; overflow-y: auto; }
 @media (max-width: 700px) { .mp-card { max-width: none; } }
+/* Legende */
+.mp-legend { margin-top: 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.mp-legend summary { min-height: 44px; display: flex; align-items: center; padding: 0 12px; cursor: pointer; font-weight: 600; }
+.mp-leg-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 16px; padding: 0 12px 4px; }
+.mp-leg-cols ul { list-style: none; margin: 4px 0 0; padding: 0; font-size: 13px; }
+.mp-leg-cols li { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.mp-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #0006; flex: 0 0 auto; }
+.mp-dot.sq { border-radius: 3px; }
+.mp-legend p { margin: 0; padding: 4px 12px 10px; }
