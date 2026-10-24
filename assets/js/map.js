@@ -1,4 +1,4 @@
-// Daten-Karte (läuft im normalen RICS Live; Nebel und Beziehungslinien nur bei laufender Show): Draufsicht aus reinen Daten (Raster + Punkte), Canvas.
+// Daten-Karte (läuft im normalen RICS Live; Nebel nur bei laufender Show): Draufsicht aus reinen Daten (Raster + Punkte), Canvas.
 // Gelände kommt einmal (/api/map/terrain/<id>), Figuren/Bauten/Welt alle 2 s (/api/map). Fremdtext nur über textContent bzw. Canvas-Text.
 import * as live from './live.js';
 import { isShowMode, getShowData } from './show-gate.js';
@@ -346,14 +346,6 @@ export function karteView() {
       view.x = camp ? camp.x : m.sizeX / 2; view.z = camp ? camp.z : m.sizeZ / 2; view.fit = true;
     };
 
-    const friendly = (a, b) => {
-      if (!isShowMode()) return 'plain';
-      const ops = getShowData()?.opinions || [];
-      const f = (x, y) => ops.find((o) => o.a === x && o.b === y)?.v ?? 0;
-      const v1 = f(a, b), v2 = f(b, a);
-      return v1 >= 30 && v2 >= 30 ? 'friend' : (v1 + v2) / 2 <= -30 ? 'rival' : 'plain';
-    };
-
     // ---- Nebel (Wildshow live-nebel): Daten kommen aus /api/show (fog), nur im Show-Modus mit Surveillance Shift. Ohne fog: alles sichtbar wie bisher. ----
     const fogOf = (m) => (isShowMode() ? getShowData()?.fog?.maps?.find((f) => f.id === m.id) : null) || null;
     const fogCache = new WeakMap();
@@ -469,19 +461,10 @@ export function karteView() {
       if (fog) { drawFog(m, fog); drawFogMarks(fog); }
       const ps = filt.pawns ? m.pawns : [];
       const sel = findEnt(selected, m);
-      // Wege (gestrichelt) und Nähe-Linien
+      // Wege (gestrichelt) zum Ziel; keine Nähe-Linien zwischen Kolonisten (Nutzerwunsch 2026-10-24: stören)
       ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(255,255,255,.45)';
       const walkers = sel && (selected.t === 'a' || selected.t === 's') ? ps.concat([sel]) : ps;
       for (const p of walkers) if (p.dx != null) { const [a, b] = toPx(p.x, p.z), [c, d] = toPx(p.dx, p.dz); ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); }
-      for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
-        if (Math.hypot(ps[i].x - ps[j].x, ps[i].z - ps[j].z) >= NEAR) continue;
-        const kind = friendly(ps[i].id, ps[j].id);
-        const [a, b] = toPx(ps[i].x, ps[i].z), [c, d] = toPx(ps[j].x, ps[j].z);
-        ctx.setLineDash(kind === 'rival' ? [6, 5] : []);
-        ctx.lineWidth = kind === 'plain' ? 1.5 : 3;
-        ctx.strokeStyle = kind === 'friend' ? '#8fbf7a' : kind === 'rival' ? '#e07a6b' : 'rgba(200,200,200,.5)';
-        ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke();
-      }
       ctx.setLineDash([]);
       const tag = (txt, px, py, r) => {
         ctx.font = '12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
