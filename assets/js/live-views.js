@@ -850,15 +850,19 @@ function panelOverview(p) {
   const top = (p.skills || []).filter((s) => !s.disabled).sort((a, b) => b.level - a.level || b.passion - a.passion).slice(0, 3);
   const skills = top.length ? section('Beste Fähigkeiten', `<div class="bgrid">${top.map(skillRow).join('')}</div>`) : '';
   let traits = '';
-  if ((p.traits || []).length) {
-    const open = p.traits.find((t) => t.label === openTrait);
-    traits = section('Eigenschaften', `<div class="traits">${p.traits.map((t) =>
+  const trs = (p.traits || []).filter((t) => !HIDDEN_TRAITS.has(t.def));
+  if (trs.length) {
+    const open = trs.find((t) => t.label === openTrait);
+    traits = section('Eigenschaften', `<div class="traits">${trs.map((t) =>
       `<button type="button" class="trait" data-trait="${esc(t.label)}" aria-expanded="${t === open}" title="${esc(t.desc)}">${t.def ? `<span class="tr-sym" data-pickey="tr_${esc(t.def)}_${Number(t.degree) || 0}" data-pcls="tr-img sm" data-psize="28"></span>` : ''}${esc(t.label)}</button>`).join('')}</div>
       ${open ? `<p class="trait-desc"><b>${esc(open.label)}:</b> ${esc(open.desc)}</p>` : '<p class="small muted trait-hint">Tippe auf eine Eigenschaft, um sie zu lesen.</p>'}`);
   }
   const bonds = (p.bonds || []).length ? `<p class="bonds"><span class="heart" aria-hidden="true">♥</span> Gebunden an: <b>${p.bonds.map((b) => bondLink(b)).join(', ')}</b></p>` : '';
   return bonds + needs + skills + traits || '<div class="empty">Keine Angaben.</div>';
 }
+
+// Eigenschaften, die jeder Kolonist hat (Mod-Grundausstattung) – auf der Seite nichtssagend, deshalb ausgeblendet (Nutzerwunsch 2026-10-24)
+const HIDDEN_TRAITS = new Set(['PE_FirearmProficiency']);
 
 // Gedanken wie im Stimmungs-Reiter des Spiels; Antippen zeigt die Beschreibung (gleicher Mechanismus wie Eigenschaften)
 function panelMood(p) {
