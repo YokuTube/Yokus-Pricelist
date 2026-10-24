@@ -118,7 +118,9 @@ export function karteView() {
     // Gelände: Übersicht = ein Pixel je Feld (ImageData, Durchschnittsfarbe der Bodenkachel bzw. Kategoriefarbe), hochskaliert.
     // Ab TILE_MIN Bildpunkten je Feld kommen Stücke (32×32 Felder, Offscreen-Canvas) mit den Bodenkacheln darüber – nur sichtbare, begrenzt zwischengespeichert.
     // Neu laden, wenn die Mod terrainVer erhöht.
-    const defCols = (t) => t.defs.map((d, i) => { const e = GFX.peek('tr_' + d); return (e && e.state === 'ok' && e.avg) || t.catRgb[i] || RGB.g; });
+    // Wasser hat im Spiel kein Standbild (animierter Shader, die Mod liefert dafür eine einfarbige, oft weiße Kachel) -> immer Kategoriefarbe
+    const tileOk = (t, i) => !t.water || !t.water[i];
+    const defCols = (t) => t.defs.map((d, i) => { const e = tileOk(t, i) && GFX.peek('tr_' + d); return (e && e.state === 'ok' && e.avg) || t.catRgb[i] || RGB.g; });
     const buildOverview = (t) => {
       const w = t.w, h = t.h;
       if (!t.ov) { t.ov = document.createElement('canvas'); t.ov.width = w; t.ov.height = h; }
@@ -153,13 +155,14 @@ export function karteView() {
           }
           t.idx = idx; t.defs = d.defs.map(String);
           t.catRgb = t.defs.map((_, i) => RGB[first[i]] || RGB.g);
+          t.water = t.defs.map((_, i) => first[i] === 'w' || first[i] === 'W');
           t.catCss = t.catRgb.map((c) => `rgb(${c[0]},${c[1]},${c[2]})`);
           t.order = t.defs.map((_, i) => i).sort((a, b) => cnt[b] - cnt[a]);
         }
         buildOverview(t);
         if (!alive()) return;
         terrain.set(id, t);
-        if (t.idx) for (const i of t.order) GFX.get('tr_' + t.defs[i], 'tr', t.defs[i]);     // häufigste Böden zuerst
+        if (t.idx) for (const i of t.order) if (tileOk(t, i)) GFX.get('tr_' + t.defs[i], 'tr', t.defs[i]);     // häufigste Böden zuerst
         draw();
       } catch { /* später erneut */ } finally { terrLoading.delete(id); }
     };
@@ -183,7 +186,7 @@ export function karteView() {
       const size = CH * L, cv = old?.cv || document.createElement('canvas');
       if (!old) { cv.width = size; cv.height = size; }
       const g = cv.getContext('2d'); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
-      const ents = t.defs.map((d) => { const e = GFX.peek('tr_' + d); return e && e.state === 'ok' ? e.bmp : null; }), missing = new Set();
+      const ents = t.defs.map((d, i) => { const e = tileOk(t, i) && GFX.peek('tr_' + d); return e && e.state === 'ok' ? e.bmp : null; }), missing = new Set();
       for (let lz = 0; lz < CH; lz++) {
         const gz = ccz * CH + lz; if (gz >= t.h) break;
         const dy = (CH - 1 - lz) * L, ty = 3 - (gz & 3);
