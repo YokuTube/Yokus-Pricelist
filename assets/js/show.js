@@ -1,7 +1,8 @@
-// Wildshow-Ansicht (Show-Teil der Live-Seite, Baustein 4.8). Läuft nur, wenn die Mod RICS Live erreichbar ist UND
-// ihr /api/show eine laufende Show meldet (Mod andreas.wildshow, Show-Modus). Sonst: nichts davon sichtbar, die Seite bleibt wie bisher.
+// Wildshow-Ansicht (Show-Teil der Live-Seite, Baustein 4.8). Wird von show-gate.js erst nachgeladen, wenn die Mod RICS Live
+// erreichbar ist UND ihr /api/show eine laufende Show meldet (Mod andreas.wildshow, Show-Modus). Sonst wird dieses Modul nie geladen.
 // Alles Fremde (Namen, Zuschauer, Gespräche, Tagebuch) wird nur per textContent in die Seite gesetzt – nie innerHTML.
 import * as live from './live.js';
+import { getShowData } from './show-gate.js';
 import * as X from './show-live.js';   // Strang live-show2: Jetzt (Challenges, Spenden, Verschollen, Lager/Reisen) + Archiv
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -31,39 +32,8 @@ const s = (tag, props, ...kids) => build(() => document.createElementNS(NS, tag)
 const clear = (el) => { while (el.firstChild) el.removeChild(el.firstChild); };
 
 // ---------- Zustand ----------
-let showData = null;          // letzte Antwort von /api/show (nur wenn active)
-let active = false;
-const listeners = new Set();
-let probeStop = null;
-
-export const isShowMode = () => active && live.isLive();
-export const getShowData = () => showData;
-export const onShowChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
-
-function setActive(v) {
-  v = !!v;
-  if (v === active) return;
-  active = v;
-  document.body.classList.toggle('show-mode', active && live.isLive());
-  listeners.forEach((fn) => { try { fn(active); } catch (e) { console.warn('[show]', e); } });
-}
-
-/** Einmal beim Start: erkennt im Hintergrund, ob eine Show läuft. Ohne Live-Mod passiert nichts. */
-export function initShow() {
-  const start = () => {
-    if (probeStop) { probeStop(); probeStop = null; }
-    if (!live.isLive()) { showData = null; setActive(false); document.body.classList.remove('show-mode'); return; }
-    probeStop = live.poll({
-      path: '/api/show', every: 8000, alive: () => live.isLive(),
-      onResult: (r) => {
-        if (r.status === 200 && r.data && r.data.active) { if (!r.unchanged || !showData) showData = r.data; setActive(true); document.body.classList.add('show-mode'); }
-        else if (r.status === 200 || r.status === 404) { showData = null; setActive(false); }
-      },
-    });
-  };
-  live.on('change', start);
-  start();
-}
+// Erkennung und Laden übernimmt show-gate.js; dieses Modul wird erst geladen, wenn eine Show läuft.
+let showData = getShowData();   // letzte Antwort von /api/show
 
 // ---------- Hilfen ----------
 const byId = (id) => (showData?.members || []).find((m) => m.id === id);

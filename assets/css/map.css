@@ -1,0 +1,21 @@
+/* Daten-Karte */
+.mp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.mp-subs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 10px; }
+.mp-sub { flex: 0 0 auto; min-height: 44px; padding: 0 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; }
+.mp-sub[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+.mp-wrap { position: relative; width: 100%; height: min(72vh, 560px); min-height: 300px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: #1d1b18; }
+.mp-cv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; display: block; }
+.mp-ctl { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.mp-ctl button { min-width: 44px; min-height: 44px; padding: 0 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 18px; }
+.mp-ctl button:last-child { font-size: 12px; }
+.mp-card { position: absolute; left: 8px; right: 8px; bottom: 8px; max-width: 360px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 4px 16px #0006; }
+.mp-card[hidden] { display: none; }
+.mp-card-h { display: flex; justify-content: space-between; align-items: center; }
+.mp-x { width: 36px; height: 36px; border: 0; background: none; cursor: pointer; font-size: 16px; color: var(--text); }
+.mp-need { display: grid; grid-template-columns: 70px 1fr 44px; gap: 6px; align-items: center; font-size: 13px; }
+.mp-bar { height: 7px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.mp-bar i { display: block; height: 100%; background: var(--good); }
+.mp-link { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline dotted; }
+.mp-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.mp-chip { min-height: 44px; padding: 0 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
+.mp-chip.on { border-color: var(--accent); color: var(--accent); }

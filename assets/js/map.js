@@ -1,7 +1,7 @@
-// Daten-Karte (Wildshow 4.9, läuft auch im normalen RICS Live): Draufsicht aus reinen Daten (Raster + Punkte), Canvas.
+// Daten-Karte (läuft im normalen RICS Live; Nebel und Beziehungslinien nur bei laufender Show): Draufsicht aus reinen Daten (Raster + Punkte), Canvas.
 // Gelände kommt einmal (/api/map/terrain/<id>), Figuren/Bauten/Welt alle 2 s (/api/map). Fremdtext nur über textContent bzw. Canvas-Text.
 import * as live from './live.js';
-import { isShowMode, getShowData } from './show.js';
+import { isShowMode, getShowData } from './show-gate.js';
 
 const COLORS = { g: '#6f8f4f', s: '#b9a56e', w: '#4f86b8', W: '#2f5b8a', r: '#6b6760', t: '#355f33' };
 const BLD = { fire: '#e8812e', bed: '#c9b48a', door: '#8a6a3a', wall: '#4a4540', build: '#9b8a6b' };

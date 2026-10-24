@@ -11,7 +11,7 @@ import { initStreamSettings, syncStreamDock, openStreamBar } from './stream.js';
 import { initCooldowns, setCooldownData } from './cooldowns.js';
 import { initFeedback } from './feedback.js';
 import { karteView } from './map.js';
-import { showView, initShow, isShowMode, onShowChange } from './show.js';
+import { SHOW_TAB, SHOW_HIDDEN, initShow, isShowMode, isShowSettled, onShowChange } from './show-gate.js';
 
 const TABS = [
   { id: 'start', label: 'Start', view: startView },
@@ -33,9 +33,6 @@ const LIVE_TABS = [
   { id: 'ereignisse', label: 'Ereignisse', view: ereignisseView },
   { id: 'gedenken', label: 'Gedenken', view: gedenkenView },
 ];
-// Show-Modus (Mod Wildshow läuft, Show-Spielstand): eigener Reiter „Show“, Einkaufs- und Preislisten-Reiter fallen weg.
-const SHOW_TAB = { id: 'show', label: 'Show', view: showView };
-const SHOW_HIDDEN = ['items', 'events', 'wetter', 'traits', 'rassen', 'mods', 'spiel'];
 const LIVE_IDS = [...LIVE_TABS.map((t) => t.id), SHOW_TAB.id];
 // Der Stream ist kein Reiter mehr, sondern eine Leiste oben (stream.js).
 const tabList = () => {
@@ -110,6 +107,16 @@ function renderView() {
     history.replaceState(null, '', '#/start');
     rawId = 'start';
     openStreamBar();
+  }
+  if (rawId === SHOW_TAB.id && live.isLive() && !isShowSettled()) {
+    // Direktlink auf den Show-Reiter: erst abwarten, ob eine Show läuft (sonst Start)
+    renderTabs();
+    document.getElementById('view').innerHTML = '<div class="empty">Lade …</div>';
+    return;
+  }
+  if (rawId === SHOW_TAB.id && live.isLive() && !isShowMode()) {
+    history.replaceState(null, '', '#/start');   // keine Show: der Reiter existiert nicht
+    rawId = 'start';
   }
   if (LIVE_IDS.includes(rawId) && !live.isLive() && !live.isSettled()) {
     // Live-Status noch unbekannt: gewünschte Ansicht abwarten statt auf Start umzubiegen.
