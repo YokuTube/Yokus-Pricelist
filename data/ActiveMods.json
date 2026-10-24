@@ -1,6 +1,6 @@
 {
-  "exportedAt": "2026-10-11T11:57:00.5801659Z",
-  "totalActiveMods": 285,
+  "exportedAt": "2026-10-24T08:39:34.4898995Z",
+  "totalActiveMods": 286,
   "mods": [
     {
       "author": "Krkr",
@@ -12,7 +12,7 @@
       "author": "Captolamia",
       "name": "[CAP] Rimworld Interactive Chat Service",
       "steamId": "3603078790",
-      "version": "1.51.0"
+      "version": "1.54.0"
     },
     {
       "author": "LimeTreeSnake",
@@ -117,12 +117,6 @@
       "version": null
     },
     {
-      "author": "Yoku",
-      "name": "Yoku Mod-Fixes",
-      "steamId": null,
-      "version": null
-    },
-    {
       "author": "Luved",
       "name": "Animal Traits System",
       "steamId": "3652630316",
@@ -186,7 +180,7 @@
       "author": "NetzachSloth, Toby",
       "name": "Better autocasting for Vanilla Psycasts Expanded",
       "steamId": "3199585285",
-      "version": "8.1.1.0"
+      "version": "9.0.0.4"
     },
     {
       "author": "KyleMHB",
@@ -228,7 +222,7 @@
       "author": "void",
       "name": "Character Editor",
       "steamId": "1874644848",
-      "version": "1.6.1"
+      "version": "1.7.1"
     },
     {
       "author": "ChippedChap",
@@ -258,7 +252,7 @@
       "author": "ilyvion,  Fluffy",
       "name": "Colony Manager Redux",
       "steamId": "3310027356",
-      "version": "0.19.1"
+      "version": "0.22.2"
     },
     {
       "author": "avilmask",
@@ -288,7 +282,7 @@
       "author": "AlenDio",
       "name": "Dawn of a New Day",
       "steamId": "3771580900",
-      "version": "1.6.2"
+      "version": "1.7.0"
     },
     {
       "author": "WiseClock,  fork: AtrociousCollector",
@@ -348,31 +342,31 @@
       "author": "telardo",
       "name": "DragSelect",
       "steamId": "2599942235",
-      "version": "1.6.0.2"
+      "version": "1.7.0.1"
     },
     {
       "author": "Dubwise",
       "name": "Dubs Bad Hygiene",
       "steamId": "836308268",
-      "version": "3.1.2800"
+      "version": "3.2.3250"
     },
     {
       "author": "Dubwise",
       "name": "Dubs Mint Menus",
       "steamId": "1446523594",
-      "version": "1.3.1686"
+      "version": "1.3.1695"
     },
     {
       "author": "Dubwise",
       "name": "Dubs Mint Minimap",
       "steamId": "1662119905",
-      "version": "1.3.800"
+      "version": "1.3.821"
     },
     {
       "author": "Dubwise",
       "name": "Dubs Performance Analyzer",
       "steamId": "2038874626",
-      "version": "1.6.10"
+      "version": "1.7.21"
     },
     {
       "author": "Nepenthe",
@@ -462,7 +456,7 @@
       "author": "Andreas Pardeike",
       "name": "Harmony",
       "steamId": "2009463077",
-      "version": "2.4.2.0"
+      "version": "3.0.1.0"
     },
     {
       "author": "UnlimitedHugs",
@@ -498,7 +492,7 @@
       "author": "ilyvion",
       "name": "ilyvion's Laboratory",
       "steamId": "3296362231",
-      "version": "0.24.0"
+      "version": "0.26.0"
     },
     {
       "author": "kathanon",
@@ -615,6 +609,12 @@
       "version": null
     },
     {
+      "author": "Yoku",
+      "name": "Kamera-Regie",
+      "steamId": null,
+      "version": null
+    },
+    {
       "author": "Linnun",
       "name": "Keep Converting",
       "steamId": "3461478214",
@@ -720,7 +720,7 @@
       "author": "Mlie",
       "name": "No Version Warning",
       "steamId": "2599504692",
-      "version": "1.6.115"
+      "version": "1.7.0"
     },
     {
       "author": "Zaljerem",
@@ -768,7 +768,7 @@
       "author": "Scherub",
       "name": "Planning Extended",
       "steamId": "2877392159",
-      "version": "1.17.0"
+      "version": "1.18.0"
     },
     {
       "author": "Peppsen",
@@ -804,7 +804,7 @@
       "author": "LightThief",
       "name": "Prisoners Can Betray",
       "steamId": "3654068121",
-      "version": null
+      "version": "2.0"
     },
     {
       "author": "DanZinagri",
@@ -1056,13 +1056,13 @@
       "author": "Maux",
       "name": "Rimbody",
       "steamId": "3354086860",
-      "version": "1.2.12"
+      "version": "1.2.13"
     },
     {
       "author": "Maux",
       "name": "Rimbody - Stat Module",
       "steamId": "3373263045",
-      "version": "1.2.3"
+      "version": "1.2.4"
     },
     {
       "author": "ferny",
@@ -1143,10 +1143,10 @@
       "version": null
     },
     {
-      "author": " Original author: Captain Muscles (Nathan Harbour)\r\n\t\t\t Original Progression Fork: Arodoid\r\n    ",
+      "author": "Cruesoe,  Captain Muscles (Nathan Harbour),  Arodoid",
       "name": "Semi Random Research:P-Fork Continued",
       "steamId": "3778002533",
-      "version": "260930"
+      "version": "261023"
     },
     {
       "author": "PeteTimesSix",
@@ -1164,7 +1164,7 @@
       "author": "B4ttl3m3d (Dev),  Pumpkinlass (Art)",
       "name": "SimpleBabyCarry",
       "steamId": "3692756679",
-      "version": "5.0.0"
+      "version": "5.2.0"
     },
     {
       "author": "ray1203",
@@ -1710,6 +1710,12 @@
       "author": "Imranfish",
       "name": "XML Extensions",
       "steamId": "2574315206",
+      "version": null
+    },
+    {
+      "author": "Yoku",
+      "name": "Yoku Mod-Fixes",
+      "steamId": null,
       "version": null
     }
   ]

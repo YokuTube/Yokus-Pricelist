@@ -57674,6 +57674,21 @@
       "Category": "Entspannung",
       "Enabled": true,
       "modactive": true
+    },
+    "CE_RestraintCross": {
+      "DefName": "CE_RestraintCross",
+      "CustomName": "Restraint cross",
+      "HasQuantityLimit": true,
+      "QuantityLimit": 1,
+      "LimitMode": "OneStack",
+      "IsUsable": false,
+      "IsEquippable": false,
+      "IsWearable": false,
+      "Mod": "Capture Expansion",
+      "BasePrice": 103,
+      "Category": "Möbel",
+      "Enabled": true,
+      "modactive": true
     }
   }
 }
