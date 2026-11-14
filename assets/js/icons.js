@@ -10,7 +10,6 @@ const P = {
   ich: '<circle cx="12" cy="8" r="3.500"/><path d="M5 21c0-4 3-6.500 7-6.500s7 2.500 7 6.500"/><path d="M17 4l1 2 2 .3-1.500 1.400.4 2L17 8.700"/>',
   kolonie: '<path d="M3 20V10l5-4 5 4v10M13 20v-7l4-3 4 3v7M3 20h18"/><path d="M6.500 20v-4h3v4"/>',
   stream: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M10 9l5 2.500-5 2.500z"/><path d="M8 21h8"/>',
-  show: '<circle cx="12" cy="9" r="3"/><path d="M6 21c0-3.500 2.500-5.500 6-5.500s6 2 6 5.500"/><path d="M3 4l2 1.500M21 4l-2 1.500M12 1.500V3"/>',
   karte: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
   spiel: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   ereignisse: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',

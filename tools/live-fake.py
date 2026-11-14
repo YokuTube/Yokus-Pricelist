@@ -770,123 +770,6 @@ def fake_effect(user, cmd, args):
     return None
 
 
-# ---------- Wildshow (Show-Modus), nur mit FAKE_SHOW=1: /api/show und /api/show/diary/<id> ----------
-# Ohne FAKE_SHOW antwortet der Fake wie die echte Mod ohne Wildshow: 404 "Keine Show aktiv".
-SHOW = bool(os.environ.get("FAKE_SHOW"))
-if SHOW:
-    import copy
-    for _u, _n, _m in (("svenja", "Svenja", 64), ("tom_w", "Tom", 38), ("jule", "Jule", 81)):
-        _c = copy.deepcopy(PAWNS["eddi_tv"])
-        _c.update({"user": _u, "id": _u, "displayName": _n + "_TV" if _u != "jule" else None, "name": _n, "fullName": _n + " Wald", "moodPct": _m})
-        PAWNS[_u] = _c
-    PAWNS["jule"]["user"] = None
-    PAWNS["yoku"]["name"] = "Kira"
-
-
-def show_info():
-    ids = ["yoku", "mira_spielt", "svenja", "eddi_tv", "tom_w", "luna_88", "jule"]
-    cl = {"yoku": 0, "mira_spielt": 0, "svenja": 0, "eddi_tv": 1, "tom_w": 1}
-    roles = {"yoku": ("Kochen", 0.9, 0.8), "mira_spielt": ("Jagen", 0.4, 0.75), "svenja": ("Sammeln", 1.0, 0.5), "eddi_tv": ("Bauen", 0.2, 0.3),
-             "tom_w": ("Jagen", 0.7, 0.2), "luna_88": ("Feuer hüten", 0.55, 0.9), "jule": (None, None, None)}
-    psy = {"yoku": ["gesellig", "fleißig", "mutig"], "mira_spielt": ["verspielt", "offen"], "svenja": ["gelassen", "mitfühlend"],
-           "eddi_tv": ["angespannt", "eitel"], "tom_w": ["aggressiv", "nüchtern"], "luna_88": ["fantasievoll", "verschlossen"], "jule": ["ängstlich", "bescheiden"]}
-    members = []
-    for i in ids:
-        r = roles[i]
-        members.append({"id": i, "name": PAWNS[i]["name"], "leader": i == "svenja", "clique": cl.get(i, -1),
-                        "regard": {"yoku": 0.4, "mira_spielt": 0.1, "svenja": 0.7, "eddi_tv": -0.5, "tom_w": -0.2, "luna_88": 0.0, "jule": 0.2}[i],
-                        "popularity": 0.2,
-                        "role": {"text": r[0], "done": r[1], "yesterday": r[2]}, "psyche": psy[i],
-                        "marks": {"yoku": ["scar"], "eddi_tv": ["saboteur"], "tom_w": ["hoard", "scar"]}.get(i, [])})
-    pairs = {("yoku", "mira_spielt"): (62, 55), ("yoku", "svenja"): (48, 51), ("mira_spielt", "svenja"): (40, 33), ("eddi_tv", "tom_w"): (44, 47),
-             ("yoku", "eddi_tv"): (-45, -52), ("svenja", "eddi_tv"): (-30, -12), ("luna_88", "jule"): (22, 10), ("tom_w", "mira_spielt"): (-8, 15),
-             ("luna_88", "yoku"): (18, 5)}
-    ops = []
-    for (a, b), (x, y) in pairs.items():
-        ops.append({"a": a, "b": b, "v": x}); ops.append({"a": b, "b": a, "v": y})
-    res = show_info_base(ids, members, ops)
-    res.update(show_extra())
-    if not os.environ.get("FAKE_NOFOG"):
-        res["fog"] = fog_fake()
-    return res
-
-
-def show_extra():
-    """Strang live-show2: events, eventStats, missing, donation, camps, journeys, archive. FAKE_SHOW_EMPTY=1: alles leer (Test Leerzustand)."""
-    if os.environ.get("FAKE_SHOW_EMPTY"):
-        return {"events": [], "eventStats": {"done": 0, "failed": 0, "open": 0}, "missing": [], "donation": None, "camps": [], "journeys": [], "archive": []}
-    el = int(time.time() - FAKE_START)
-    left = max(0, 150000 - el * 400)          # Spielticks, laufen sichtbar ab
-    dsec = max(0, 180 - el % 200)
-    return {
-        "events": [
-            {"id": 7, "def": "WS_SE_Challenge_Vorrat", "title": "Vorrat für den Winter", "kind": "challenge", "startTick": 520000, "endTick": 520000 + 180000,
-             "ticksLeft": left, "ticksTotal": 180000, "leftText": "noch %d T. %d Std." % (left // 60000, (left % 60000) // 2500), "progress": round(min(0.95, 0.35 + el / 400), 2),
-             "text": "Vorrat 35 %", "camp": 1, "members": ["yoku", "svenja", "tom_w"]},
-            {"id": 8, "def": "WS_SE_Dilemma_Fell", "title": "Wer bekommt das Fell?", "kind": "dilemma", "startTick": 560000, "endTick": 560000 + 20000, "ticksLeft": 3000, "ticksTotal": 20000,
-             "leftText": "noch 2 Std.", "progress": None, "text": None, "camp": 1, "members": []},
-            {"id": 9, "def": "WS_SE_Natur_Nebel", "title": "Dichter Nebel", "kind": "nature", "startTick": 570000, "endTick": None, "ticksLeft": -1, "ticksTotal": -1,
-             "leftText": "ohne Frist", "progress": None, "text": "Nebel zieht durch das Tal", "camp": 1, "members": ["luna_88"]},
-        ],
-        "eventStats": {"done": 3, "failed": 1, "open": 3},
-        "missing": [{"pawn": "tom_w", "name": "Tom", "state": "missing", "sinceDay": 8, "sinceTick": 500000, "phase": "search", "searchSinceTick": 520000, "round": 1},
-                    {"pawn": "jule", "name": "Jule", "state": "home", "sinceDay": 5, "sinceTick": 330000, "phase": None, "searchSinceTick": None, "round": 1}],
-        "donation": {"open": True, "secondsLeft": dsec if os.environ.get("FAKE_DON_LIMIT") else -1, "donors": 3, "total": 7, "totalMax": 10, "perViewer": 1,
-                     "items": [{"name": "Schokolade", "price": 40, "max": 3, "left": 3}, {"name": "Mahlzeit", "price": 25, "max": 5, "left": 2},
-                               {"name": "Heilkraut", "price": 30, "max": 2, "left": 0}],
-                     "list": [{"name": "eddi_tv", "item": "Mahlzeit", "count": 3}, {"name": "mira_spielt", "item": "Schokolade", "count": 1}, {"name": "<b>luna_88</b>", "item": "Heilkraut", "count": 2}]},
-        "camps": [{"map": 1, "name": "Hauptlager", "tile": 100, "second": False, "current": True, "members": ["yoku", "mira_spielt", "svenja", "luna_88"]},
-                  {"map": 2, "name": "Flusslager", "tile": 101, "second": True, "current": False, "members": ["eddi_tv"]}],
-        "journeys": [{"kind": "Besuch", "phase": 1, "members": ["eddi_tv"], "from": 2, "to": 1, "tile": 100, "destTile": 100, "moving": True, "resting": False, "days": 1.4}],
-        "archive": [{"season": "20261001-1200", "endTick": 400000, "endDay": 7, "winner": {"id": "p901", "name": "Lena"}, "viewerWinner": {"id": "p902", "name": "Ole"},
-                     "members": [{"id": "p901", "name": "Lena", "fate": "Siegerin"}, {"id": "p902", "name": "Ole", "fate": "Publikumsliebling"}, {"id": "p903", "name": "Rik", "fate": "ausgeschieden an Tag 4"}],
-                     "highlights": ["Lena zündete das Signalfeuer.", "Ole trug Rik durch den Sturm."]}],
-    }
-
-
-def show_info_base(ids, members, ops):
-    return {
-        "active": True, "tag": 9, "tick": 9 * 60000 + 21000, "staffel": "20261014-1200", "members": members, "opinions": ops,
-        "cliques": [{"nr": 0, "members": ["yoku", "mira_spielt", "svenja"]}, {"nr": 1, "members": ["eddi_tv", "tom_w"]}],
-        "feuerabend": {"running": True, "topic": "Svenja erzählt vom ersten Fisch des Tages.", "seated": ["yoku", "mira_spielt", "svenja", "luna_88", "tom_w"]},
-        "timeline": [
-            {"kind": "Etappe", "title": "Erstes Feuer", "text": "Kira hat das erste Feuer entfacht.", "day": 1, "tick": 20000, "pawn": "yoku", "name": "Kira"},
-            {"kind": "Erster", "title": "Erster Fisch", "text": "Tom hat den ersten Fisch gefangen.", "day": 3, "tick": 190000, "pawn": "tom_w", "name": "Tom"},
-            {"kind": "Bestwert", "title": "Längste Jagd", "text": "Mira jagte vier Stunden am Stück.", "day": 6, "tick": 370000, "pawn": "mira_spielt", "name": "Mira"},
-            {"kind": "Etappe", "title": "Erster Streit", "text": "Kira und Eddi gerieten aneinander.", "day": 7, "tick": 430000, "pawn": "eddi_tv", "name": "Eddi"},
-            {"kind": "Etappe", "title": "Neuer Anführer", "text": "Svenja führt jetzt die Gruppe.", "day": 8, "tick": 500000, "pawn": "svenja", "name": "Svenja"}],
-        "talk": [
-            {"tick": 540000, "from": "svenja", "to": "yoku", "kind": "Erzaehlen_Antwort", "text": "Der Fisch war so groß wie mein Unterarm.", "thread": 4},
-            {"tick": 540200, "from": "yoku", "to": "svenja", "kind": "Erzaehlen_Antwort", "text": "Dann braten wir ihn heute Abend.", "thread": 4},
-            {"tick": 540400, "from": "tom_w", "to": "mira_spielt", "kind": "Erzaehlen_Antwort", "text": "Ich hab die Spur im Schilf gesehen.", "thread": 4},
-            {"tick": 540600, "from": "luna_88", "to": None, "kind": "Selbstgespraech", "text": "Ob es morgen regnet?", "thread": 0}],
-        "memorial": [{"id": "olaf", "name": "Olaf", "viewer": "olaf_tv", "kind": "tot", "days": 6, "tick": 400000,
-                      "memories": ["Hat den ersten Fisch gefangen.", "Stritt oft mit Eddi.", "Sang abends am Feuer."]}],
-        "confessions": [{"pawn": "yoku", "day": 8, "question": "Wem vertraust du am meisten?", "answer": "Mira. Sie hört zu, ohne zu urteilen.", "viewer": "mira_spielt"},
-                        {"pawn": "tom_w", "day": 8, "question": "Was nervt dich?", "answer": "Eddi redet zu viel. Aber ich sag's ihm nicht.", "viewer": "luna_88"}],
-        "council": {"running": False, "openWishes": 2,
-                    "protocol": [{"id": 3, "tick": 400000, "kind": "Teilen", "question": "Wer bekommt das letzte Fell?", "options": ["Kira", "Tom", "Niemand"],
-                                  "chosen": 0, "decision": "Kira bekommt das Fell.", "tie": False,
-                                  "votes": [{"pawn": "svenja", "option": 0, "weight": 1.5}, {"pawn": "yoku", "option": 1, "weight": 1.0}, {"pawn": "tom_w", "option": 1, "weight": 1.0},
-                                            {"pawn": "mira_spielt", "option": 0, "weight": 1.0}, {"pawn": "luna_88", "option": 0, "weight": 1.0}]}],
-                    "rules": [{"kind": "Feuer", "text": "Nachts wacht immer einer am Feuer.", "pawn": "svenja"}, {"kind": "Essen", "text": "Beute wird zuerst geteilt.", "pawn": None}]},
-    }
-
-
-def show_diary(pid):
-    if pid not in PAWNS:
-        return None
-    n = PAWNS[pid]["name"]
-    return {"id": pid, "name": n, "sections": [
-        {"title": "Erlebtes", "lines": [{"text": "Tag 8: Hat Eddi widersprochen – Eddi", "tone": "bad"}, {"text": "Tag 7: Hat Beeren geteilt – Mira", "tone": "good"}, {"text": "Tag 5: Hat am Feuer gesessen", "tone": "text"}]},
-        {"title": "Erste Male", "lines": [{"text": "der erste Fisch (Tag 3)", "tone": "good"}]},
-        {"title": "Meinungen", "lines": [{"text": "Mira ist mir sympathisch.", "tone": "good"}, {"text": "Eddi nervt mich.", "tone": "bad"}]},
-        {"title": "Befinden", "lines": [{"text": "Heute: Kochen", "tone": "text"}, {"text": "Gestern lief es gut.", "tone": "quiet"}]},
-        {"title": "Ich", "lines": [{"text": "„Ich will nicht, dass wir hungern.“", "tone": "text"}]},
-        {"title": "Wünsche", "lines": [{"text": "Einmal wieder warm schlafen.", "tone": "quiet"}]},
-        {"title": "Beichtstuhl", "lines": [{"text": "Noch nichts im Beichtstuhl.", "tone": "quiet"}]}]}
-
-
 # ---------- Daten-Karte: /api/map und /api/map/terrain/<id> ----------
 import math
 MAP_W = MAP_H = 100
@@ -1073,27 +956,6 @@ def ws_image(key):
     return out
 
 
-def fog_fake():
-    """Strang live-nebel: Sichtmaske (Zellraster, 10 Felder je Zelle) + sichtbare Wesen + Merkpunkte. FAKE_NOFOG=1: kein Nebel (fog fehlt)."""
-    m = map_live()["maps"][0]
-    cell, cols, rows = 10, 25, 25
-    t = int(time.time() - FAKE_START)
-    vis = []
-    for gz in range(rows):
-        row = []
-        for gx in range(cols):
-            cx, cz = gx * cell + 5, gz * cell + 5
-            d = min(math.hypot(cx - p["x"], cz - p["z"]) for p in m["pawns"])
-            row.append("2" if d < 24 else "1" if d < 60 or (cx < 100 and cz > 150) else "0")
-        vis.append("".join(row))
-    seen = [{"kind": "animal", "label": "Wolf", "x": m["pawns"][0]["x"] + 12, "z": m["pawns"][0]["z"] + 8}]
-    ghosts = [{"kind": "animal", "label": "Hirsch", "x": 70, "z": 190, "age": 1800 + t * 40},
-              {"kind": "foreign", "label": "Fremder", "x": 190, "z": 60, "age": 9000 + t * 40},
-              {"kind": "animal", "label": "Wildschwein", "x": 40, "z": 100, "age": 14000 + t * 40}]
-    return {"on": True, "tick": 9 * 60000 + 21000, "fade": 15000,
-            "maps": [{"id": m["id"], "cell": cell, "cols": cols, "rows": rows, "vis": vis, "seen": seen, "ghosts": [g for g in ghosts if g["age"] < 15000]}]}
-
-
 class H(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -1159,13 +1021,6 @@ class H(BaseHTTPRequestHandler):
             return self.js(st, body, cache=False)
         if p.startswith("/api/map/terrain/"):
             return self.js(200, map_terrain())
-        if p == "/api/show" or p.startswith("/api/show/diary/"):
-            if not SHOW:
-                return self.js(404, {"error": "Keine Show aktiv"}, cache=False)
-            if p == "/api/show":
-                return self.js(200, show_info())
-            d = show_diary(unquote(p[16:]).lower())
-            return self.js(200, d) if d else self.js(404, {"error": "Noch kein Tagebuch"}, cache=False)
         if p == "/api/status":
             return self.js(200, {"live": True, "colony": "Neu-Yoku", "prefix": "!", "allowed": ALLOWED})
         if p == "/api/game":

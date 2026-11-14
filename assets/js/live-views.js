@@ -452,26 +452,15 @@ function voteMinimized() {
   let st = null;
   try { st = JSON.parse(sessionStorage.getItem('ys-vote-min') || 'null'); } catch { /* egal */ }
   if (st && st.sig === voteSig()) return st.min;
-  // Standard: Pille (aufklappbar, nach der Wahl wieder eingeklappt). Im Show-Reiter steht die Frage schon groß im Reiter.
-  return !isFrage(voteState) || (document.body.classList.contains('show-mode') && location.hash.startsWith('#/show'));
+  // Standard: Pille (aufklappbar, nach der Wahl wieder eingeklappt).
+  return !isFrage(voteState);
 }
 function setVoteMin(min) {
   try { sessionStorage.setItem('ys-vote-min', JSON.stringify({ sig: voteSig(), min })); } catch { /* egal */ }
   renderVote();
 }
 
-function announceVote() {
-  const v = voteState?.open && live.isLive() ? voteState : null;
-  const opts = v?.options || [];
-  const detail = v ? { state: v, at: voteAt, mine: myVote(opts), busy: voteBusy } : null;
-  window.__ysVoteDetail = detail;   // für Ansichten, die später geladen werden (Show-Reiter)
-  try { window.dispatchEvent(new CustomEvent('ys-vote-state', { detail })); } catch { /* egal */ }
-}
-window.addEventListener('hashchange', () => { if (isFrage(voteState)) renderVote(); });
-window.addEventListener('ys-vote-cast', (e) => { const n = Number(e.detail?.n); if (n >= 1) castVote(n); });
-
 function renderVote() {
-  announceVote();
   if (!voteEl) return;
   if (!voteState?.open || !live.isLive()) {
     voteEl.hidden = true; stopVoteTick(); morph(voteEl, '');
