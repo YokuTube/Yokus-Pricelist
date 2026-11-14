@@ -109,7 +109,7 @@ export function karteView() {
     let data = null, which = null;                       // which = Karten-id oder 'world'
     const terrain = new Map();                           // id -> { data, canvas }
     const imgs = new Map();                              // pawn id -> Image | false
-    let follow = false;                                  // Karte folgt der ausgewählten Figur (bis man selbst verschiebt)
+    let follow = false, mini = false;                    // Karte folgt der ausgewählten Figur (bis man selbst verschiebt); mini = Infofenster zu, Folgen läuft weiter
     let filt = loadFilt(), thing = null, thingTimer = 0;
     const animImgs = new Map(), terrLoading = new Set();
     let selected = null, view = { s: 4, x: 0, z: 0, fit: false }, cv = null, ctx = null, raf = 0, card = null, strip = null;
@@ -510,7 +510,18 @@ export function karteView() {
       const add = (...k) => k.flat(Infinity).forEach((c) => { if (c != null && c !== false) card.append(c); });
       if (!e) return;
       const bar = (label, v) => v == null ? null : el('div', { class: 'mp-need' }, el('span', {}, label), el('span', { class: 'mp-bar' }, el('i', { style: `width:${Math.max(2, Math.min(100, v))}%` })), el('span', { class: 'muted small' }, v + ' %'));
-      const close = el('button', { type: 'button', class: 'mp-x', 'aria-label': 'Schließen', onclick: () => { selected = null; follow = false; clearTimeout(thingTimer); drawCard(); draw(); } }, '✕');
+      const stop = () => { selected = null; follow = false; mini = false; clearTimeout(thingTimer); drawCard(); drawStrip(); draw(); };
+      // Beim Folgen schließt ✕ nur das Fenster – die Karte folgt weiter (kleine Leiste bleibt)
+      const close = el('button', { type: 'button', class: 'mp-x', 'aria-label': follow ? 'Fenster schließen, weiter folgen' : 'Schließen', onclick: () => { if (follow) { mini = true; drawCard(); } else stop(); } }, '✕');
+      card.classList.toggle('mp-mini', mini && follow);
+      if (mini && follow) {
+        const nm = e.name || e.label || (selected.t === 'a' ? 'Tier' : 'Figur');
+        add(el('span', { class: 'mp-mini-n' }, '◉ Folge ' + nm),
+          el('button', { type: 'button', class: 'mp-link', onclick: () => { mini = false; drawCard(); } }, 'Infos'),
+          el('button', { type: 'button', class: 'mp-link', onclick: stop }, 'Folgen aus'));
+        return;
+      }
+      mini = false;
       const folgen = () => e.dx !== undefined || selected.t !== 'b' ? el('button', { type: 'button', class: 'mp-link mp-follow', 'aria-pressed': follow, onclick: () => { follow = !follow; if (follow) { view.x = e.x; view.z = e.z; } drawCard(); draw(); } }, follow ? '◉ Folge ich – aus' : '○ Folgen') : null;
       const pos = el('div', { class: 'small' }, 'Ort: ' + m.name + ' (' + e.x + ' / ' + e.z + ')');
       const xref = (id, name) => id ? el('a', { class: 'mp-link', href: '#/kolonie/' + encodeURIComponent(id) }, name || 'Kolonist') : el('span', {}, name || '?');
@@ -560,7 +571,7 @@ export function karteView() {
     }
 
     function pick(sel, center) {
-      selected = sel; follow = !!sel && sel.t !== 'b'; clearTimeout(thingTimer);
+      selected = sel; follow = !!sel && sel.t !== 'b'; mini = false; clearTimeout(thingTimer);
       if (sel?.t === 'b') fetchThing(sel.id); else thing = null;
       drawCard(); drawStrip();
       const p = findEnt(sel);
@@ -653,7 +664,7 @@ export function karteView() {
         }
         view.x -= (e.clientX - last[0]) / view.s; view.z += (e.clientY - last[1]) / view.s;
         moved += Math.abs(e.clientX - last[0]) + Math.abs(e.clientY - last[1]); last = [e.clientX, e.clientY];
-        if (follow && moved >= 6) { follow = false; drawCard(); }   // selbst verschoben: Folgen aus
+        if (follow && moved >= 6) { follow = false; if (mini) { mini = false; selected = null; drawStrip(); } drawCard(); }   // selbst verschoben: Folgen aus (Fenster war zu: ganz abwählen)
         draw();
       });
       const up = (e) => {

@@ -37,3 +37,7 @@
 .mp-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #0006; flex: 0 0 auto; }
 .mp-dot.sq { border-radius: 3px; }
 .mp-legend p { margin: 0; padding: 4px 12px 10px; }
+.mp-card.mp-mini { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: max-content; max-width: calc(100% - 16px); padding: 4px 12px; }
+.mp-card.mp-mini[hidden] { display: none; }
+.mp-mini-n { font-weight: 600; }
+.mp-mini .mp-link { min-height: 44px; }
